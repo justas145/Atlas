@@ -5,21 +5,6 @@ BATCH filename
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-filename
-string
-yes
-Name of the batch file.
-
-
-
-Back to command reference.
+Name     | Type   | Required | Description            
+---------+--------+----------+------------------------
+filename | string | yes      | Name of the batch file.

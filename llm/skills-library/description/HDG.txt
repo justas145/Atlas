@@ -5,34 +5,11 @@ HDG acid,hdg (deg,True)
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-txt
-Yes
-Aircraft id
-
-
-hdg
-float
-Yes
-Aircraft heading [deg] [1]
-
-
-type
-deg/True
-No
-Heading type
-
+Name | Type     | Required | Description               
+-----+----------+----------+---------------------------
+acid | txt      | Yes      | Aircraft id               
+hdg  | float    | Yes      | Aircraft heading [deg] [1]
+type | deg/True | No       | Heading type              
 
 
 [1] The heading of the aircraft can be given by clicking the screen with the mouse. The aircraft will fly from its start coordinates, heading towards the clicked location.
-Back to command reference.

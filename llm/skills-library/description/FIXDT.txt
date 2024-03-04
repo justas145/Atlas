@@ -6,27 +6,7 @@ FIXDT ON/OFF,[t_end]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-ON/OFF
-bool
-yes
-Toggle Fixdt on or off
-
-
-t_end
-float
-no
-Optional end time for fixdt
-
-
-
-Back to command reference.
+Name   | Type  | Required | Description                
+-------+-------+----------+----------------------------
+ON/OFF | bool  | yes      | Toggle Fixdt on or off     
+t_end  | float | no       | Optional end time for fixdt

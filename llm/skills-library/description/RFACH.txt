@@ -5,21 +5,6 @@ RFACH [factor]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-factor
-float
-Yes
-Horizontal margin [NM]
-
-
-
-Back to command reference.
+Name   | Type  | Required | Description           
+-------+-------+----------+-----------------------
+factor | float | Yes      | Horizontal margin [NM]

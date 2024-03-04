@@ -5,22 +5,9 @@ RMETHV [method]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-method
-txt
-Yes
-Vertical method [1]
-
+Name   | Type | Required | Description        
+-------+------+----------+--------------------
+method | txt  | Yes      | Vertical method [1]
 
 
 [1] The available option for vertical methods are: NONE, ON, OFF, OF, V/S
-Back to command reference.

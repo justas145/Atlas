@@ -5,58 +5,16 @@ DEST acid, latlon/airport
 
 Arguments 1:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-text
-yes
-Aircraft id
-
-
-lat
-float/txt
-yes
-[[Latitude [deg]
-
-
-lon
-float/txt
-yes
-[[Longitude [deg]
-
+Name | Type      | Required | Description      
+-----+-----------+----------+------------------
+acid | text      | yes      | Aircraft id      
+lat  | float/txt | yes      | [[Latitude [deg] 
+lon  | float/txt | yes      | [[Longitude [deg]
 
 
 Arguments 2:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-text
-yes
-Aircraft id
-
-
-airport
-txt
-yes
-4 letters of airport ICAO code
-
-
-
-Back to command reference.
+Name    | Type | Required | Description                   
+--------+------+----------+-------------------------------
+acid    | text | yes      | Aircraft id                   
+airport | txt  | yes      | 4 letters of airport ICAO code

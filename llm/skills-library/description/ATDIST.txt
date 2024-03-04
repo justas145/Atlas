@@ -6,39 +6,9 @@ acid ATDIST pos, dist, cmdtxt
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-txt
-Yes
-Aircraft id
-
-
-pos
-latlon
-Yes
-[Location]
-
-
-dist
-float
-Yes
-[Distance]
-
-
-cmdtxt
-string
-Yes
-Full command line to be issued when condition is met
-
-
-
-Back to command reference.
+Name   | Type   | Required | Description                                         
+-------+--------+----------+-----------------------------------------------------
+acid   | txt    | Yes      | Aircraft id                                         
+pos    | latlon | Yes      | [Location]                                          
+dist   | float  | Yes      | [Distance]                                          
+cmdtxt | string | Yes      | Full command line to be issued when condition is met

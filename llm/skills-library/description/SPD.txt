@@ -5,27 +5,7 @@ SPD acid,spd
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-txt
-Yes
-Aircraft id
-
-
-spd
-float
-Yes
-[[Aircraft speed
-
-
-
-Back to command reference.
+Name | Type  | Required | Description     
+-----+-------+----------+-----------------
+acid | txt   | Yes      | Aircraft id     
+spd  | float | Yes      | [[Aircraft speed

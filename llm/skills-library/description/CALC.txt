@@ -2,37 +2,11 @@ CALC: Calc
 Calc is a simple in-line math calculator. The output will be displayed in the control window. Enter any expression as a line of text as argument after calc.
 If calc is called without arguments, a list of possible functions to use is provided.
 Functions supported:
-
-Math operators
-'pi' as π, e as base of natural logarithm
-sind, cosd and tand: trigonometric functions with arguments in degrees
-deg(d,m,s), rad(d,m,s): convert degree-minute-seconds coordinates to decimal degree/radians notation
-dist, qdr, qdrdist, qdrpos: calculate bearing (qdr), distance (dist), both (qdrdist) or a distance vector (qdrpos) between two lat-lon points
-rwgs84: compute local earth radius with WGS'84 geoid definition
-kwikdist: quick and dirty distance computation between two lat-lon points
-latlondist: distance computation between two lat-lon points
-lat2txt, lon2txt, latlon2txt: transform lat-lon coordinates to text format: degrees-minutes-seconds
-
 Usage:
 CALC expression
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-expression
-txt
-no
-The expression to be evaluated
-
-
-
-Back to command reference.
+Name       | Type | Required | Description                   
+-----------+------+----------+-------------------------------
+expression | txt  | no       | The expression to be evaluated

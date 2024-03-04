@@ -6,21 +6,6 @@ HELP command
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-Command
-txt
-No
-Command name on which help is required
-
-
-
-Back to command reference.
+Name    | Type | Required | Description                           
+--------+------+----------+---------------------------------------
+Command | txt  | No       | Command name on which help is required

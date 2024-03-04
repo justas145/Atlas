@@ -7,21 +7,6 @@ NORESO [acid]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-txt
-no
-Aircraft ID
-
-
-
-Back to command reference.
+Name | Type | Required | Description
+-----+------+----------+------------
+acid | txt  | no       | Aircraft ID

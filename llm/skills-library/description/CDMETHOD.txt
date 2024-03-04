@@ -5,21 +5,6 @@ CDMETHOD [method]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-cdmethod
-txt
-no
-The name of the conflict detection method.
-
-
-
-Back to command reference.
+Name     | Type | Required | Description                               
+---------+------+----------+-------------------------------------------
+cdmethod | txt  | no       | The name of the conflict detection method.

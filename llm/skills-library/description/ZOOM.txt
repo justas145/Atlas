@@ -7,21 +7,6 @@ ZOOM IN/OUT or factor
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-factor
-txt/float
-yes
-"IN" or "OUT" or factor
-
-
-
-Back to command reference.
+Name   | Type      | Required | Description            
+-------+-----------+----------+------------------------
+factor | txt/float | yes      | "IN" or "OUT" or factor

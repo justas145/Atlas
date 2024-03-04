@@ -7,33 +7,11 @@ or:
 RTA acid wpname rtatime
 
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-txt
-Yes
-Aircraft id
-
-
-wpname
-txt
-Yes
-Waypoint name
-
-
-rtatime
-time
-Yes
-Give required time of arrival as absolute, simulated time in seconds (Formats below)
-
+Name    | Type | Required | Description                                                                         
+--------+------+----------+-------------------------------------------------------------------------------------
+acid    | txt  | Yes      | Aircraft id                                                                         
+wpname  | txt  | Yes      | Waypoint name                                                                       
+rtatime | time | Yes      | Give required time of arrival as absolute, simulated time in seconds (Formats below)
 
 
 Examples:
@@ -46,4 +24,3 @@ Time formats allowed:
 SS.hh
 MM:SS.hh
 HH.MM.SS.hh
-Back to command reference.

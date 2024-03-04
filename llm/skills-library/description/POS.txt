@@ -2,55 +2,14 @@ POS: Pos
 Get info on an object. This can be an aircraft, airport or waypoint. Provide the object name as the function argument.
 The returned information depends on the type of object:
 Aircraft
-
-Location
-Heading
-Altitude
-CAS & TAS & Groundspeed & Mach number
-Indication of vnav & lnav + destination (if used)
-Aircraft origin & destination
-
 Airport
-
-Airport size
-Location
-Elevation
-Country name
-Number of runways (if known)
-
 Waypoints
-
-Type
-Location
-Description, including frequencies (for navaids)
-Variation (for VOR beacons)
-Number of waypoints with same name (if more than one exist)
-Names of airways that connect to it
-
 Airway
-
-List of segments in the airway
-
 Usage:
 POS object
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-object
-txt
-yes
-[[Object name
-
-
-
-Back to command reference.
+Name   | Type | Required | Description  
+-------+------+----------+--------------
+object | txt  | yes      | [[Object name

@@ -5,21 +5,6 @@ RFACV [factor]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-factor
-float
-Yes
-Vertical margin [ft]
-
-
-
-Back to command reference.
+Name   | Type  | Required | Description         
+-------+-------+----------+---------------------
+factor | float | Yes      | Vertical margin [ft]

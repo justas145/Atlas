@@ -5,24 +5,13 @@ CASMACHTHR threshold
 
 Arguments 1:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-threshold
-int
-yes
-The value under which a velocity value is taken as a Mach number instead of CAS in kts.
-
+Name      | Type | Required | Description                                                                            
+----------+------+----------+----------------------------------------------------------------------------------------
+threshold | int  | yes      | The value under which a velocity value is taken as a Mach number instead of CAS in kts.
 
 
 Example:
+
 CASMACHTHR 3
 
 Then, when a speed command is used, any value given below 3 is taken as a Mach number, any value above 3 is taken as kts.
@@ -31,5 +20,3 @@ SPD 2
 
 Knots:
 SPD 5
-
-Back to command reference.

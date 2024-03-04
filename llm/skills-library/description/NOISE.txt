@@ -9,21 +9,6 @@ NOISE [setting]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-Setting
-txt
-no
-[[Indication
-
-
-
-Back to command reference.
+Name    | Type | Required | Description 
+--------+------+----------+-------------
+Setting | txt  | no       | [[Indication

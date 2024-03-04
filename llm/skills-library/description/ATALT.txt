@@ -6,33 +6,8 @@ acid ATALT alt, cmdtxt
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-txt
-Yes
-Aircraft id
-
-
-alt
-float
-Yes
-Altitude
-
-
-cmdtxt
-string
-Yes
-Full command line to be issued when condition is met
-
-
-
-Back to command reference.
+Name   | Type   | Required | Description                                         
+-------+--------+----------+-----------------------------------------------------
+acid   | txt    | Yes      | Aircraft id                                         
+alt    | float  | Yes      | Altitude                                            
+cmdtxt | string | Yes      | Full command line to be issued when condition is met

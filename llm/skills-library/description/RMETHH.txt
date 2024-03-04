@@ -5,22 +5,9 @@ RMETHH [method]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-method
-txt
-Yes
-Horizontal method [1]
-
+Name   | Type | Required | Description          
+-------+------+----------+----------------------
+method | txt  | Yes      | Horizontal method [1]
 
 
 [1] The available option for horizontal methods are: BOTH, SPD, HDG, NONE, ON, OFF, OF
-Back to command reference.

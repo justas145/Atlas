@@ -11,21 +11,6 @@ DEL acid/WIND/shape
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-object
-txt
-yes
-[[Object name
-
-
-
-Back to command reference.
+Name   | Type | Required | Description  
+-------+------+----------+--------------
+object | txt  | yes      | [[Object name

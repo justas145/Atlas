@@ -5,27 +5,7 @@ BENCHMARK [filename,duration]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-filename
-string
-no
-Load the initial condition in file 'filename'
-
-
-duration
-float
-no
-Set the duration of the benchmark
-
-
-
-Back to command reference.
+Name     | Type   | Required | Description                                  
+---------+--------+----------+----------------------------------------------
+filename | string | no       | Load the initial condition in file 'filename'
+duration | float  | no       | Set the duration of the benchmark

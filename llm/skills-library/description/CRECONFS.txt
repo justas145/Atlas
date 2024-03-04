@@ -5,69 +5,14 @@ CRECONFS id, type, targetid, dpsi, cpa, tlos_hor, dH, tlos_ver, spd
 
 Arguments:
 
-
-
-Name
-Type
-Optional
-Description
-
-
-
-
-id
-txt
-No
-Aircraft id for the new aircraft
-
-
-type
-txt
-No
-Aircraft type
-
-
-targetid
-acid
-No
-Id of the aircraft you want to create a conflict with
-
-
-dpsi
-hdg
-No
-Relative heading [deg]
-
-
-cpa
-float
-No
-Distance at closest point of approach [nm]
-
-
-tlos_hor
-time
-No
-Time until horizontal loss of separation [sec]
-
-
-dH
-alt
-Yes
-Altitude difference [ft]
-
-
-tlos_ver
-time
-Yes
-Time until vertical loss of separation [sec]
-
-
-spd
-spd
-Yes
-Aircraft speed
-
-
-
-Back to command reference.
+Name     | Type  | Optional | Description                                          
+---------+-------+----------+------------------------------------------------------
+id       | txt   | No       | Aircraft id for the new aircraft                     
+type     | txt   | No       | Aircraft type                                        
+targetid | acid  | No       | Id of the aircraft you want to create a conflict with
+dpsi     | hdg   | No       | Relative heading [deg]                               
+cpa      | float | No       | Distance at closest point of approach [nm]           
+tlos_hor | time  | No       | Time until horizontal loss of separation [sec]       
+dH       | alt   | Yes      | Altitude difference [ft]                             
+tlos_ver | time  | Yes      | Time until vertical loss of separation [sec]         
+spd      | spd   | Yes      | Aircraft speed

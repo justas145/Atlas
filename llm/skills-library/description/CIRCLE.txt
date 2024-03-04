@@ -5,53 +5,11 @@ CIRCLE name,lat,lon,radius,[top,bottom]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-name
-txt
-yes
-name of the box
-
-
-lat
-float
-yes
-[[latitude
-
-
-lon
-float
-yes
-[[longitude
-
-
-radius
-float
-yes
-radius of circle [nm]
-
-
-top
-float
-no
-
-altitude of top of circle
-
-
-bottom
-float
-no
-
-altitude of bottom of circle
-
-
-
-Back to command reference.
+Name   | Type  | Required | Description                 
+-------+-------+----------+-----------------------------
+name   | txt   | yes      | name of the box             
+lat    | float | yes      | [[latitude                  
+lon    | float | yes      | [[longitude                 
+radius | float | yes      | radius of circle [nm]       
+top    | float | no       | altitude of top of circle   
+bottom | float | no       | altitude of bottom of circle

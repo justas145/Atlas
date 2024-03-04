@@ -5,27 +5,7 @@ THR acid [throttle]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-string
-yes
-Aircraft id
-
-
-throttle
-AUTO/IDLE/float
-No
-The throttle setting
-
-
-
-Back to command reference.
+Name     | Type            | Required | Description         
+---------+-----------------+----------+---------------------
+acid     | string          | yes      | Aircraft id         
+throttle | AUTO/IDLE/float | No       | The throttle setting

@@ -6,33 +6,8 @@ acid ATSPD spd, cmdtxt
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-txt
-Yes
-Aircraft id
-
-
-spd
-float
-Yes
-Speed
-
-
-cmdtxt
-string
-Yes
-Full command line to be issued when condition is met
-
-
-
-Back to command reference.
+Name   | Type   | Required | Description                                         
+-------+--------+----------+-----------------------------------------------------
+acid   | txt    | Yes      | Aircraft id                                         
+spd    | float  | Yes      | Speed                                               
+cmdtxt | string | Yes      | Full command line to be issued when condition is met

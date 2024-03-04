@@ -5,21 +5,6 @@ DUMPRTE acid
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-txt
-Yes
-Aircraft id
-
-
-
-Back to command reference.
+Name | Type | Required | Description
+-----+------+----------+------------
+acid | txt  | Yes      | Aircraft id

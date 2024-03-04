@@ -8,31 +8,10 @@ When ASAS is on, it is called every 'asas_dt' seconds. This value can be set in 
 asas_dt = 1.0
 
 Conflict detection and resolution are called within the update of the traffic. The traffic update follows this order:
-
-The atmosphere is updated
-The ADSB is updated
-The autopilot logic is updated (defining the track, TAS, altitude, and vertical speed that each aircraft should adopt in order to follow their pre-defined route)
-ASAS is called - conflict detection and resolution are here performed.
-aporasas (meaning: AutoPilot or ASAS) is called. for every aircraft in conflict, the track, TAS, altitude, and vertical speed produced by the conflict resolution algorithm overwrite the AutoPilot values:
-
-self.trk = np.where(bs.traf.cr.hdgactive, bs.traf.cr.trk, bs.traf.ap.trk)
-self.tas = np.where(bs.traf.cr.tasactive, asastas, bs.traf.ap.tas)
-self.alt = np.where(bs.traf.cr.altactive, bs.traf.cr.alt, bs.traf.ap.alt)
-self.vs  = np.where(bs.traf.cr.vsactive, bs.traf.cr.vs, bs.traf.ap.vs)
 Note that the 'active' values are vectors with a dimension equal to the number of aircraft. In each position of the vector, 0 indicates that the aircraft with that index is not in conflict, 1 indicates that this aircraft is in conflict and its state should change to the value output by the conflict resolution module.
-
-Performance values are updated
-
 When ASAS is OFF, aircraft simply follow their trajectory as set by the AutoPilot class.
 Conflict Detection:
 By default, Bluesky uses a state-based conflict detection (statebased.py). The state-based method receives the current traffic information and performs the following calculations:
-
-Calculates the current distance and quadrant between all aircraft (note that the numpy package is used for vectorial calculation)
-Calculates distance at CPA by finding the closest distance between all aircraft
-Horizontal conflicts are detected when distance at CPA < minimum separation (rpz)
-Checks for altitude differences between aircraft. In situations where aircraft are at a vertical distance > minimum vertical separation (hpz) these are removed from the vertical conflicts
-Detected conflicts are returned to the detection.py class
-
 Other conflict detection modules may be added. This module should inherit from the ConflictDetection class (detection.py), and should overwrite function detect(). This new module can be called with the command:
 CDMETHOD MODULE-NAME
 
@@ -41,7 +20,7 @@ Conflict resolution can be turned on and off through the following command:
 RESO ON/OFF
 
 By default, Bluesky uses the modified voltage potential (MVP) conflict resolution method. However, other conflict resolution methods can be added through plugins (see as reference ssd.py). A conflict resolution plugin must inherit from ConflictResolution.py and overwrite the resolve() function. This new conflict resolution method should be set by:
-RESO MODULE-NAME 
+RESO MODULE-NAME
 
 The plugin must also be activated in settings.cfg:
 enabled_plugins = ['NAME']
@@ -49,7 +28,4 @@ enabled_plugins = ['NAME']
 Return to the route after conflict (Bouncing Conflicts)
 Once an aircraft is no longer in conflict, and is past the closest point of approach with intruders, it must redirect itself to the next waypoint in its route. By default, the aircraft will follow the instructions from AutoPilot towards the next waypoint. Thus, it will follow a straight line toward its next waypoint. However, there is code in place to guarantee that aircraft do not keep bouncing on and off of conflicts when trying to move towards the next waypoint.
 In resumenav(), in resolution.py, you can find:
-# Bouncing conflicts: If two aircraft are getting in and out of conflict continously, then they it is a bouncing conflict.
-# ASAS should stay active until the bouncing stops.
-is_bouncing = abs(anglediff(ownship.trk[idx1], intruder.trk[idx2])) < 30.0 and hdist < rpz * self.resofach
 The previous code finds whether two aircraft, previous in conflict with each other, will go back into conflict if they return directly to their next waypoint (bouncing conflict). An aircraft only returns to the next waypoint after there are no bouncing conflicts.

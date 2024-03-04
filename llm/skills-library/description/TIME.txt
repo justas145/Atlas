@@ -5,21 +5,6 @@ TIME time
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-time
-string
-yes
-The time in hours:minutes:seconds
-
-
-
-Back to command reference.
+Name | Type   | Required | Description                      
+-----+--------+----------+----------------------------------
+time | string | yes      | The time in hours:minutes:seconds

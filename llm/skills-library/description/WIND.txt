@@ -5,46 +5,10 @@ WIND lat,lon,alt/*,dir,spd,[alt,dir,spd,alt,...]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-lat
-float
-Yes
-[[Latitude
-
-
-lon
-float
-Yes
-[[Longitude
-
-
-alt
-float/txt
-Yes
-* means all altitudes[Altitude]]
-
-
-dir
-float/txt
-Yes
-Wind directionfloat
-
-
-
-spd
-float/txt
-Yes
-Wind speeds[[Speed]
-
-
-
-Back to command reference.
+Name | Type      | Required | Description                     
+-----+-----------+----------+---------------------------------
+lat  | float     | Yes      | [[Latitude                      
+lon  | float     | Yes      | [[Longitude                     
+alt  | float/txt | Yes      | * means all altitudes[Altitude]]
+dir  | float/txt | Yes      | Wind directionfloat             
+spd  | float/txt | Yes      | Wind speeds[[Speed]

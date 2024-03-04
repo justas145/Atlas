@@ -5,28 +5,10 @@ DIRECT acid wpname
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-txt
-Yes
-Aircraft id
-
-
-wpname
-txt
-Yes
-Waypoint name [1]
-
+Name   | Type | Required | Description      
+-------+------+----------+------------------
+acid   | txt  | Yes      | Aircraft id      
+wpname | txt  | Yes      | Waypoint name [1]
 
 
 [1] The waypoint name needs to start with an alphanumerical character
-Back to command reference.

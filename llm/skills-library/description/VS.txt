@@ -5,27 +5,7 @@ VS acid,vspd
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-txt
-Yes
-Aircraft ID
-
-
-vspd
-float
-Yes
-Vertical speed [ft/min]
-
-
-
-Back to command reference.
+Name | Type  | Required | Description            
+-----+-------+----------+------------------------
+acid | txt   | Yes      | Aircraft ID            
+vspd | float | Yes      | Vertical speed [ft/min]

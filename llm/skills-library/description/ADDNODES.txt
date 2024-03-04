@@ -5,21 +5,6 @@ ADDNODES number
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-number
-int
-yes
-The number of nodes to be added.
-
-
-
-Back to command reference.
+Name   | Type | Required | Description                     
+-------+------+----------+---------------------------------
+number | int  | yes      | The number of nodes to be added.

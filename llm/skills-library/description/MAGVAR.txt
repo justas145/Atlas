@@ -5,17 +5,6 @@ MAGVAR latlon/acid/airport/waypoint
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-latlon/acid/airport/waypoint
-location
-yes
-position where magnetic variation is wanted
+Name                         | Type     | Required | Description                                
+-----------------------------+----------+----------+--------------------------------------------
+latlon/acid/airport/waypoint | location | yes      | position where magnetic variation is wanted

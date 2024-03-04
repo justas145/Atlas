@@ -7,33 +7,8 @@ PCALL filename [args] [ABS(=default)/REL]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-filename
-string
-yes
-Name of the scenario data file.
-
-
-args
-string
-yes
-Number of arguments, will substitute %0  %1  %2 etc wherever used in called scenario file
-
-
-REL/ABS
-string
-no
-Enable relative or absolute (the default) timestamps.
-
-
-
-Back to command reference.
+Name     | Type   | Required | Description                                                                              
+---------+--------+----------+------------------------------------------------------------------------------------------
+filename | string | yes      | Name of the scenario data file.                                                          
+args     | string | yes      | Number of arguments, will substitute %0  %1  %2 etc wherever used in called scenario file
+REL/ABS  | string | no       | Enable relative or absolute (the default) timestamps.

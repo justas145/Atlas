@@ -5,60 +5,20 @@ ORIG acid, latlon/airport
 
 Arguments 1:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-text
-yes
-Aircraft id [1]
-
-
-lat
-float/txt
-yes
-Latitude [deg] [2]
-
-
-lat
-float/txt
-yes
-Longitude [deg] [2]
-
+Name | Type      | Required | Description        
+-----+-----------+----------+--------------------
+acid | text      | yes      | Aircraft id [1]    
+lat  | float/txt | yes      | Latitude [deg] [2] 
+lat  | float/txt | yes      | Longitude [deg] [2]
 
 
 Arguments 2:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-text
-yes
-Aircraft id [1]
-
-
-airport
-txt
-yes
-4 letters of airport ICAO code
-
+Name    | Type | Required | Description                   
+--------+------+----------+-------------------------------
+acid    | text | yes      | Aircraft id [1]               
+airport | txt  | yes      | 4 letters of airport ICAO code
 
 
 [1] For more information on entering aircraft id, see Aircraft ID.
 [2] For more information on entering coordinates, see Coordinates.
-Back to command reference.

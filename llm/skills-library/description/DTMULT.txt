@@ -5,21 +5,6 @@ DTMULT multiplier
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-multiplier
-float
-yes
-The rate multiplier.
-
-
-
-Back to command reference.
+Name       | Type  | Required | Description         
+-----------+-------+----------+---------------------
+multiplier | float | yes      | The rate multiplier.

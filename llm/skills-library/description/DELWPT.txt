@@ -5,27 +5,7 @@ DELWPT acid,wpname
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-txt
-Yes
-Aircraft id
-
-
-wpname
-txt
-Yes
-Waypoint name
-
-
-
-Back to command reference.
+Name   | Type | Required | Description  
+-------+------+----------+--------------
+acid   | txt  | Yes      | Aircraft id  
+wpname | txt  | Yes      | Waypoint name

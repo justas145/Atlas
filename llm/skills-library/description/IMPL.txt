@@ -5,27 +5,7 @@ IMPL base, implementation
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-base
-txt
-yes
-Base class in Bluesky
-
-
-implementation
-txt
-yes
-Implementation (plugin) to replace base class.
-
-
-
-Back to command reference.
+Name           | Type | Required | Description                                   
+---------------+------+----------+-----------------------------------------------
+base           | txt  | yes      | Base class in Bluesky                         
+implementation | txt  | yes      | Implementation (plugin) to replace base class.

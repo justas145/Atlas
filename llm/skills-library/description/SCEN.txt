@@ -5,21 +5,6 @@ SCEN scenname
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-scenname
-string
-yes
-Name for the scenario.
-
-
-
-Back to command reference.
+Name     | Type   | Required | Description           
+---------+--------+----------+-----------------------
+scenname | string | yes      | Name for the scenario.

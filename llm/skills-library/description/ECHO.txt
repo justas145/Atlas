@@ -1,33 +1,11 @@
 ECHO: Echo
 Show a text in the command window for user to read.
 This function can be used in the command window to chat with yourself, or in a scenario file to display messages at specific times. Useful examples are:
-
-Starting a horizontal conflict scenario with 8 aircraft
-Begin descent to 2000ft
-Experiment finished - close the application
-What is your favourite colour?
-Increasing wind speeds now
-
 Usage:
 ECHO txt
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-txt
-txt
-yes
-any text for display
-
-
-
-Back to command reference.
+Name | Type | Required | Description         
+-----+------+----------+---------------------
+txt  | txt  | yes      | any text for display

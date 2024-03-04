@@ -14,39 +14,9 @@ SAVEIC EXCEPT
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-filename
-string
-no
-Name of the scenario file (default location: scenario folder, extension .scn will be added)
-
-
-CLOSE
-string
-no
-keyword to close current file and stop recording (automatically called during reset or quit
-
-
-EXCEPT
-string
-no
-keyword to select which commands to excluded (or show current list)
-
-
-command
-string
-no
-command to be excluded
-
-
-
-Back to command reference.
+Name     | Type   | Required | Description                                                                                
+---------+--------+----------+--------------------------------------------------------------------------------------------
+filename | string | no       | Name of the scenario file (default location: scenario folder, extension .scn will be added)
+CLOSE    | string | no       | keyword to close current file and stop recording (automatically called during reset or quit
+EXCEPT   | string | no       | keyword to select which commands to excluded (or show current list)                        
+command  | string | no       | command to be excluded

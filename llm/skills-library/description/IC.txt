@@ -8,27 +8,7 @@ IC [IC/filename]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-IC
-string
-no
-'IC IC' reloads the current initial condition.
-
-
-filename
-string
-no
-Load the scenario in file 'filename'
-
-
-
-Back to command reference.
+Name     | Type   | Required | Description                                   
+---------+--------+----------+-----------------------------------------------
+IC       | string | no       | 'IC IC' reloads the current initial condition.
+filename | string | no       | Load the scenario in file 'filename'

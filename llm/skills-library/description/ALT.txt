@@ -5,33 +5,8 @@ ALT acid, alt, [vspd]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-txt
-yes
-Aircraft identifier name
-
-
-alt
-float
-yes
-Selected altitude [ft]
-
-
-vspd
-float
-no
-Selected climb speed [ft/min]
-
-
-
-Back to command reference.
+Name | Type  | Required | Description                  
+-----+-------+----------+------------------------------
+acid | txt   | yes      | Aircraft identifier name     
+alt  | float | yes      | Selected altitude [ft]       
+vspd | float | no       | Selected climb speed [ft/min]

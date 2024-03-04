@@ -6,4 +6,3 @@ CLRCRECMD
 
 Arguments:
 None
-Back to command reference.

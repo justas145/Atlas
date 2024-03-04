@@ -13,21 +13,6 @@ CRECMD cmdtxt
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-cmdtxt
-string
-Yes
-Full command line with traffic command to be issued upon creation, a/c id of new aircraft will be added before this line
-
-
-
-Back to command reference.
+Name   | Type   | Required | Description                                                                                                             
+-------+--------+----------+-------------------------------------------------------------------------------------------------------------------------
+cmdtxt | string | Yes      | Full command line with traffic command to be issued upon creation, a/c id of new aircraft will be added before this line

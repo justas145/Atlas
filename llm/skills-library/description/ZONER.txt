@@ -5,21 +5,6 @@ ZONER [radius]
 
 Arguments:
 
-
-
-Name
-Type
-Optional
-Description
-
-
-
-
-radius
-float
-Yes
-Radius [NM]
-
-
-
-Back to command reference.
+Name   | Type  | Optional | Description
+-------+-------+----------+------------
+radius | float | Yes      | Radius [NM]

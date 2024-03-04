@@ -8,21 +8,6 @@ DTLOOK [time]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-time
-float
-no
-Lookahead time for conflict detection [s]
-
-
-
-Back to command reference.
+Name | Type  | Required | Description                              
+-----+-------+----------+------------------------------------------
+time | float | no       | Lookahead time for conflict detection [s]

@@ -5,138 +5,40 @@ acid AT wpname [DEL] SPD/ALT/DO/STACK [spd/alt/command]
 
 Arguments 1: Show spd/alt constraints at a waypoint
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-txt
-Yes
-Aircraft id
-
-
-wpname
-txt
-Yes
-Waypoint name
-
+Name   | Type | Required | Description  
+-------+------+----------+--------------
+acid   | txt  | Yes      | Aircraft id  
+wpname | txt  | Yes      | Waypoint name
 
 
 Arguments 2: Edit spd/alt constraints at a waypoint
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-txt
-Yes
-Aircraft id
-
-
-wpname
-txt
-Yes
-Waypoint name
-
-
-contraint type
-SPD/ALT
-Yes
-Edit speed, altitude or both contraints
-
-
-spd/alt
-float
-Yes
-Aircraft Speed, altitude or both of them
-
+Name           | Type    | Required | Description                             
+---------------+---------+----------+-----------------------------------------
+acid           | txt     | Yes      | Aircraft id                             
+wpname         | txt     | Yes      | Waypoint name                           
+contraint type | SPD/ALT | Yes      | Edit speed, altitude or both contraints 
+spd/alt        | float   | Yes      | Aircraft Speed, altitude or both of them
 
 
 Arguments 3: Delete spd/alt constraints & Stack commands at a waypoint
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-txt
-Yes
-Aircraft id
-
-
-wpname
-txt
-Yes
-Waypoint name
-
-
-DEL
-DEL
-Yes
-Delete constraint
-
-
-contraint type
-SPD/ALT/STACK
-Yes
-Delete speed, altitude or both contraints
-
+Name           | Type          | Required | Description                              
+---------------+---------------+----------+------------------------------------------
+acid           | txt           | Yes      | Aircraft id                              
+wpname         | txt           | Yes      | Waypoint name                            
+DEL            | DEL           | Yes      | Delete constraint                        
+contraint type | SPD/ALT/STACK | Yes      | Delete speed, altitude or both contraints
 
 
 Arguments 4: Add command lines to the stack at this waypoint, these will be executed when passing this waypoint
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-acid
-txt
-Yes
-Aircraft id
-
-
-wpname
-txt
-Yes
-Waypoint name
-
-
-DO/STACK
-DO/STACK
-Yes
-Indicate a command will be stacked
-
-
-cmdline
-txt
-Yes
-The command line, if the first argument type is an a/c id and this is not given, then the ownship (acid) will be inserted
-
+Name     | Type     | Required | Description                                                                                                              
+---------+----------+----------+--------------------------------------------------------------------------------------------------------------------------
+acid     | txt      | Yes      | Aircraft id                                                                                                              
+wpname   | txt      | Yes      | Waypoint name                                                                                                            
+DO/STACK | DO/STACK | Yes      | Indicate a command will be stacked                                                                                       
+cmdline  | txt      | Yes      | The command line, if the first argument type is an a/c id and this is not given, then the ownship (acid) will be inserted
 
 
 Examples:
@@ -150,4 +52,3 @@ KL204 AT LOPIK STACK ECHO HELLO WORLD => "ECHO HELLO WORLD" will be issued when 
 KL204 AT LOPIK  => shows everything entered at this waypoint\
 See also: ADDWPT, ORIG, DEST, LNAV, VNAV for route editing features
 \See also: ATALT, ATSPD, ATDIST and DELAY for other conditional commands to be issued than AT ... DO/STACK
-Back to command reference.

@@ -5,21 +5,6 @@ ZONEDH [height]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-height
-float
-Yes
-Height [ft]
-
-
-
-Back to command reference.
+Name   | Type  | Required | Description
+-------+-------+----------+------------
+height | float | Yes      | Height [ft]

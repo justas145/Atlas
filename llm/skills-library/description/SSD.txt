@@ -5,22 +5,9 @@ SSD [input]
 
 Arguments:
 
-
-
-Name
-Type
-Required
-Description
-
-
-
-
-input
-txt
-Yes
-Input parameter [1]
-
+Name  | Type | Required | Description        
+------+------+----------+--------------------
+input | txt  | Yes      | Input parameter [1]
 
 
 [1] The input parameters available are: aircraft id, ALL, or OFF
-Back to command reference.
