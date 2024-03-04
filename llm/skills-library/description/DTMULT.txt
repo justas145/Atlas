@@ -1,0 +1,25 @@
+DTMULT: Dt multiplier
+Set the simulation rate multiplier for the current simulation. By default this multiplier is equal to one (real-time operation). If set to another value, the simulation will run faster (or slower) than real-time, with a fixed ratio as provided. For example, a multiplier of 2 would cause the simulation to run twice as fast: 60 simulation minutes take 30 actual minutes.
+Usage:
+DTMULT multiplier
+
+Arguments:
+
+
+
+Name
+Type
+Required
+Description
+
+
+
+
+multiplier
+float
+yes
+The rate multiplier.
+
+
+
+Back to command reference.

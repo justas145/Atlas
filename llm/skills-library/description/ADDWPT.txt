@@ -1,0 +1,114 @@
+ADDWPT: Addwpt
+Add a waypoint to the (FMS) route of an aircraft. It can be specified using an existing waypoint in the navigation database, or a custom latitude/longitude.
+For more information on editing routes, look at this tutorial.
+Usage:
+ADDWPT acid, (wpname/lat,lon/TAKEOFF),[alt,spd,afterwp]
+
+Arguments:
+
+
+
+Name
+Type
+Required
+Description
+
+
+
+
+acid
+txt
+yes
+Aircraft id
+
+
+wpname
+txt
+yes
+Fix name (navaid or fix)
+
+
+lat
+float/txt
+yes
+[[Latitude
+
+
+lon
+float/txt
+yes
+[[Longitude
+
+
+TAKEOFF
+txt
+no
+Insert a take-off waypoint (after runway to maintain runway heading) automatically, optionally add a runway name like: EHAM/RW18R
+
+
+alt
+float
+no
+Altitude constraint for this waypoint
+
+
+spd
+float
+no
+Speed constraint for this waypoint
+
+
+afterwp
+txt
+no
+Insert the new waypoint after waypoint 'afterwp'
+
+
+
+Examples:
+Adding a waypoint by name:
+ADDWPT KL364 WP1
+
+Adding a waypoint by coordinates (lat, lon):
+ADDWPT KL364 42.57 16.47
+
+Adding a waypoint with an altitude and speed constraint by name:
+ADDWPT KL364 WP1 FL100 250
+
+Adding a waypoint with an altitude and speed constraint by coordinates (lat, lon):
+ADDWPT KL364 42.57 16.47 FL100 250
+
+Related commands:
+
+
+
+Name
+Description
+
+
+
+
+ADDWPTMODE
+Command to change the type of waypoints that the ADDWPT commands adds (flyby, flyover, flyturn)
+
+
+AT
+Command to define commands when happen when an aircraft reaches a certain position/state.
+
+
+ATALT
+Command to define commands when an aircraft reaches a certain altitude.
+
+
+ATDIST
+Command to define commands when an aircraft reaches a certain distance from a location.
+
+
+ATSPD
+Command to define commands when an aircraft reaches a certain speed.
+
+
+
+Legacy functionality:
+The ADDWPT command also has legacy functionality for backwards compatibility, that has been moved to the ADDWPTMODE command. It is preferred to use the latter command (ADDWPTMODE) for changing the mode of the ADDWPT command.
+Back to command reference.

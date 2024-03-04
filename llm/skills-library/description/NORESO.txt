@@ -1,0 +1,27 @@
+NORESO: Noreso
+Switch off conflict resolution for specific aircraft.
+This function had aircraft names as arguments. Aircraft selected by NORESO will no longer perform resolution of conflicts that are encountered, and other aircraft will make no effort to avoid them.
+If NORESO is called without arguments, a list will be displayed containing all aircraft that are NOT performing conflict resolution.
+Usage:
+NORESO [acid]
+
+Arguments:
+
+
+
+Name
+Type
+Required
+Description
+
+
+
+
+acid
+txt
+no
+Aircraft ID
+
+
+
+Back to command reference.

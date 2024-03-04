@@ -1,0 +1,39 @@
+PCALL: Process call
+Import scenario commands from a different scenario file.
+Arguments can be used, separated by a comma or space. When reading the scenario file the first argument will be inserted wherever %0 is used in the scenario file, the second argument will replace all occurences of %2 etc. The maximum number of arguments is 10 (referred to as %9 in the called scenario file)
+Reserved words are ABS(default) and REL for time control. By default, the timestamps in the imported file are used as absolute time references. An optional REL flag causes the timestamps to be interpreted as relative to the timestamp of the PCALL command itself.
+Usage:
+PCALL filename [args] [ABS(=default)/REL]
+
+Arguments:
+
+
+
+Name
+Type
+Required
+Description
+
+
+
+
+filename
+string
+yes
+Name of the scenario data file.
+
+
+args
+string
+yes
+Number of arguments, will substitute %0  %1  %2 etc wherever used in called scenario file
+
+
+REL/ABS
+string
+no
+Enable relative or absolute (the default) timestamps.
+
+
+
+Back to command reference.

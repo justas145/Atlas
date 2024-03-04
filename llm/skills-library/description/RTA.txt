@@ -1,0 +1,49 @@
+RTA: Set Required Time of Arrival for a waypoint in the route
+Set an RTA at a given waypoint in the route
+Usage:
+acid RTA wpname rtatime
+
+or:
+RTA acid wpname rtatime
+
+
+
+
+Name
+Type
+Required
+Description
+
+
+
+
+acid
+txt
+Yes
+Aircraft id
+
+
+wpname
+txt
+Yes
+Waypoint name
+
+
+rtatime
+time
+Yes
+Give required time of arrival as absolute, simulated time in seconds (Formats below)
+
+
+
+Examples:
+KL204 RTA LOPIK 00:02:20
+KL204 RTA LOPIK 00:02:20.12
+KL204 RTA LOPIK 02:20.12
+KL204 RTA LOPIK 140.12
+Waypoint name should be the name is given in the route (use LISTRTE acid or double click on the aircraft to see it)
+Time formats allowed:
+SS.hh
+MM:SS.hh
+HH.MM.SS.hh
+Back to command reference.

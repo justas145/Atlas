@@ -1,0 +1,50 @@
+WIND: wind
+Define a wind vector (or a profile) at a specified position (and optionally at altitude). At one lat/lon position different wind vectors can be defined at different altitudes, will be interpolated with the inverse distance
+Usage:
+WIND lat,lon,alt/*,dir,spd,[alt,dir,spd,alt,...]
+
+Arguments:
+
+
+
+Name
+Type
+Required
+Description
+
+
+
+
+lat
+float
+Yes
+[[Latitude
+
+
+lon
+float
+Yes
+[[Longitude
+
+
+alt
+float/txt
+Yes
+* means all altitudes[Altitude]]
+
+
+dir
+float/txt
+Yes
+Wind directionfloat
+
+
+
+spd
+float/txt
+Yes
+Wind speeds[[Speed]
+
+
+
+Back to command reference.

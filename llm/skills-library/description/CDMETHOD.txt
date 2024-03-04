@@ -1,0 +1,25 @@
+CDMETHOD: Cdmethod
+Set conflict detection method. When called without arguments, the current CD method is printed to the console.
+Usage:
+CDMETHOD [method]
+
+Arguments:
+
+
+
+Name
+Type
+Required
+Description
+
+
+
+
+cdmethod
+txt
+no
+The name of the conflict detection method.
+
+
+
+Back to command reference.

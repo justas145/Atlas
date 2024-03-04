@@ -1,0 +1,26 @@
+SWRAD: Swrad
+Switch on/off elements and background of map/radar view
+Usage:
+SWRAD [element]
+
+Arguments:
+
+
+
+Name
+Type
+Required
+Description
+
+
+
+
+element
+txt
+Yes
+Element and background of map/radar view [1]
+
+
+
+[1] The available element and background are: GEO, FIR, APT, VOR, WPT, WP, NAV, SAT, ADSB, LAB
+Back to command reference.

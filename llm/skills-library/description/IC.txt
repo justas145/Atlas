@@ -1,0 +1,34 @@
+IC: Initial Condition
+Load a new scenario file (an initial condition), or re-load the previous scenario file again. When called without arguments an Open file dialog is shown. When called as:
+IC IC
+
+the same scenario file is run as the last time an IC command was issued (which is saved in the IC.scn file).
+Usage:
+IC [IC/filename]
+
+Arguments:
+
+
+
+Name
+Type
+Required
+Description
+
+
+
+
+IC
+string
+no
+'IC IC' reloads the current initial condition.
+
+
+filename
+string
+no
+Load the scenario in file 'filename'
+
+
+
+Back to command reference.

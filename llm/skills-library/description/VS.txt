@@ -1,0 +1,31 @@
+VS: Set vertical speed during climb/descent
+Vertical speed setting for the autopilot [ft/min]. This command only has an effect when the aircraft is climbing or descending, so after an ALT command. When in altitude hold mode (flying level) this command has no effect.
+Usage:
+VS acid,vspd
+
+Arguments:
+
+
+
+Name
+Type
+Required
+Description
+
+
+
+
+acid
+txt
+Yes
+Aircraft ID
+
+
+vspd
+float
+Yes
+Vertical speed [ft/min]
+
+
+
+Back to command reference.

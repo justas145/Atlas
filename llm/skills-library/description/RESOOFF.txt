@@ -1,0 +1,25 @@
+RESOOFF: Resooff
+Switch for conflict resolution module. The switch that will turn OFF the conflict resolution module for particular aircraft that will not avoid others.
+Usage:
+RESOOFF [acid]
+
+Arguments:
+
+
+
+Name
+Type
+Required
+Description
+
+
+
+
+acid
+txt
+Yes
+Aircraft id
+
+
+
+Back to command reference.

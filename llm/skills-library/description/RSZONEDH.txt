@@ -1,0 +1,25 @@
+RSZONEDH: Rszonedh
+Set half of vertical dimension of conflict resolution zone.
+Usage:
+RSZONEDH [height]
+
+Arguments:
+
+
+
+Name
+Type
+Required
+Description
+
+
+
+
+height
+float
+Yes
+Height [ft]
+
+
+
+Back to command reference.

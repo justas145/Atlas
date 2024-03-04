@@ -1,0 +1,34 @@
+RESO: Reso
+Set resolution method. There are several available methods that can be used:
+
+OFF: Do Nothing
+MVP: Modified Voltage Potential
+
+EBY: Method developed by Martin S. Eby
+
+SWARM: Swarm theory
+
+
+Usage:
+RESO [method]
+
+Arguments:
+
+
+
+Name
+Type
+Required
+Description
+
+
+
+
+method
+OFF/MVP/EBY/SWARM
+Yes
+Conflict resolution method
+
+
+
+Back to command reference.

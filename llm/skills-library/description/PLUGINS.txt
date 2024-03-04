@@ -1,0 +1,34 @@
+PLUGINS: Plugins
+List all plugins, load a plugin, or remove a loaded plugin.
+BlueSky looks for plugins in the plugins directory (in the bluesky root folder when you run BlueSky from source, or in $home/bluesky/plugins when you run a packaged version of BlueSky). On startup, BlueSky automatically detects the available plugins in this folder. If you want to automatically load particular plugins on startup add the following to your bluesky settings file (settings.cfg, situated either in the bluesky root folder when you run from source, or in $home/bluesky):
+enabled_plugins = ['plugin1', 'plugin2', ..., 'pluginn']
+Here, pluginn is the name you give your plugin.
+Usage:
+PLUGINS LIST or LOAD plugin or REMOVE plugin
+
+Arguments:
+
+
+
+Name
+Type
+Optional
+Description
+
+
+
+
+LIST/LOAD/REMOVE
+txt
+no
+List all plugins, or (un)load a plugin
+
+
+plugin
+txt
+yes
+The name of the plugin to be (un)loaded
+
+
+
+Back to command reference.

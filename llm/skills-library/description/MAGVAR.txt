@@ -1,0 +1,21 @@
+MAGVAR: Magnetic variation (declination)
+Get magnetic variation on a position in degrees. Will be shown in console.
+Usage:
+MAGVAR latlon/acid/airport/waypoint
+
+Arguments:
+
+
+
+Name
+Type
+Required
+Description
+
+
+
+
+latlon/acid/airport/waypoint
+location
+yes
+position where magnetic variation is wanted

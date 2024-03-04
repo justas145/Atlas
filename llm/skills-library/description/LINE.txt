@@ -1,0 +1,49 @@
+LINE: Line
+Draw a line on the radar screen between two coordinates.
+Usage:
+LINE name,lat0,lon0,lat1,lon1
+
+Arguments:
+
+
+
+Name
+Type
+Required
+Description
+
+
+
+
+name
+txt
+Yes
+Line name
+
+
+lat0
+float
+Yes
+[[Latitude
+
+
+lon0
+float
+Yes
+[[Longitude
+
+
+lat1
+float
+Yes
+[[Latitude
+
+
+lon1
+float
+Yes
+[[Longitude
+
+
+
+Back to command reference.
