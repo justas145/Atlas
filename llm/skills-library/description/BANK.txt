@@ -1,0 +1,11 @@
+BANK: bank limit
+Set BANK angle limit (e.g. for autopilot)
+Usage:
+BANK acid,bankangle (deg)
+
+Arguments:
+
+Name      | Type  | Required | Description                    
+----------+-------+----------+--------------------------------
+acid      | txt   | Yes      | Aircraft id                    
+bankangle | float | Yes      | Aircraft bank angle limit [deg]

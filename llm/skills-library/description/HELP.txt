@@ -1,0 +1,11 @@
+HELP: Help
+Show help on a command. If no arguments are given, HELP returns info on itself.
+"PDF" is a special argument: this opens a .pdf file with information of all commands.
+Usage:
+HELP command
+
+Arguments:
+
+Name    | Type | Required | Description                           
+--------+------+----------+---------------------------------------
+Command | txt  | No       | Command name on which help is required

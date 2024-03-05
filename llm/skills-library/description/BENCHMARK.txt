@@ -1,0 +1,11 @@
+BENCHMARK: run benchmark
+Load a new initial condition, and time it to benchmark BlueSky. When no file is given the current initial condition is re-started and used as a benchmark. By default, the benchmark is run for 300 seconds. Optionally a different duration can be passed.
+Usage:
+BENCHMARK [filename,duration]
+
+Arguments:
+
+Name     | Type   | Required | Description                                  
+---------+--------+----------+----------------------------------------------
+filename | string | no       | Load the initial condition in file 'filename'
+duration | float  | no       | Set the duration of the benchmark

@@ -1,0 +1,34 @@
+ADDWPTMODE: AddwptMode
+Changes the mode and parameters of the ADDWPT command. Also displays the current mode of the ADDWPT command if no optional arguments are given.
+Usage:
+ADDWPTMODE acid, [FLYBY/FLYOVER/FLYTURN/TURNRAD/TURNSPD],[spd/radius]
+
+Arguments:
+
+Name    | Type  | Required | Description                                                                                   
+--------+-------+----------+-----------------------------------------------------------------------------------------------
+acid    | txt   | yes      | Aircraft id                                                                                   
+FLYBY   | txt   | no       | Make next ADDWPTs for this aircraft insert fly-by waypoints (default)                         
+FLYOVER | txt   | no       | Make next ADDWPTs for this aircraft insert fly-over waypoints                                 
+FLYTURN | txt   | no       | Make next ADDWPTs for this aircraft insert fly-turn waypoints                                 
+TURNRAD | txt   | no       | Sets the turn radius used when performing turns at next ADDWPTs that insert fly-turn waypoints
+TURNSPD | txt   | no       | Sets the turn speed used when performing turns at next ADDWPTs that insert fly-turn waypoints 
+radius  | txt   | no       | Turn radius to use at next ADDWPTs that insert fly-turn waypoints                             
+spd     | float | no       | Turn speed to use at next ADDWPTs that insert fly-turn waypoints                              
+
+
+Examples:
+Print the current mode of the ADDWPT command in the console:
+ADDWPTMODE acid
+
+Changing the ADDWPT mode to TURNSPD:
+ADDWPTMODE acid TURNSPD
+
+Setting the turn speed for the next ADDWPT commands:
+ADDWPT acid TURNSPD 15
+
+Related commands:
+
+Name   | Description                                           
+-------+-------------------------------------------------------
+ADDWPT | Command to add a waypoint to the route of an aircraft.

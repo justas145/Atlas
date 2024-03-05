@@ -1,0 +1,12 @@
+FIXDT: Set fixed timestep
+NOTE: This functionality is only used in the pygame version of BlueSky!
+Enable/disable a fixed timestep for the simulation. You can optionally set an end time.
+Usage:
+FIXDT ON/OFF,[t_end]
+
+Arguments:
+
+Name   | Type  | Required | Description                
+-------+-------+----------+----------------------------
+ON/OFF | bool  | yes      | Toggle Fixdt on or off     
+t_end  | float | no       | Optional end time for fixdt
