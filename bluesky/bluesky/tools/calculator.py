@@ -55,3 +55,15 @@ def calculator(txt):
             " or geo functions: dist,qdr,qdrdist,qdrpos,rwgs84," \
              +"kwikdist,latlondist,lat2txt,lon2txt,latlon2txt"
     return True, str(x)
+
+# from meters to feet and other way around
+def m2ft(x):
+    return x*3.28084
+def ft2m(x):
+    return x/3.28084
+
+# from knots to m/s and other way
+def kts2ms(x):
+    return x*0.51440329
+def ms2kts(x):
+    return x/0.51440329

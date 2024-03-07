@@ -6,7 +6,7 @@ import numpy as np
 import bluesky as bs
 from bluesky import stack
 from bluesky.tools.geo import qdrdist
-
+from bluesky.tools.calculator import ft2m, m2ft, kts2ms, ms2kts
 # Enumerated condtion types
 alttype, spdtype, postype = 0, 1, 2
 
@@ -96,16 +96,31 @@ class Condition():
     def ataltcmd(self,acidx,targalt,cmdtxt):
         actalt = bs.traf.alt[acidx]
         self.addcondition(acidx, alttype, targalt, actalt, cmdtxt)
+        targetalt_ft = ft2m(targalt)
+        # echo results
+        bs.stack.stack(f"ECHO {bs.traf.id[acidx]} AT ALTITUDE {targalt} meters / {targetalt_ft} feet will excecute command: {cmdtxt}")
+        
         return True
 
     def atspdcmd(self, acidx, targspd, cmdtxt):
         actspd = bs.traf.tas[acidx]
         self.addcondition(acidx, spdtype, targspd, actspd,cmdtxt)
+        targspd_kts = ms2kts(targspd)
+        # echo
+        bs.stack.stack(
+            f"ECHO {bs.traf.id[acidx]} AT SPEED {targspd} m/s / {targspd_kts} kts will excecute command: {cmdtxt}")
+        
         return True
 
     def atdistcmd(self, acidx, lat, lon, targdist, cmdtxt):
         qdr, actdist = qdrdist(bs.traf.lat[acidx], bs.traf.lon[acidx], lat, lon)
         self.addcondition(acidx, postype, targdist, actdist, cmdtxt, (lat,lon))
+        
+        # echo
+        targetdist_ft = ft2m(targdist)
+        bs.stack.stack(
+            f"ECHO {bs.traf.id[acidx]} AT DISTANCE {targdist} meters / {targetdist_ft} feet from latitutde: {lat} longitude: {lon} will excecute command: {cmdtxt}")
+        
         return True
 
     def addcondition(self,acidx, icondtype, target, actual, cmdtxt,latlon=None):
@@ -122,7 +137,8 @@ class Condition():
         self.cmd.append(cmdtxt)
 
         self.ncond = self.ncond+1
-        #print("addcondition: self.ncond",self.ncond)
+        
+
         return
 
     def renameac(self,oldid,newid):
