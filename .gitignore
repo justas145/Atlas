@@ -1,4 +1,3 @@
 venv/
 .env
 venv_test/
-llm/skills-library/vectordb/
