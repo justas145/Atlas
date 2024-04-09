@@ -702,6 +702,7 @@ class Autopilot(Entity, replaceable=True):
 
         bs.traf.swlnav[idx] = False
         # Everything went ok!
+        #bs.stack.stack(f"ECHO heading set to {hdg} for aircraft {idx}")
         return True
 
     @stack.command(name='SPD', aliases=("SPEED",))
