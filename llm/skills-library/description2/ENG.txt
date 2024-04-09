@@ -1,0 +1,14 @@
+ENG: Eng
+Change to a different engine type. When engine_id is empty, it will show the available engine types related to the aircraft.
+Usage:
+ENG acid,[engine_id]
+
+Arguments:
+
+Name      | Type | Required | Description    
+----------+------+----------+----------------
+acid      | txt  | Yes      | Aircraft id    
+engine_id | txt  | No       | Engine type [1]
+
+
+[1] Engine types available are related to the aircraft type

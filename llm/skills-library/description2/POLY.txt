@@ -1,0 +1,15 @@
+POLY: Poly
+Draw a random polygon on the radar display with a user defined name. This polygon can be made into an area of interest using the AREA command.
+NOTE:
+Usage:
+POLY name,lat1,lon1,lat1,lon1, ...
+
+Arguments:
+
+Name | Type  | Required | Description        
+-----+-------+----------+--------------------
+name | txt   | yes      | name of the polygon
+lat1 | float | yes      | [[latitude         
+lon1 | float | yes      | [[longitude        
+lat2 | float | yes      | [[latitude         
+lon2 | float | yes      | [[longitude
