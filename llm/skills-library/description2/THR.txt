@@ -1,0 +1,11 @@
+THR: Set throttle setting or AUTO
+By default, the autothrottle system is on, but this command allows to override this with a value between 0 and 1 or 0% and 100%. Setting it to AUTO enables the ATS (autothrottle system) again.
+Usage:
+THR acid [throttle]
+
+Arguments:
+
+Name     | Type            | Required | Description         
+---------+-----------------+----------+---------------------
+acid     | string          | yes      | Aircraft id         
+throttle | AUTO/IDLE/float | No       | The throttle setting
