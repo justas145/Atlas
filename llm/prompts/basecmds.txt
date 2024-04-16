@@ -4,12 +4,10 @@ ADDWPTMODE - Change mode and parameters of ADDWPT command.
 AFTER - Add waypoint after specified waypoint to aircraft route.
 ALT - Altitude command for autopilot, setting vertical speed if needed.
 AREA - Define area of interest for aircraft simulation with shapes.
-ASAS ON/OFF - Enable/disable conflict detection and resolution system.
-CDMETHOD MODULE-NAME - Set conflict detection method.
-RESO ON/OFF - Enable/disable conflict resolution system.
-RESO MODULE-NAME - Set conflict resolution method.
+ASAS - Enable/disable conflict detection and resolution system.
+CDMETHOD - Set conflict detection method.
+RESO - Enable/disable conflict resolution system.
 enabled_plugins = ['NAME'] - Activate conflict resolution plugin.
-resumenav() - Prevent bouncing conflicts when returning to route.
 AT - Add alt/speed constraint or command at a waypoint.
 ATALT - Execute command when aircraft reaches specified altitude.
 ATDIST - Execute command when aircraft reaches specified distance to position.
