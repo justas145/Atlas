@@ -161,13 +161,14 @@ def GetConflictInfo(commad: str = 'SHOWTCPA'):
     - str: conflict information between aircraft pairs
     """
     client.send_event(b'STACK', 'SHOWTCPA')
+    client.send_event(b'STACK', 'GETACIDS')
     time.sleep(1)
     sim_output = update_until_complete(client)
     return sim_output
 
 
 @tool
-def ContinueMonitoring(time: str = '5'):
+def ContinueMonitoring(duration: str = '5'):
     """Monitor for conflicts between aircraft pairs for a specified time. 
     Parameters:
     - time (str): The time in seconds to monitor for conflicts. Default is 5 seconds.
@@ -178,7 +179,8 @@ def ContinueMonitoring(time: str = '5'):
     Returns:
     - str: The conflict information between aircraft pairs throughout the monitoring period.
     """
-    for i in range(int(time)):
+    sim_output = ''
+    for i in range(int(duration)):
         client.send_event(b'STACK', 'SHOWTCPA')
         time.sleep(1)
         sim_output += str(i) + ' sec: \n' + \
@@ -241,7 +243,7 @@ def QueryDatabase(input: str):
 
 
 tools = [GetAllAircraftInfo, GetConflictInfo,
-         SendCommand, QueryDatabase]
+         SendCommand, QueryDatabase, ContinueMonitoring]
 
 ### Tools ###
 
@@ -265,7 +267,7 @@ user_input = st.text_area(
 
 # Select Model
 model_names = ["mixtral", "llama2:70b", "gpt-3.5-turbo-0125",
-               "gpt-4-1106-preview", "claude-3-opus-20240229"]
+               "gpt-4-turbo-2024-04-09", "claude-3-opus-20240229"]
 model_name = st.selectbox("Select a Model", model_names)
 
 # Select Model Type
@@ -283,7 +285,7 @@ elif model_name == "claude-3-opus-20240229":
 
 # Scenario File Selection
 scenario = st.selectbox("Select a Scenario File", [
-                        "case1", "case2", "case3", "case4", "case5"])
+                        "case1", "case2", "case3", "case4", "case5", "case6"])
 
 # Agent Execution based on Model Type
 if st.button("Run"):
@@ -294,18 +296,18 @@ if st.button("Run"):
         react_prompt.template = user_template
         react_agent = create_react_agent(llm, tools, react_prompt)
         agent_executor = AgentExecutor(
-            agent=react_agent, tools=tools, verbose=True, handle_parsing_errors=True)
+            agent=react_agent, tools=tools, verbose=True, handle_parsing_errors=True, max_iterations=70)
     elif model_type == "xml":
         xml_prompt = hub.pull("hwchase17/xml-agent-convo")
         xml_agent = create_xml_agent(llm, tools, xml_prompt)
         agent_executor = AgentExecutor(
-            agent=xml_agent, tools=tools, verbose=True, handle_parsing_errors=True)
+            agent=xml_agent, tools=tools, verbose=True, handle_parsing_errors=True, max_iterations=70)
     elif model_type == "openai":
         openai_function_prompt = hub.pull("hwchase17/openai-functions-agent")
         openai_function_agent = create_openai_functions_agent(
             llm, tools, openai_function_prompt)
         agent_executor = AgentExecutor(
-            agent=openai_function_agent, tools=tools, verbose=True, handle_parsing_errors=True)
+            agent=openai_function_agent, tools=tools, verbose=True, handle_parsing_errors=True, max_iterations=70)
 
     client.send_event(b'STACK', f'IC simple/conflicts/2ac/{scenario}.scn')
     # Assume update_until_complete is defined elsewhere
