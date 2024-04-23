@@ -1,0 +1,34 @@
+# Sim Configuration
+0:00:00.00>navdb worldnav
+0:00:00.00>NOISE OFF
+0:00:00.00>radardt 0.0
+0:00:00.00>navdt 0.0
+0:00:00.00>rtf 1.0
+0:00:00.00>SWTAXI ON
+0:00:00.00>pan tfn
+
+# Revised Aircraft Configuration - Adjusted positions and headings
+# KLM Flight 4805 - Positioned for takeoff
+0:00:00.00>CRE KLM4805 B747 28.482500 -16.341944 150 0.0
+0:00:00.00>LNAV KLM4805, ON
+0:00:00.00>VNAV KLM4805, ON
+0:00:00.00>SNAV KLM4805, ON
+
+# Pan Am Flight 1736 - Positioned on the runway
+0:00:00.00>CRE PANAM1736 B747 28.482534 -16.342000 30 0.0
+0:00:00.00>LNAV PANAM1736, OFF
+0:00:00.00>VNAV PANAM1736, OFF
+0:00:00.00>SNAV PANAM1736, ON
+
+# Assuming KLM is ready for takeoff facing the north
+0:00:10.00>KLM4805 HDG 010
+0:00:10.00>KLM4805 THR 100
+
+# Pan Am is taxiing to leave the runway, not aware of KLM's takeoff
+0:01:00.00>PANAM1736 HDG 010
+0:01:00.00>PANAM1736 SPD 10
+
+# KLM accelerates to takeoff speed, still on a collision course
+0:01:20.00>KLM4805 SPD 180
+
+# No further commands to illustrate collision avoidance failure

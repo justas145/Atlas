@@ -1,0 +1,97 @@
+input.input|outputs.output
+time: 1701:57.0, source: Clipper1736 communications co-pilot, message: Tenerife the Clipper one seven three six|Command is clear.
+time: 1702:01.8, source: APP, message: Clipper one seven three six Tenerife.|Command is clear.
+time: 1702:03.6, source: Clipper1736 communications co-pilot, message: Ah- We were instructed to contact you and also to taxi down the runway, is that correct?|Command is clear.
+time: 1702:08.4, source: APP, message: Affirmative, taxi into the runway and -ah leave the runway third, third to your left, (background conversation in the tower).|Command is clear.
+time: 1702:16.4, source: Clipper1736 communications co-pilot, message: Third to the left, O.K.|Command is clear.
+time: 1702:18.4, source: Clipper1736 flight engineer, message: Third he said.|Command is clear.
+time: 1702:18.4, source: Clipper1736 ?, message: Three.|"Sender: LLM, Receiver: Clipper1736, message: Please confirm, the instruction was to take the third exit to the left, not ""three."" Ensure to follow the correct taxi instructions."
+time: 1702:20.6, source: APP, message: -ird one to your left.|Command is clear.
+time: 1702:21.9, source: Clipper1736 captain, message: I think he said first.|Sender: LLM, Receiver: Clipper1736 Captain, message: The instruction from ATC was to take the third exit to the left, not the first. Please confirm and proceed with the third exit.
+time: 1702:26.4, source: Clipper1736 co-pilot, message: I'll ask him again.|Command is clear.
+time: 1702:32.2, source: Clipper1736 co-pilot, message: Left turn.|Sender: LLM, Receiver: Clipper1736 Co-pilot, message: To clarify, the instruction was to take the third exit to the left. Please confirm this maneuver with ATC if unsure.
+time: 1702:33.1, source: Clipper1736 captain, message: I don't think they have take-off minimums anywhere right now.|Command is clear.
+time: 1702:39.2, source: Clipper1736 captain, message: What really happened over there today?|Command is clear.
+time: 1702:41.6, source: Clipper1736 co-pilot, message: They put a bomb (in) the terminal, Sir, right where the check-in counters are.|Command is clear.
+time: 1702:46.6, source: Clipper1736 captain, message: Well we asked them if we could hold and -uh- I guess you got the word, we landed here **|Command is clear.
+time: 1702:49.8, source: APP, message: KLM4805 how many taxiway -ah- did you pass?|Command is clear.
+time: 1702:55.6, source: KLM4805, message: I think we just passed charlie four now.|Command is clear.
+time: 1702:59.9, source: APP, message: O.K. ... at the end of the runway make one eighty and report -ah- ready -ah- for ATC clearance (background conversation in the tower).|Command is clear.
+time: 1703:09.3, source: Clipper1736 co-pilot, message: The first one is a ninety degree turn.|Sender: LLM, Receiver: Clipper1736 Co-pilot, message: To clarify, the instruction was to take the third exit to the left. Please follow the correct taxi instructions and confirm with ATC if needed.
+time: 1703:11.0, source: Clipper1736 captain, message: Yeah, O.K.|Command is clear.
+time: 1703:12.1, source: Clipper1736 co-pilot, message: Must be the third ... I'll ask him again.|Command is clear.
+time: 1703:14.2, source: Clipper1736 captain, message: O.K.|Command is clear.
+time: 1703:16.6, source: Clipper1736 captain, message: We could probably go in it's ah ...|Command is clear.
+time: 1703:19.1, source: Clipper1736 captain, message: You gotta make a ninety degree turn.|Sender: LLM, Receiver: Clipper1736 Captain, message: Please confirm the instruction with ATC. The taxi instruction was to take the third exit to the left, not necessarily a ninety-degree turn. Ensure to follow the correct exit as per ATC guidance.
+time: 1703:21.6, source: Clipper1736 captain, message: Yeah, uh.|Command is clear.
+time: 1703:21.6, source: Clipper1736 co-pilot, message: Ninety degree turn to get around this ... this one down here it's a forty five.|Sender: LLM, Receiver: Clipper1736 Co-pilot, message: Please confirm with ATC on the specific turn directions. The instruction was to take the third exit to the left. Ensure clarity on the angle of the turn required for accurate compliance.
+time: 1703:29.3, source: Clipper1736 communications co-pilot, message: Would you confirm that you want the clipper one seven three six to turn left at the third intersection? (1703:35.4).|Command is clear.
+time: 1703:35.1, source: APP, message: The third one, sir, one; two, three, third, third one (1703:38.3)..|Command is clear.
+time: 1703:38.3, source: Clipper1736 ?, message: One two (four).|Sender: LLM, Receiver: Clipper1736, message: Please clarify if you are confirming the taxi instructions or require further details. The instruction from ATC was to turn left at the third intersection. Confirm this maneuver to ensure correct compliance.
+time: 1703:39.0, source: Clipper1736 captain, message: Good.|Command is clear.
+time: 1703:40.1, source: Clipper1736 captain, message: That's what we need right, the third one.|Command is clear.
+time: 1703:42.9, source: Clipper1736 flight engineer, message: Uno, dos, tres.|Command is clear.
+time: 1703:44.9, source: Clipper1736 flight engineer, message: Tres - uh - si.|Command is clear.
+time: 1703:46.5, source: Clipper1736 captain, message: Right.|Command is clear.
+time: 1703:47.6, source: Clipper1736 flight engineer, message: We'll make it yet.|Command is clear.
+time: 1703:47.6, source: APP, message: ...er seven one three six report leaving the runway.|Sender: LLM, Receiver: APP, message: Please confirm the call sign. It seems there might have been a miscommunication. The call sign should be Clipper1736, not seven one three six. Please verify and correct as necessary.
+time: 1703:49.1, source: Clipper1736 co-pilot, message: Wing flaps?|Command is clear.
+time: 1703:50.2, source: Clipper1736 captain, message: Ten, indicate ten, leading edge lights are green.|Command is clear.
+time: 1703:54.1, source: Clipper1736 ?, message: Get that.|Command is clear.
+time: 1703:55.0, source: Clipper1736 communications co-pilot, message: Clipper one seven three six (1703:56.4)|Command is clear.
+time: 1703:56.5, source: Clipper1736 co-pilot, message: Yaw damp and instrument?|Command is clear.
+time: 1703:58.6, source: Clipper1736 captain, message: Ah- Bob we'll get a left one *|Command is clear.
+time: 1703:59.3, source: Clipper1736 co-pilot, message: I got a left.|Command is clear.
+time: 1704:00.6, source: Clipper1736 captain, message: Did you?|Command is clear.
+time: 1704.00.9, source: Clipper1736 co-pilot, message: And -ah- need a right.|Command is clear.
+time: 1704:02.6, source: Clipper1736 captain, message: I'll give you a little *|Command is clear.
+time: 1704:03.8, source: Clipper1736 co-pilot, message: Put a little aileron in this thing.|Command is clear.
+time: 1704:05.0, source: Clipper1736 captain, message: O.K., here's a left and I'll give you a right one right here.|Command is clear.
+time: 1704:09.7, source: Clipper1736 captain, message: O.K. right turn right and left yaw.|Command is clear.
+time: 1704:11.4, source: Clipper1736 co-pilot, message: Left yaw checks.|Command is clear.
+time: 1704:12.4, source: Clipper1736 captain, message: O.K., here's the rudders.|Command is clear.
+time: 1704:28.5, source: Clipper1736 ?, message: O.K.|Command is clear.
+time: 1704:34.5, source: Clipper1736 ?, message: ***|Command is unclear. Please provide more details or clarify the message.
+time: 1704:37.2, source: Clipper1736 co-pilot, message: Weight and balance finals?|Command is clear.
+time: 1704:37.7, source: Clipper1736 ?, message: (Sounds similar to stabilizer trim)|Command is unclear. Please provide more details or clarify the message.
+time: 1704:39.8, source: Clipper1736 flight engineer, message: We got four and a half and we weigh five thirty four (sound of stabilizer trim).|Command is clear.
+time: 1704:44.6, source: Clipper1736 co-pilot, message: Four and a half on the right.|Command is clear.
+time: 1704:46.8, source: Clipper1736 co-pilot, message: Engineer's taxi check.|Command is clear.
+time: 1704:48.4, source: Clipper1736 flight engineer, message: Taxi check is complete.|Command is clear.
+time: 1704:52.1, source: Clipper1736 captain, message: O.K., it'll be standard, we gonna go straight out there till we get thirty five hundred feet then we're gonna make that reversal and go back' out to * fourteen.|Command is clear.
+time: 1704:58.2, source: APP, message: -m eight seven zero five and clipper one seven ... three six, for your information, the centre line lighting is out of service. (APP transmission is readable but slightly broken.)|Sender: LLM, Receiver: Clipper1736, message: Please note that the center line lighting is currently out of service. Confirm receipt and adjust your taxiing and takeoff procedures accordingly.
+time: 1705:05.8, source: KLM4805, message: I copied that.|Command is clear.
+time: 1705:07.7, source: Clipper1736 communications co-pilot, message: Clipper one seven three six.|Command is clear.
+"time: 1705:09.6, source: Clipper1736 captain, message: We got center line markings (* only) (could be ""don't we) they count the same thing as ... we need eight hundred meters if you don't have that center line... I read that on the back (of this) just a while ago."|Command is clear.
+time: 1705:22.0, source: Clipper1736 captain, message: That's two.|Command is clear.
+time: 1705:23.5, source: Clipper1736 flight engineer, message: Yeh, that's forty-five there.|Command is clear.
+time: 1705:25.7, source: Clipper1736 captain, message: Yeh.|Command is clear.
+time: 1705:26.5, source: Clipper1736 co-pilot, message: That's this one right here.|Command is clear.
+time: 1705:27.2, source: Clipper1736 captain, message: (Yeh)I know.|Command is clear.
+time: 1705:28.1, source: Clipper1736 flight engineer, message: O.K.|Command is clear.
+time: 1705:28.5, source: Clipper1736 flight engineer, message: Next one is almost a forty-five, huh yeh.|Command is clear.
+time: 1705:30.6, source: Clipper1736 captain, message: But it goes...|Command is unclear. Please provide more details or clarify the message.
+time: 1705:32.4, source: Clipper1736 captain, message: Yeh, but it goes ... ahead, I think (it's) gonna put us on (the) taxiway.|Command is clear.
+time: 1705:35.9, source: Clipper1736 flight engineer, message: Yeah, just a little bit yeh.|Command is clear.
+time: 1705:39.8, source: Clipper1736 ?, message: O.K., for sure.|Command is unclear. Please provide more details or clarify the message.
+time: 1705:40.0, source: Clipper1736 co-pilot, message: Maybe he, maybe he counts these (are) three.|Command is clear.
+time: 1705:44.8, source: Clipper1736 ?, message: I like this.|Command is unclear. Please provide more details or clarify the message.
+time: 1705:44.8, source: KLM4805, message: Uh, the KLM ... four eight zero five is now ready for take-off ... uh and we're waiting for our ATC clearance.|Command is clear.
+time: 1705:53.4, source: APP, message: KLM eight seven * zero five uh you are cleared to the Papa Beacon climb to and maintain flight level nine zero right turn after take-off proceed with heading zero four zero until intercepting the three two five radial from Las Palmas VOR. (1706:08.2)|"Sender: LLM, Receiver: APP, message: Please confirm the correct call sign for the clearance. The message references ""KLM eight seven zero five,"" but a previous message from the aircraft identified it as ""KLM four eight zero five."" Please clarify to ensure the correct aircraft receives their ATC clearance."
+time: 1706:09.6, source: KLM4805, message: Ah roger, sir, we're cleared to the Papa Beacon flight level nine zero, right turn out zero four zero until intercepting the three two five and we're now (at take-off).|"Sender: LLM, Receiver: KLM4805, message: Please confirm the call sign used in your clearance. The initial clearance was issued to ""KLM eight seven zero five,"" but your call sign is ""KLM four eight zero five."" Ensure the clearance is for your flight before proceeding with the takeoff."
+time: ca. 1706:13, source: KLM4805 captain, message: We gaan. (We're going)|"Sender: LLM, Receiver: KLM4805, message: Please hold takeoff and confirm that the clearance was indeed intended for ""KLM four eight zero five"" and not ""KLM eight seven zero five"" as initially communicated by ATC. It's essential to ensure the correct aircraft is executing the clearance for safety."
+time: 1706:18.19, source: APP, message: OK.|Sender: LLM, Receiver: APP, message: Please confirm the correction of the call sign and clearance for KLM4805 before they proceed with takeoff. This is essential to ensure clear and accurate communication for the safety of the flight.
+time: 1706:19.3, source: RDO, message: No .. eh.|Sender: LLM, Receiver: APP, message: It appears there is confusion or disagreement about the previous message or clearance. Please clarify and confirm the correct call sign and clearance instructions for KLM4805 to ensure all communications are clear and accurate.
+time: 1706:20.08, source: APP, message: Stand by for take-off, I will call you.|Command is clear.
+time: 1706:20.3, source: RDO, message: And we're still taxiing down the runway, the clipper one seven three six.|Sender: LLM, Receiver: APP, message: Please note that Clipper1736 is still taxiing down the runway. Coordination and clearance confirmation for all movements on the runway are crucial for safety. Please manage the traffic accordingly to prevent any conflicts.
+time: 1706:19.39 - 1706:23.19, source: RDO and APP communications, message: caused a shrill noise in KLM cockpit - messages not heard by KLM crew.|Sender: LLM, Receiver: APP, message: There was a shrill noise in the KLM4805 cockpit, causing the crew to miss recent communications. Please repeat the necessary instructions to ensure they are aware of their current status and any required actions, especially regarding their hold for takeoff confirmation.
+time: 1706:25.6, source: APP, message: Roger alpha one seven three six report when runway clear|"Sender: LLM, Receiver: APP, message: Please confirm the call sign, as you referenced ""alpha one seven three six."" The correct call sign should be ""Clipper one seven three six"" based on previous communications. Please ensure the message is directed to the correct aircraft for accurate reporting and safety."
+time: 1706:29.6, source: RDO, message: OK, we'll report when we're clear.|Command is clear.
+time: 1706:32.43, source: KLM4805 flight engineer, message: Is hij er niet af dan? {Is he not clear then?}|Sender: LLM, Receiver: KLM4805 cockpit crew, message: Please confirm with ATC regarding the status of Clipper1736 on the runway to ensure it is clear before proceeding with any further actions. It is essential to maintain clear and direct communication with ATC for updates on runway status for safety.
+time: 1706:34.1, source: KLM4805 captain, message: Wat zeg je? {What do you say?}|Sender: LLM, Receiver: KLM4805 captain, message: It appears there might have been some communication difficulties within the cockpit. Please ensure that all messages from ATC are clearly understood and that the current status of Clipper1736 regarding the runway clearance is confirmed with ATC before proceeding. Safety and clarity in communication are critical at this stage.
+time: 1706:34.15, source: KLM4805 ?, message: Yup.|"Sender: LLM, Receiver: KLM4805 cockpit crew, message: Please confirm the source and intent of the brief communication ""Yup."" It is critical to maintain clear and unambiguous communication, particularly in the current context of ensuring runway clearance and coordination with ATC."
+time: 1706:34.7, source: KLM4805 flight engineer, message: Is hij er niet af, die Pan American? {Is he not clear that Pan American?}|Sender: LLM, Receiver: KLM4805 cockpit crew, message: It is crucial to confirm directly with ATC regarding the status of Clipper1736, the Pan American aircraft, on the runway. Please request an update from ATC to ensure all information is accurate and current before making any decisions or movements.
+time: 1706:35.7, source: KLM4805 captain, message: Jawel. {Oh yes. - emphatic}|Sender: LLM, Receiver: KLM4805 captain, message: If you believe that Clipper1736 is clear of the runway, please urgently confirm this information with ATC to ensure there are no misunderstandings or miscommunications regarding runway status. This confirmation is critical for ensuring the safety of all aircraft in the vicinity.
+time: 1706:40, source: PanAm captain sees landinglights of KLM Boeing at approx. 700m, message: |Sender: LLM, Receiver: PanAm Captain, APP, message: The PanAm captain has visual contact with the landing lights of the KLM Boeing at approximately 700 meters. Please confirm the positions and intentions of both aircraft immediately to ensure runway safety and prevent any potential conflict. Clear and prompt communication from ATC is required to manage this situation safely.
+time: 1706:47.44, source: KLM4805 captain, message: [Scream]|Sender: LLM, Receiver: APP, message: Urgent attention required. There was a scream heard from the KLM4805 captain. Immediate action and confirmation of the situation on the runway involving KLM4805 and any nearby aircraft are necessary to assess and address any potential emergency. Please coordinate with all relevant parties to ensure safety.
+time: 1706:50, source: collision, message: |Sender: LLM, Receiver: Emergency Response Teams, APP, message: A collision has occurred. Immediate deployment of emergency response teams is required. ATC, please coordinate all necessary airport emergency services and notify all relevant authorities. Prioritize safety and provide support to all involved. Ensure all other aircraft in the vicinity are informed and managed to maintain safety.
