@@ -245,8 +245,6 @@ def QueryDatabase(input: str):
 tools = [GetAllAircraftInfo, GetConflictInfo,
          SendCommand, QueryDatabase, ContinueMonitoring]
 
-### Tools ###
-
 
 def invoke_until_success(llm):
     while True:
