@@ -1,0 +1,2 @@
+TIME: 00:00:05, SOURCE: ATC, MESSAGE: DAL123, turn right heading 090.
+TIME: 00:00:06, SOURCE: DAL132, MESSAGE: Turning right to 090, DAL132.

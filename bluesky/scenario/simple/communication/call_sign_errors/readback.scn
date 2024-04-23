@@ -1,0 +1,7 @@
+# Scenario Initialization
+00:00:00.00> CRE XYZ123, B737, 52.30805, 4.76417, 90, FL280, 300
+00:00:00.00> CRE XYZ132, A320, 52.31053, 4.76888, 270, FL280, 300
+
+# Miscommunication Event
+#00:00:05.00> ECHO Command issued for XYZ123, readback incorrectly by XYZ132.
+00:00:10.00> XYZ132 ALT FL300
