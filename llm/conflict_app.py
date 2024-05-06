@@ -3,11 +3,9 @@ from langchain_community.callbacks.streamlit import (
     StreamlitCallbackHandler,
 )
 from langchain_core.tracers.context import tracing_v2_enabled
-from langchain_google_genai import GoogleGenerativeAI
-from langchain_anthropic import AnthropicLLM, ChatAnthropic
 from langchain_community.chat_models import ChatOllama
 from langchain_openai import OpenAI, ChatOpenAI
-from langchain.agents import AgentExecutor, create_react_agent, create_json_chat_agent, create_xml_agent, create_openai_functions_agent
+from langchain.agents import AgentExecutor, create_react_agent, create_json_chat_agent, create_structured_chat_agent, create_openai_functions_agent
 from langchain import hub
 import sys
 sys.path.append('../bluesky')  # Adjust the path as necessary
@@ -32,7 +30,6 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain.agents.format_scratchpad.openai_tools import (
 
     format_to_openai_tool_messages,
-
 )
 from langchain.agents.output_parsers.openai_tools import OpenAIToolsAgentOutputParser
 from langchain.agents import AgentExecutor
@@ -44,7 +41,9 @@ from langchain_community.llms import Ollama
 from langchain.agents import tool
 from langchain.agents import tool, initialize_agent, AgentType, Tool
 import sys
-import os
+import requests
+
+load_dotenv(find_dotenv())
 
 # Initialization
 vectordb_path = 'C:/Users/justa/OneDrive/Desktop/Developer/LLM-Enhanced-ATM/llm/skills-library/vectordb'
@@ -87,7 +86,7 @@ def update_until_complete(client):
             complete_output += new_output  # Add non-empty output to complete output
 
         # If there are two consecutive empty outputs, break the loop
-        if empty_output_count >= 2:
+        if empty_output_count >= 5:
             break
 
     # It's assumed you want to keep the last update outside the loop
@@ -257,6 +256,22 @@ def invoke_until_success(llm):
             print("Invocation failed, trying again...")
             time.sleep(1)  # Wait for a short period before retrying
 
+def fetch_model_names(base_url):
+    api_endpoint = f"{base_url}/api/tags"
+    try:
+        response = requests.get(api_endpoint)
+        response.raise_for_status()  # Raises an HTTPError for bad responses
+        data = response.json()
+        model_names = [model['name'] for model in data.get('models', [])]
+        return model_names
+    except requests.RequestException as e:
+        return str(e)
+    
+
+def load_non_gpt_model(model_name):
+    llm = ChatOllama(base_url="https://ollama.junzis.com", model=model_name)
+    invoke_until_success(llm)
+    return llm
 
 
 # User Input
@@ -264,22 +279,39 @@ user_input = st.text_area(
     "Enter your input", value="Check if there are any conflicts between aircraft and if there are resolve them by changing altitude or heading. Your Goal is to have no conflicts between aircraft.")
 
 # Select Model
-model_names = ["mixtral", "llama2:70b", "gpt-3.5-turbo-0125",
-               "gpt-4-turbo-2024-04-09", "claude-3-opus-20240229"]
+model_names = fetch_model_names("https://ollama.junzis.com")
+
+# add gpt model names to the list
+gpt_models = ['gpt-4-turbo-2024-04-09', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-instruct']
+model_names.extend(gpt_models)
+
 model_name = st.selectbox("Select a Model", model_names)
 
 # Select Model Type
-model_types = ["react", "xml", "openai"]
+model_types = ["react", "structured", "openai"]
 model_type = st.selectbox("Select a Model Type", model_types)
 
 # Initialize LLM based on selection
-if model_name in ["mixtral", "llama2:70b"]:
-    llm = Ollama(base_url="https://ollama.junzis.com", model=model_name)
-    invoke_until_success(llm)
-elif "gpt" in model_name:
-    llm = ChatOpenAI(model=model_name)
-elif model_name == "claude-3-opus-20240229":
-    llm = AnthropicLLM(model=model_name)
+# Function to load non-GPT models with retries
+
+
+
+# Model selection dropdown
+
+# Check for the model in the session state or load it if not present or if model name has changed
+if 'llm' not in st.session_state or 'model_name' not in st.session_state or st.session_state['model_name'] != model_name:
+    if model_name not in gpt_models:
+        # Load non-GPT model if not in session state or if a different model is selected
+        st.session_state['llm'] = load_non_gpt_model(model_name)
+    elif "gpt" in model_name:
+        # Load GPT model if applicable and not in session state or if a different model is selected
+        st.session_state['llm'] = ChatOpenAI(model=model_name)
+    # Update the session state to reflect the current model
+    st.session_state['model_name'] = model_name
+
+# Retrieve the model from session state
+llm = st.session_state['llm']
+
 
 # Scenario File Selection
 scenario = st.selectbox("Select a Scenario File", [
@@ -295,11 +327,13 @@ if st.button("Run"):
         react_agent = create_react_agent(llm, tools, react_prompt)
         agent_executor = AgentExecutor(
             agent=react_agent, tools=tools, verbose=True, handle_parsing_errors=True, max_iterations=70)
-    elif model_type == "xml":
-        xml_prompt = hub.pull("hwchase17/xml-agent-convo")
-        xml_agent = create_xml_agent(llm, tools, xml_prompt)
+    elif model_type == "structured":
+        structured_prompt = hub.pull("hwchase17/structured-chat-agent")
+        structured_prompt.messages[0].prompt.template = 'Respond to the human as helpfully and accurately as possible. You have access to the following tools:\n\n{tools}\n\nUse a json blob to specify a tool by providing an action key (tool name) and an action_input key (tool input).\n\nValid "action" values: "Final Answer" or {tool_names}\n\nProvide only ONE action per $JSON_BLOB, as shown:\n\n```\n{{\n  "action": $TOOL_NAME,\n  "action_input": $INPUT\n}}\n```\n\nFollow this format:\n\nQuestion: input question to answer\nThought: consider previous and subsequent steps\nAction:\n```\n$JSON_BLOB\n```\nObservation: action result\n... (repeat Thought/Action/Observation N times)\nThought: I know what to respond\nAction:\n```\n{{\n  "action": "Final Answer",\n  "action_input": "Final response to human"\n}}\n```\nBegin! Reminder to ALWAYS respond with a valid json blob of a single action. Use tools if necessary. Respond directly if appropriate. Format is Action:```$JSON_BLOB```then Observation'
+        structured_agent = create_structured_chat_agent(
+            llm, tools, structured_prompt)
         agent_executor = AgentExecutor(
-            agent=xml_agent, tools=tools, verbose=True, handle_parsing_errors=True, max_iterations=70)
+            agent=structured_agent, tools=tools, verbose=True, handle_parsing_errors=True, max_iterations=70)
     elif model_type == "openai":
         openai_function_prompt = hub.pull("hwchase17/openai-functions-agent")
         openai_function_agent = create_openai_functions_agent(
