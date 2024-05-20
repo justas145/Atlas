@@ -1,4 +1,6 @@
 
+from langchain.agents import AgentExecutor, create_openai_tools_agent
+from langchain_groq import ChatGroq
 from langchain_community.callbacks.streamlit import (
     StreamlitCallbackHandler,
 )
@@ -178,6 +180,7 @@ def ContinueMonitoring(duration: str = '5'):
     Returns:
     - str: The conflict information between aircraft pairs throughout the monitoring period.
     """
+    duration = duration.replace('"', '').replace("'", "")
     sim_output = ''
     for i in range(int(duration)):
         client.send_event(b'STACK', 'SHOWTCPA')
@@ -279,10 +282,11 @@ user_input = st.text_area(
     "Enter your input", value="Check if there are any conflicts between aircraft and if there are resolve them by changing altitude or heading. Your Goal is to have no conflicts between aircraft.")
 
 # Select Model
-model_names = fetch_model_names("https://ollama.junzis.com")
-
+#model_names = fetch_model_names("https://ollama.junzis.com")
+model_names = ['llama3-70b-8192']
 # add gpt model names to the list
-gpt_models = ['gpt-4-turbo-2024-04-09', 'gpt-3.5-turbo-0125', 'gpt-3.5-turbo-instruct']
+gpt_models = ['gpt-4-turbo-2024-04-09', 'gpt-3.5-turbo-0125',
+              'gpt-3.5-turbo-instruct', 'gpt-4o-2024-05-13']
 model_names.extend(gpt_models)
 
 model_name = st.selectbox("Select a Model", model_names)
@@ -300,7 +304,9 @@ model_type = st.selectbox("Select a Model Type", model_types)
 
 # Check for the model in the session state or load it if not present or if model name has changed
 if 'llm' not in st.session_state or 'model_name' not in st.session_state or st.session_state['model_name'] != model_name:
-    if model_name not in gpt_models:
+    if "llama3-70b-8192" in model_name:
+        st.session_state['llm'] = ChatGroq(model_name="llama3-70b-8192")
+    elif model_name not in gpt_models:
         # Load non-GPT model if not in session state or if a different model is selected
         st.session_state['llm'] = load_non_gpt_model(model_name)
     elif "gpt" in model_name:
@@ -335,8 +341,8 @@ if st.button("Run"):
         agent_executor = AgentExecutor(
             agent=structured_agent, tools=tools, verbose=True, handle_parsing_errors=True, max_iterations=70)
     elif model_type == "openai":
-        openai_function_prompt = hub.pull("hwchase17/openai-functions-agent")
-        openai_function_agent = create_openai_functions_agent(
+        openai_function_prompt = hub.pull("hwchase17/openai-tools-agent")
+        openai_function_agent = create_openai_tools_agent(
             llm, tools, openai_function_prompt)
         agent_executor = AgentExecutor(
             agent=openai_function_agent, tools=tools, verbose=True, handle_parsing_errors=True, max_iterations=70)
