@@ -245,36 +245,32 @@ def SendCommand(command: str):
     return sim_output
 
 
-# @tool
-# def QueryDatabase(input: str, command_list: list):
-#     """If you want to send command to a simulator then search which command you should use. For example if you want to create an aircraft, search for 'how do I create an aircraft', or if you want more details about specific command(s) then provide command_list with the command names.
-#     Parameters:
-#     - input: str (the query to search for)
-#     - command_list: list (optional, list of commands to search for). It would then search for those commands instead of the query.
-#     Returns:
-#     - list: the top 5 results from the database
-#     """
-#     if command_list is None:
-#         query_results = collection.query(
-#             query_texts=[input],
-#             n_results=5
-#         )
-#         return query_results
-#     else:
-#         query_results = collection.get(ids=command_list)
-#         return query_results
-
 @tool
-def QueryDatabase(command_list: list):
-    """If you want to send command to a simulator then search which command you should use. if you want more details about specific command(s) then provide command_list with the command names. For example: command_list = ['ADDNODES', 'ADDWPT', 'ADDWPTMODE']. Up to 5 commands
+def QueryDatabase(input: str):
+    """If you want to send command to a simulator please first search which command you should use. For example if you want to create an aircraft, search for 'how do I create an aircraft'.
     Parameters:
-    - command_list: list
+    - input: str (the query to search for)
     Returns:
     - list: the top 5 results from the database
     """
 
-    query_results = collection.get(ids=command_list)
+    query_results = collection.query(
+        query_texts=[input],
+        n_results=5
+    )
     return query_results
+
+# @tool
+# def QueryDatabase(command_list: list):
+#     """If you want to send command to a simulator then search which command you should use. if you want more details about specific command(s) then provide command_list with the command names. For example: command_list = ['ADDNODES', 'ADDWPT', 'ADDWPTMODE']. Up to 5 commands
+#     Parameters:
+#     - command_list: list
+#     Returns:
+#     - list: the top 5 results from the database
+#     """
+
+#     query_results = collection.get(ids=command_list)
+#     return query_results
 
 
 tools = [GetAllAircraftInfo, GetConflictInfo,
