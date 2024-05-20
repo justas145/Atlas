@@ -1,0 +1,31 @@
+ASAS: Airborne Separation Assurance System
+The Airborne Separation Assurance System (ASAS) is used to perform conflict detection and resolution between agents.
+Usage:
+ASAS ON/OFF
+
+When ASAS is on, it is called every 'asas_dt' seconds. This value can be set in the settings.cfg file:
+# ASAS update interval [sec]
+asas_dt = 1.0
+
+Conflict detection and resolution are called within the update of the traffic. The traffic update follows this order:
+Note that the 'active' values are vectors with a dimension equal to the number of aircraft. In each position of the vector, 0 indicates that the aircraft with that index is not in conflict, 1 indicates that this aircraft is in conflict and its state should change to the value output by the conflict resolution module.
+When ASAS is OFF, aircraft simply follow their trajectory as set by the AutoPilot class.
+Conflict Detection:
+By default, Bluesky uses a state-based conflict detection (statebased.py). The state-based method receives the current traffic information and performs the following calculations:
+Other conflict detection modules may be added. This module should inherit from the ConflictDetection class (detection.py), and should overwrite function detect(). This new module can be called with the command:
+CDMETHOD MODULE-NAME
+
+Conflict Resolution:
+Conflict resolution can be turned on and off through the following command:
+RESO ON/OFF
+
+By default, Bluesky uses the modified voltage potential (MVP) conflict resolution method. However, other conflict resolution methods can be added through plugins (see as reference ssd.py). A conflict resolution plugin must inherit from ConflictResolution.py and overwrite the resolve() function. This new conflict resolution method should be set by:
+RESO MODULE-NAME
+
+The plugin must also be activated in settings.cfg:
+enabled_plugins = ['NAME']
+
+Return to the route after conflict (Bouncing Conflicts)
+Once an aircraft is no longer in conflict, and is past the closest point of approach with intruders, it must redirect itself to the next waypoint in its route. By default, the aircraft will follow the instructions from AutoPilot towards the next waypoint. Thus, it will follow a straight line toward its next waypoint. However, there is code in place to guarantee that aircraft do not keep bouncing on and off of conflicts when trying to move towards the next waypoint.
+In resumenav(), in resolution.py, you can find:
+The previous code finds whether two aircraft, previous in conflict with each other, will go back into conflict if they return directly to their next waypoint (bouncing conflict). An aircraft only returns to the next waypoint after there are no bouncing conflicts.

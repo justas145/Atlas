@@ -1,0 +1,11 @@
+SWTOD: Switch on/off Top of Descent (ToD) guidance logic
+Switch on or off the top of descent guidance logic (descend as late as allowed by altitude constraints in flight plan and as fast as allowed by performance)  As this logic is normally used by the FMS of an airliner it is ON by default, but can be switched ON or OFF with the SWTOD command. When switched off, the aircraft will start descending with a vertical speed aiming to arrive at the next altitude constraint further down the flight plan. (Intermediate waypoints without altitude constraints are irrelevant and not considered in the VNAV logic for altitude.)
+Usage:
+SWTOD acid,switch
+
+Arguments:
+
+Name   | Type   | Required | Description                                           
+-------+--------+----------+-------------------------------------------------------
+acid   | txt    | Yes      | Aircraft id                                           
+switch | ON/OFF | Yes      | Switch to ON or OFF ToD (top of descent) guidance mode

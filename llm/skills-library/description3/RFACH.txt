@@ -1,0 +1,10 @@
+RFACH: Rfach
+Set resolution factor horizontal (to add a margin)
+Usage:
+RFACH [factor]
+
+Arguments:
+
+Name   | Type  | Required | Description           
+-------+-------+----------+-----------------------
+factor | float | Yes      | Horizontal margin [NM]
