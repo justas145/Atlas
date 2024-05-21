@@ -356,4 +356,26 @@ csv_concatinated = os.path.join(
 
 concatenate_csv_files(csv_input, csv_output, csv_concatinated)
 
+EVAL_TEMPLATE = """
+I want you to evaluate my agent. Agent's task is to execute the given task by sending commands to a simulator. I will provide you the task and relevant documents that should or are helpful to be used for executing a task. Then I will provide you with agent's intermediate steps and its final output. You must give a score either 0 or 1 as well as a comment for you score. If the task executed without mistakes give a score of 1, if there are mistake or mistakes give a score of 0 and comment why you gave a score of 1 or 0. Sending an unknown command is not considered a mistake. Please always check if the command's arguments are in the correct sequence.
 
+TASK: {task}
+
+RELEVANT DOCUMENTS: {relevant_docs}
+
+INTERMEDIATE STEPS: {intermediate_steps}
+
+FINAL ANSWER: {final_answer}
+
+Output your answer in this format:
+SCORE: <here goes the score>
+COMMENT: <here goes the comment>
+"""
+eval_prompt = PromptTemplate.from_template(
+    EVAL_TEMPLATE
+)
+
+res
+
+eval_llm_chain = eval_prompt | ChatGroq(
+    temperature=0.0, model_name="llama3-70b-8192") | StrOutputParser() | 
