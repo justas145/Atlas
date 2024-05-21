@@ -1,8 +1,0 @@
-CLRCRECMD: clears CRECMD list
-Clears CRECMD list: the lists with traffic command which will be issued for each aircraft when it has been created. No arguments need, it will only report the number of commands which were in the deleted list.
-Note: To check the list instead of clearing it, use "CRECMD ?".
-Usage:
-CLRCRECMD
-
-Arguments:
-None
