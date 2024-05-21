@@ -1,3 +1,12 @@
+import yaml
+from langchain.chains.openai_functions import create_structured_output_chain
+from langchain_core.output_parsers import JsonOutputParser
+from langchain.output_parsers import PydanticOutputParser
+from langchain_core.pydantic_v1 import BaseModel, Field, validator
+import sys
+import os
+sys.path.append('../../bluesky')  # Adjust the path as neces
+sys.path.append(os.path.abspath('../../'))
 from langchain.agents import tool, initialize_agent, AgentType, Tool
 from langchain.agents import tool
 from langchain_community.llms import Ollama
@@ -45,23 +54,55 @@ import requests
 import argparse
 import sys
 import os
-sys.path.append('../bluesky')  # Adjust the path as neces
-sys.path.append(os.path.abspath('../'))
+
 
 load_dotenv(find_dotenv())
 
+# Function to read YAML configuration
 
 parser = argparse.ArgumentParser(
-    description='Run the ChatGrok model with specified parameters.')
-parser.add_argument('--temperature', type=float, default=0.0,
-                    help='Set the temperature for the model')
-parser.add_argument('--model_name', type=str,
-                    default="llama3-70b-8192", help='Specify the model name')
-parser.add_argument('--system_prompt', type=str,
-                    default='You are a helpful assistant', help='Specify the system prompt')
+    description='Evaluate the chatbot on the bluesky operations dataset.')
+parser.add_argument('--config', type=str,
+                    help='specify the configuration file path')
+parser.add_argument('--test_csv', type=str,
+                    help='path to the test csv file')
 args = parser.parse_args()
 
-chat = ChatGroq(temperature=args.temperature, model_name=args.model_name)
+config_path = args.config
+csv_input = args.test_csv
+
+# config filename without extension
+config_filename = os.path.splitext(os.path.basename(config_path))[0]
+
+# base_path = llm-enhanced-atm/llm
+base_path = os.path.dirname(os.path.dirname(__file__))
+
+
+csv_output = os.path.join(
+    base_path, 'data', 'bluesky_operations', 'results', f'{config_filename}.csv')
+
+csv_concatinated = os.path.join(
+    base_path, 'data', 'bluesky_operations', 'concatinated_results', f'{config_filename}.csv')
+
+csv_final = os.path.join(base_path, 'data', 'bluesky_operations',
+                         'final_results', f'{config_filename}.csv')
+
+
+def read_config(config_path):
+    with open(config_path, 'r') as file:
+        return yaml.safe_load(file)
+    
+
+config = read_config(config_path)
+agent_model_name = config['model']
+agent_type = config['agent_type']
+system_prompt = config['system_prompt']
+temperature = config['temperature']
+base_url = config['base_url']
+
+
+
+# chat = ChatGroq(temperature=args.temperature, model_name=args.model_name)
 
 summary_prompt = PromptTemplate.from_template(
     "Summarise the intermediate steps in first person, keep it short, and for commands write a full command syntax. intermediate steps: {intermediate_steps_str}"
@@ -73,7 +114,7 @@ summarise_llm_chain = summary_prompt | ChatGroq(
 # get current working dir path
 
 # Get the directory of the current script
-base_path = os.path.dirname(__file__)
+# base_path = llm-enhanced-atm/llm
 # Set the path to vectordb relative to the script's location
 vectordb_path = os.path.join(base_path, 'skills-library', 'vectordb')
 openai_ef = embedding_functions.OpenAIEmbeddingFunction(
@@ -122,12 +163,11 @@ def update_until_complete(client):
     return complete_output
 
 
-# Streamlit UI
 
 # Select Vector DB
 collections = chroma_client.list_collections()
 collection_names = [collection.name for collection in collections]
-selected_collection = 'test2'
+selected_collection = 'test1'
 
 collection = chroma_client.get_or_create_collection(
     name=selected_collection, embedding_function=openai_ef, metadata={"hnsw:space": "cosine"})
@@ -164,7 +204,7 @@ def GetAllAircraftInfo(command: str = 'GETACIDS'):
     print(f'LLM input:{command}')
 
     client.send_event(b'STACK', command)
-    time.sleep(1)
+    time.sleep(0.1)
     sim_output = update_until_complete(client)
     return sim_output
 
@@ -184,7 +224,7 @@ def GetConflictInfo(commad: str = 'SHOWTCPA'):
     """
     client.send_event(b'STACK', 'SHOWTCPA')
     client.send_event(b'STACK', 'GETACIDS')
-    time.sleep(1)
+    time.sleep(0.1)
     sim_output = update_until_complete(client)
     return sim_output
 
@@ -204,7 +244,7 @@ def ContinueMonitoring(duration: str = '5'):
     sim_output = ''
     for i in range(int(duration)):
         client.send_event(b'STACK', 'SHOWTCPA')
-        time.sleep(1)
+        time.sleep(0.1)
         sim_output += str(i) + ' sec: \n' + \
             update_until_complete(client) + '\n'
     return sim_output
@@ -236,7 +276,7 @@ def SendCommand(command: str):
     command = command.split('\n')[0]
     client.send_event(b'STACK', command)
     # wait 1 second
-    time.sleep(1)
+    time.sleep(0.1)
     # Wait for and retrieve the output from the simulator
     sim_output = update_until_complete(client)
     if sim_output == '':
@@ -265,6 +305,43 @@ def QueryDatabase(input: str):
 tools = [GetAllAircraftInfo, GetConflictInfo,
          SendCommand, QueryDatabase, ContinueMonitoring]
 
+if 'gpt' in agent_model_name:
+    agent_model = ChatOpenAI(model=agent_model_name, temperature=temperature)
+    print("Agent model is " + agent_model_name)
+elif 'llama3-70b-8192' in agent_model_name:
+    agent_model = ChatGroq(model=agent_model_name, temperature=temperature)
+    print("Agent model is " + agent_model_name)
+else:
+    agent_model = ChatOllama(
+        model=agent_model_name, temperature=temperature, base_url=base_url)
+    print("Agent model is " + agent_model_name)
+
+if agent_type == 'openai_tools':
+    
+    prompt = hub.pull("hwchase17/openai-tools-agent")
+    if system_prompt is not None:
+        prompt.messages[0].prompt.template = system_prompt
+    
+    agent = create_openai_tools_agent(agent_model, tools, prompt)
+    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True,
+                                handle_parsing_errors=True, return_intermediate_steps=True)
+    print("Agent type is " + agent_type)
+
+elif agent_type == 'react':
+    prompt = hub.pull("hwchase17/react")
+    if system_prompt is not None:
+        prompt.template = system_prompt
+    agent = create_react_agent(agent_model, tools, prompt)
+    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True,
+                                handle_parsing_errors=True, return_intermediate_steps=True)
+    print("Agent type is " + agent_type)
+
+else:
+    print('Invalid agent type')
+    exit()
+    
+
+
 
 def get_intermediate_steps(data):
     steps_summary = []
@@ -281,13 +358,7 @@ def get_intermediate_steps(data):
 
     return '\n\n'.join(steps_summary)
 
-# Get the prompt to use - you can modify this!
-prompt = hub.pull("hwchase17/openai-tools-agent")
-# prompt.messages[0].prompt.template = args.system_prompt + '''\n\nYou can send commands to a simulator to execute user questions. Here are some commands you can use:\n\n''' + BASE_CMDS + '''\n\n you can search for a full command by using the QueryDatabase tool.'''
-# Create an agent executor by passing in the agent and tools
-agent = create_openai_tools_agent(chat, tools, prompt)
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True,
-                               handle_parsing_errors=True, return_intermediate_steps=True)
+
 
 def process_csv_inputs(csv_input, csv_output, agent_executor):
     with open(csv_input, newline='', encoding='utf-8') as csvfile:
@@ -305,7 +376,7 @@ def process_csv_inputs(csv_input, csv_output, agent_executor):
                 scenario = 'A1A2A3'
                 client.send_event(
                     b'STACK', f'IC simple/bluesky_operations/{scenario}.scn')
-                time.sleep(2)  # Wait for the scenario to load
+                time.sleep(0.5)  # Wait for the scenario to load
                 update_until_complete(client)
                 try:
                     out = agent_executor.invoke({"input": user_input})
@@ -322,7 +393,7 @@ def process_csv_inputs(csv_input, csv_output, agent_executor):
                     {'user_input': user_input, 'output': out['output'], 'intermediate_steps': intermediate_steps_str})
 
 
-def concatenate_csv_files(csv_test, csv_result, output_folder):
+def concatenate_csv_files(csv_test, csv_result, output_file_path):
     # Read the CSV files
     df_test = pd.read_csv(csv_test)
     df_result = pd.read_csv(csv_result)
@@ -330,34 +401,17 @@ def concatenate_csv_files(csv_test, csv_result, output_folder):
     # Merge the DataFrames on 'user_input'
     df_concat = pd.merge(df_test, df_result, on='user_input')
 
-    # Extract the file name from the result path
-    file_name = os.path.basename(csv_result)
-
     # Create the output directory if it doesn't exist
-    os.makedirs(output_folder, exist_ok=True)
-
-    # Construct the output file path
-    output_file = os.path.join(output_folder, file_name)
+    os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
 
     # Save the concatenated DataFrame to the new CSV file
-    df_concat.to_csv(output_file, index=False)
+    df_concat.to_csv(output_file_path, index=False)
 
-    print(f"Concatenated CSV saved to {output_file}")
+    print(f"Concatenated CSV saved to {output_file_path}")
 
-csv_input = os.path.join(base_path, 'data', 'bluesky_operations', 'test_bluesky_operations.csv')
-
-csv_output = os.path.join(
-    base_path, 'data', 'bluesky_operations', 'results', 'llama3-70b-openai.csv')
-
-csv_concatinated = os.path.join(
-    base_path, 'data', 'bluesky_operations', 'concatinated_results', )
-
-# process_csv_inputs(csv_input, csv_output, agent_executor)
-
-concatenate_csv_files(csv_input, csv_output, csv_concatinated)
 
 EVAL_TEMPLATE = """
-I want you to evaluate my agent. Agent's task is to execute the given task by sending commands to a simulator. I will provide you the task and relevant documents that should or are helpful to be used for executing a task. Then I will provide you with agent's intermediate steps and its final output. You must give a score either 0 or 1 as well as a comment for you score. If the task executed without mistakes give a score of 1, if there are mistake or mistakes give a score of 0 and comment why you gave a score of 1 or 0. Sending an unknown command is not considered a mistake. Please always check if the command's arguments are in the correct sequence.
+I want you to evaluate my agent. Agent's task is to execute the given task by sending commands to a simulator. I will provide you the task and relevant documents that should or are helpful to be used for executing a task. Then I will provide you with agent's intermediate steps and its final output. You must give a score either 0 or 1 as well as a comment for you score. If the task executed without mistakes give a score of 1, if there are mistake or mistakes give a score of 0 and comment why you gave a score of 1 or 0. Sending an unknown command or not valid command is not considered a mistake. Please always check if the command's arguments are in the correct sequence.
 
 TASK: {task}
 
@@ -375,7 +429,72 @@ eval_prompt = PromptTemplate.from_template(
     EVAL_TEMPLATE
 )
 
-res
 
-eval_llm_chain = eval_prompt | ChatGroq(
-    temperature=0.0, model_name="llama3-70b-8192") | StrOutputParser() | 
+evaluator_llm = ChatGroq(
+    temperature=0.0, model_name="llama3-70b-8192")
+
+eval_llm_chain = eval_prompt | evaluator_llm | StrOutputParser()
+
+
+json_schema = {
+    "title": "evaluation",
+    "description": "information about an evaluation of an agent's performance",
+    "type": "object",
+    "properties": {
+        "score": {"title": "score", "description": "The score from evaluation", "type": "integer"},
+        "comment": {"title": "comment", "description": "The comment from evaluation", "type": "string"}
+    },
+    "required": ["score", "comment"],
+}
+
+json_structure_prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", "You are extracting information in structured formats."),
+        ("human",
+         "Use the given format to extract information from the following input: {input}")
+    ]
+)
+
+structured_json_chain = create_structured_output_chain(
+    json_schema, ChatOpenAI(), json_structure_prompt, verbose=False)
+
+
+def evaluate_csv(input_csv_path, output_csv_path):
+    # Read the input CSV file
+    df = pd.read_csv(input_csv_path)
+
+    # Ensure the output columns are added
+    df['score'] = None
+    df['comment'] = None
+
+    # Process each row
+    for index, row in df.iterrows():
+        # Prepare the input for the LLM chain
+        input_data = {
+            'task': row['user_input'],
+            'relevant_docs': row['docs'],
+            'intermediate_steps': row['intermediate_steps'],
+            'final_answer': row['output']
+        }
+
+        # Invoke the LLM chain and get the result
+        result = eval_llm_chain.invoke(input_data)
+        print(result)
+        result_json = structured_json_chain.run(result)
+        print(result_json)
+        # Update the dataframe with the results
+        df.at[index, 'score'] = result_json['score']
+        df.at[index, 'comment'] = result_json['comment']
+
+    # Write the updated dataframe to the output CSV file
+    df.to_csv(output_csv_path, index=False)
+
+
+
+
+
+process_csv_inputs(csv_input, csv_output, agent_executor)
+
+concatenate_csv_files(csv_input, csv_output, csv_concatinated)
+
+evaluate_csv(csv_concatinated, csv_final)

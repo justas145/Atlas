@@ -1,0 +1,5 @@
+model: llama3-70b-8192
+system_prompt: "You are a helpful air traffic control assistant that complies with ICAO standards"
+temperature: 0.0
+agent_type: openai_tools
+base_url: null
