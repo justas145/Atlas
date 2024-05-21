@@ -35,8 +35,6 @@ openai_ef = chromadb.utils.embedding_functions.OpenAIEmbeddingFunction(
     model_name="text-embedding-3-large",
 )
 
-# capture output information from the bluesky client and return it as a string
-
 
 # %%
 # Connect to BlueSky simulator
@@ -177,18 +175,11 @@ def SendCommand(command: str):
     Returns:
     str: The output from the simulator.
     """
-    # Convert the command and its arguments into a string to be sent
-    # command_with_args = ' '.join([command] + [str(arg) for arg in args])
-    # Send the command to the simulator
-    # client.update()  # Uncomment this if you need to update the client state before sending the command
     print(command)
-    # replace " or ' in the command string with nothing
     command = command.replace('"', "").replace("'", "")
     command = command.split("\n")[0]
     client.send_event(b"STACK", command)
-    # wait 1 second
     time.sleep(0.1)
-    # Wait for and retrieve the output from the simulator
     sim_output = receive_bluesky_output()
     if sim_output == "":
         return "Command executed successfully."
@@ -224,9 +215,6 @@ agent_tools = [
 
 # %%
 
-# chat = ChatOpenAI(model="gpt-4-turbo-2024-04-09", temperature=0.3)
-
-# Get the prompt to use - you can modify this!
 prompt = hub.pull("hwchase17/openai-tools-agent")
 
 with open("prompts/system.txt", "r") as f:
@@ -238,33 +226,18 @@ with open("prompts/conflict.txt", "r") as f:
 
 chat = ChatGroq(temperature=temperature, model_name=model_name)
 
-# Create an agent executor by passing in the agent and tools
 agent = agents.create_openai_tools_agent(chat, agent_tools, prompt)
+
 agent_executor = agents.AgentExecutor(agent=agent, tools=agent_tools, verbose=True)
 
 
 # %%
 user_input = "solve aircraft conflict with heading changes"
 
-# out = agent_executor.invoke({"input": user_input, "chat_history": chat_history})
 out = agent_executor.invoke({"input": user_input})
-# chat_history.append(messages.HumanMessage(content=user_input))
-# chat_history.append(messages.AIMessage(content=out["output"]))
-
 
 # %%
-chat_history = []
-try:
-    while True:
-        user_input = input("Enter your request or press CTRL+C to quit: ")
-        print(f"Processing your input: {user_input}")
-
-        # out = agent_executor.invoke({"input": user_input, "chat_history": chat_history})
-        out = agent_executor.invoke({"input": user_input})
-        chat_history.append(messages.HumanMessage(content=user_input))
-        chat_history.append(messages.AIMessage(content=out["output"]))
-except KeyboardInterrupt:
-    # Handle the CTRL+C gracefully
-    print("\nExiting the application. Goodbye!")
-    sys.exit(0)
-    sys.exit(0)
+# chat_history = []
+# out = agent_executor.invoke({"input": user_input, "chat_history": chat_history})
+# chat_history.append(messages.HumanMessage(content=user_input))
+# chat_history.append(messages.AIMessage(content=out["output"]))
