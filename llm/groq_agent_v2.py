@@ -100,7 +100,10 @@ collection = chroma_client.get_or_create_collection(
 
 @langchain_tool
 def GetAllAircraftInfo(command: str = "GETACIDS"):
-    """Get each aircraft information at current time: position, heading (deg), track (deg), altitude, V/S (vertical speed), calibrated, true and ground speed and mach number. Input is 'GETACIDS'.
+    """
+    Get each aircraft information at current time: position, heading (deg),
+    track (deg), altitude, V/S (vertical speed), calibrated, true and ground
+    speed and mach number. Input is 'GETACIDS'.
 
     Parameters:
     - command: str (default 'GETACIDS')
@@ -111,6 +114,7 @@ def GetAllAircraftInfo(command: str = "GETACIDS"):
     Returns:
     - str: all aircraft information
     """
+
     command = command.replace('"', "").replace("'", "")
     command = command.split("\n")[0]
     print(f"LLM input:{command}")
@@ -123,7 +127,11 @@ def GetAllAircraftInfo(command: str = "GETACIDS"):
 
 @langchain_tool
 def GetConflictInfo(commad: str = "SHOWTCPA"):
-    """Use this tool to identify and get vital information on aircraft pairs in conflict. It gives you Time to Closest Point of Approach (TCPA), Quadrantal Direction (QDR), separation distance, Closest Point of Approach distance (DCPA), and Time of Loss of Separation (tLOS).
+    """
+    Use this tool to identify and get vital information on aircraft pairs in
+    conflict. It gives you Time to Closest Point of Approach (TCPA),
+    Quadrantal Direction (QDR), separation distance, Closest Point of Approach
+    distance (DCPA), and Time of Loss of Separation (tLOS).
 
     Parameters:
     - command: str (default 'SHOWTCPA')
@@ -134,6 +142,7 @@ def GetConflictInfo(commad: str = "SHOWTCPA"):
     Returns:
     - str: conflict information between aircraft pairs
     """
+
     client.send_event(b"STACK", "SHOWTCPA")
     time.sleep(0.1)
     sim_output = receive_bluesky_output()
@@ -143,6 +152,7 @@ def GetConflictInfo(commad: str = "SHOWTCPA"):
 @langchain_tool
 def ContinueMonitoring(duration: int = 5):
     """Monitor for conflicts between aircraft pairs for a specified time.
+
     Parameters:
     - time (int): The time in seconds to monitor for conflicts. Default is 5 seconds.
 
@@ -152,6 +162,7 @@ def ContinueMonitoring(duration: int = 5):
     Returns:
     - str: The conflict information between aircraft pairs throughout the monitoring period.
     """
+
     time.sleep(duration)
     client.send_event(b"STACK", "SHOWTCPA")
     time.sleep(0.1)
@@ -163,10 +174,11 @@ def ContinueMonitoring(duration: int = 5):
 def SendCommand(command: str):
     """
     Sends a command with optional arguments to the simulator and returns the output.
-    You can only send 1 command at a time.
+    You should only send 1 command at a time.
 
     Parameters:
-    - command (str): The command to send to the simulator. Can only be a single command, with no AND or OR operators.
+    - command (str): The command to send to the simulator. Can only be a single command,
+      with no AND or OR operators.
 
     Example usage:
     - SendCommand('COMMAND_NAME ARG1 ARG2 ARG3 ...) # this command requires arguments
@@ -175,6 +187,7 @@ def SendCommand(command: str):
     Returns:
     str: The output from the simulator.
     """
+
     print(command)
     command = command.replace('"', "").replace("'", "")
     command = command.split("\n")[0]
@@ -194,9 +207,14 @@ def SendCommand(command: str):
 
 @langchain_tool
 def QueryDatabase(input: str):
-    """If you want to send command to a simulator please first search which command you should use. For example if you want to create an aircraft, search for 'how do I create an aircraft'.
+    """Query skill database
+
+    If you want to send a command to a simulator, please first search for the appropriate command.
+    For example, if you want to create an aircraft, search for 'how do I create an aircraft'.
+
     Parameters:
     - input: str (the query to search for)
+
     Returns:
     - list: the top 5 results from the database
     """
