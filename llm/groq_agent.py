@@ -1,3 +1,19 @@
+from langchain.agents import tool, initialize_agent, AgentType, Tool
+from langchain.agents import tool
+from langchain_community.llms import Ollama
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, SystemMessage
+from langchain.prompts import MessagesPlaceholder
+from langchain.agents import AgentExecutor
+from langchain.agents.output_parsers.openai_tools import OpenAIToolsAgentOutputParser
+from voice_assistant.api_key_manager import get_transcription_api_key, get_response_api_key, get_tts_api_key
+from voice_assistant.config import Config
+from voice_assistant.utils import delete_file
+from voice_assistant.text_to_speech import text_to_speech
+from voice_assistant.response_generation import generate_response
+from voice_assistant.transcription import transcribe_audio
+from voice_assistant.audio import record_audio, play_audio
+from colorama import Fore, init
+import logging
 import pandas as pd
 import csv
 import json
@@ -40,13 +56,16 @@ from langchain.agents.format_scratchpad.openai_tools import (
 
     format_to_openai_tool_messages,
 )
-from langchain.agents.output_parsers.openai_tools import OpenAIToolsAgentOutputParser
-from langchain.agents import AgentExecutor
-from langchain.prompts import MessagesPlaceholder
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage, SystemMessage
-from langchain_community.llms import Ollama
-from langchain.agents import tool
-from langchain.agents import tool, initialize_agent, AgentType, Tool
+
+
+
+# Configure logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Initialize colorama
+init(autoreset=True)
+
 
 load_dotenv(find_dotenv())
 
@@ -297,7 +316,13 @@ chat_history = []
 try:
     while True:
         # Get input from the user
-        user_input = input("Enter your request or press CTRL+C to quit: ")
+        #user_input = input("Enter your request or press CTRL+C to quit: ")
+        
+        record_audio("user_input.wav")
+        transcription_api_key = get_transcription_api_key()
+        user_input = transcribe_audio(
+            Config.TRANSCRIPTION_MODEL, transcription_api_key, 'user_input.wav', Config.LOCAL_MODEL_PATH)
+        logging.info(Fore.GREEN + "You said: " + user_input)
 
         # Process the input or pass it to your agent
         # For example, you could have your agent process this input:
@@ -309,13 +334,31 @@ try:
 
         out = agent_executor.invoke(
             {"input": user_input, "chat_history": chat_history})
+        response_text = out['output']
         intermediate_steps_str = get_intermediate_steps(out)
         print(intermediate_steps_str)
         # itermediate_steps_summary = summarise_llm_chain.invoke({"intermediate_steps_str": intermediate_steps_str})
         # print(itermediate_steps_summary)
         chat_history.append(HumanMessage(content=user_input))
         # chat_history.append(AIMessage(content=itermediate_steps_summary))
-        chat_history.append(AIMessage(content=out['output']))
+        chat_history.append(AIMessage(content=response_text))
+    
+        if Config.TTS_MODEL == 'openai':
+            output_file = 'output.mp3'
+        else:
+            output_file = 'output.wav'
+            
+        tts_api_key = get_tts_api_key()
+        # Convert the response text to speech and save it to the appropriate file
+        text_to_speech(Config.TTS_MODEL, tts_api_key,
+                       response_text, output_file, Config.LOCAL_MODEL_PATH)
+        
+        # Play the generated speech audio
+        play_audio(output_file)
+
+        # Clean up audio files
+        delete_file('test.wav')
+        delete_file(output_file)
 except KeyboardInterrupt:
     # Handle the CTRL+C gracefully
     print("\nExiting the application. Goodbye!")

@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import yaml
 from langchain.chains.openai_functions import create_structured_output_chain
 from langchain_core.output_parsers import JsonOutputParser
@@ -490,6 +491,49 @@ def evaluate_csv(input_csv_path, output_csv_path):
     df.to_csv(output_csv_path, index=False)
 
 
+def create_score_bar_chart(csv_path):
+    # Load the CSV file
+    df = pd.read_csv(csv_path)
+
+    # Extract the score and line number
+    df['line_number'] = df.index + 1
+    scores = df['score']
+
+    # Adjust the scores for visualization
+    # Replace 0 with a small value for visualization
+    adjusted_scores = scores.replace(0, 0.01)
+
+    # Create the bar chart
+    plt.figure(figsize=(10, 6))
+    plt.bar(df['line_number'], adjusted_scores, color=[
+            'red' if x == 0.01 else 'green' for x in adjusted_scores])
+    plt.xlabel('Task ')
+    plt.ylabel('Score')
+    plt.title('Score Distribution by Task Number')
+
+    # Calculate the total score
+    total_score = scores.sum()
+
+    # Annotate the total score on the figure
+    plt.text(0.5, 0.9, f'Total Score: {total_score}', horizontalalignment='center', verticalalignment='center', transform=plt.gca(
+    ).transAxes, fontsize=12, bbox=dict(facecolor='white', alpha=0.8))
+
+    # Define the output path
+    output_dir = os.path.join(os.path.dirname(csv_path), '..', 'figures')
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    output_path = os.path.join(output_dir, os.path.basename(
+        csv_path).replace('.csv', '.jpg'))
+
+    # Save the figure
+    plt.savefig(output_path, format='jpg')
+    plt.close()
+
+    return output_path
+
+
+
 
 
 
@@ -498,3 +542,5 @@ process_csv_inputs(csv_input, csv_output, agent_executor)
 concatenate_csv_files(csv_input, csv_output, csv_concatinated)
 
 evaluate_csv(csv_concatinated, csv_final)
+
+create_score_bar_chart(csv_final)
