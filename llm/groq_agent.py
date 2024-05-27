@@ -80,7 +80,12 @@ parser.add_argument('--system_prompt', type=str,
                     default='You are a helpful assistant' , help='Specify the system prompt')
 args = parser.parse_args()
 
-chat = ChatGroq(temperature=args.temperature, model_name=args.model_name)
+if 'gpt' in args.model_name:
+    chat = ChatOpenAI(temperature=args.temperature, model=args.model_name)
+else:
+    chat = ChatGroq(temperature=args.temperature, model_name=args.model_name)
+
+
 
 summary_prompt = PromptTemplate.from_template(
     "Summarise the intermediate steps in first person, keep it short, and for commands write a full command syntax. intermediate steps: {intermediate_steps_str}"
