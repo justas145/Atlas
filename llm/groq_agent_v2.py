@@ -85,7 +85,7 @@ def receive_bluesky_output():
 # Vector DB
 collections = chroma_client.list_collections()
 collection_names = [collection.name for collection in collections]
-selected_collection = "test2"
+selected_collection = "default"
 
 collection = chroma_client.get_or_create_collection(
     name=selected_collection,
