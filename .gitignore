@@ -4,3 +4,6 @@ venv_test/
 llm/notebooks/random.ipynb
 venv311/
 llm/notebooks/playground2.ipynb
+hacksky/
+output.wav
+user_input.wav
