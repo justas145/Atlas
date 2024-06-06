@@ -76,14 +76,14 @@ def GetAllAircraftInfo(command: str = "GETACIDS"):
     command = command.split("\n")[0]
     print(f"LLM input:{command}")
 
-    client.send_event(b"STACK", command)
-    time.sleep(0.1)
+    client.send_event(b"STACK", "GETACIDS")
+    time.sleep(0.8)
     sim_output = receive_bluesky_output()
     return sim_output
 
 
 @langchain_tool
-def GetConflictInfo(commad: str = "SHOWTCPA"):
+def GetConflictInfo(command: str = "SHOWTCPA"):
     """
     Use this tool to identify and get vital information on aircraft pairs in
     conflict. It gives you Time to Closest Point of Approach (TCPA),
@@ -101,7 +101,7 @@ def GetConflictInfo(commad: str = "SHOWTCPA"):
     """
 
     client.send_event(b"STACK", "SHOWTCPA")
-    time.sleep(0.1)
+    time.sleep(0.8)
     sim_output = receive_bluesky_output()
     return sim_output
 
@@ -119,10 +119,11 @@ def ContinueMonitoring(duration: int = 5):
     Returns:
     - str: The conflict information between aircraft pairs throughout the monitoring period.
     """
-
+    # ensure duration is an integer
+    duration = int(duration)
     time.sleep(duration)
     client.send_event(b"STACK", "SHOWTCPA")
-    time.sleep(0.1)
+    time.sleep(0.8)
     sim_output = receive_bluesky_output()
     return sim_output
 
@@ -149,7 +150,7 @@ def SendCommand(command: str):
     command = command.replace('"', "").replace("'", "")
     command = command.split("\n")[0]
     client.send_event(b"STACK", command)
-    time.sleep(0.1)
+    time.sleep(0.8)
     sim_output = receive_bluesky_output()
     if sim_output == "":
         return "Command executed successfully."
@@ -179,6 +180,27 @@ def QueryDatabase(input: str):
     query_results = collection.query(query_texts=[input], n_results=5)
     return query_results
 
+@langchain_tool
+def GetBlueskyCommands(ids: str) -> str:
+    """
+    Get the commands' documentation from the BlueSky database for the given ids.
+
+    Parameters:
+    - ids: string of ids seperated by comma (the ids of the commands to retrieve)
+    
+    Example usage:
+    - get_bluesky_commands("HDG, VS, ALT, ...")
+
+    Returns:
+    - str: the commands from the BlueSky database for the given ids
+    """
+    commands_lst = [item.strip() for item in ids.split(",")]
+    documents_lst = collection.get(ids=commands_lst)["documents"]
+    documents_str = ""
+    for doc in documents_lst:
+        documents_str += doc + "\n\n ############################## \n\n"
+    return documents_str
+
 
 agent_tools_list = [
     GetAllAircraftInfo,
@@ -186,4 +208,5 @@ agent_tools_list = [
     SendCommand,
     QueryDatabase,
     ContinueMonitoring,
+    GetBlueskyCommands,
 ]
