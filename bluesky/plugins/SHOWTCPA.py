@@ -32,7 +32,7 @@ def show_conflicts_tcpa():
 
     processed_pairs = set()  # Set to keep track of processed pairs
     # Iterate through detected conflicts
-    for i, pair in enumerate(traf.cd.confpairs):
+    for i, pair in enumerate(traf.cd.confpairs_unique):
         # Assuming tcpa array is aligned with confpairs, extract TCPA for the current pair
         # This part needs to be adjusted based on actual data structure and logic in your conflict detection system
         # This is an example; adjust based on your actual data structure
@@ -49,6 +49,6 @@ def show_conflicts_tcpa():
         dcpa_value = traf.cd.dcpa[i]
         tLOS_value = traf.cd.tLOS[i]
 
-        conflict_info = f"{sorted_pair[0]} - {sorted_pair[1]} TCPA: {tcpa_value:.2f} sec QDR: {qdr_value:.2f} deg Distance: {distance_value:.2f} m DCPA: {dcpa_value:.2f} m tLOS: {tLOS_value:.2f} sec"
+        conflict_info = f"{sorted_pair[0]} - {sorted_pair[1]} | TCPA: {tcpa_value:.2f} sec | QDR: {qdr_value:.2f} deg | Distance: {distance_value / 1852:.2f} Nautical miles | DCPA: {dcpa_value / 1852:.2f} Nautical miles | tLOS: {tLOS_value:.2f} sec"
         stack.stack(f'ECHO {conflict_info}')
         
