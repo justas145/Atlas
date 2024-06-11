@@ -13,8 +13,9 @@ from io import StringIO
 import chromadb
 import dotenv
 from langchain import agents, hub
-from langchain.agents import AgentExecutor, create_structured_chat_agent
+from langchain.agents import AgentExecutor, create_structured_chat_agent, create_react_agent
 from langchain_community.chat_models import ChatOllama
+from langchain_core.messages import AIMessage, HumanMessage
 
 from langchain_core import messages
 from langchain_core.tools import tool as langchain_tool
@@ -91,12 +92,14 @@ agent_tool_list_retriever = [agent_tools_list[-1]]
 agent_tool_list_verifier = [agent_tools_list[i] for i in (0, 1, 4)]
 # Get the prompt to use - you can modify this!
 prompt = hub.pull("hwchase17/structured-chat-agent")
+
 agent_planner = create_structured_chat_agent(chat, agent_tools_list_planner, prompt)
 agent_executor_planner = AgentExecutor(
     agent=agent_planner,
     tools=agent_tools_list_planner,
     verbose=True,
     handle_parsing_errors=True,
+    return_intermediate_steps=True,
 )
 
 agent_controller = create_structured_chat_agent(
@@ -107,6 +110,7 @@ agent_executor_controller = AgentExecutor(
     tools=agent_tool_list_controller,
     verbose=True,
     handle_parsing_errors=True,
+    return_intermediate_steps=True,
 )
 
 agent_retriever = create_structured_chat_agent(chat, agent_tool_list_retriever, prompt)
@@ -115,6 +119,7 @@ agent_executor_retriever = AgentExecutor(
     tools=agent_tool_list_retriever,
     verbose=True,
     handle_parsing_errors=True,
+    return_intermediate_steps=True,
 )
 
 agent_verifier = create_structured_chat_agent(chat, agent_tool_list_verifier, prompt)
@@ -123,6 +128,7 @@ agent_executor_verifier = AgentExecutor(
     tools=agent_tool_list_verifier,
     verbose=True,
     handle_parsing_errors=True,
+    return_intermediate_steps=True,
 )
 
 # agent = agents.create_openai_tools_agent(chat, agent_tools_list, prompt)
@@ -144,12 +150,15 @@ while True:
     3. <Aircraft ID> <Action> <Reason and ICAO requirement>.
     4. ...
     ...
+    INSTRUCTIONS:
     Always use absolute values and not relative values. For example use change heading to ABSOLUTE VALUE instead of change heading by RELATIVE VALUE.
-    If there are no conflicts, provide a message saying there are no conflicts.
+    
+    Always include current values into the action plan. For example if the plan is to maintain current heading, include the current heading value in the plan. 
+
+    If there are no conflicts, respond with final answer as: NO CONFLICTS
     """
 
     planner_output = agent_executor_planner.invoke({"input": start_input})
-
     plan = planner_output["output"]
 
     if "no conflicts" in plan:
@@ -163,7 +172,7 @@ while True:
     with open(commands_path, "r") as f:
         base_commands = f.read()
 
-    retriever_prompt = f"""Find all the necesarry commands that are needed to execute the plan plan.
+    retriever_prompt = f"""Find  necesarry commands that are needed to execute the plan.
 
     <Plan>: 
     {plan}
@@ -179,30 +188,24 @@ while True:
     <Command Syntax>
     2. ...
     3. ...
+    
     """
 
     retriever_output = agent_executor_retriever.invoke({"input": retriever_prompt})
-
     bluesky_commands = retriever_output["output"]
-
 
     controller_prompt = f"""Execute: {plan}
     Here are some commands that will help you execute the plan:
     {bluesky_commands}
     """
     controller_output = agent_executor_controller.invoke({"input": controller_prompt})
-    
-    
     verifier_prompt = f""" Verify that the conflict has been resolved. This was the conflict resolution plan: 
     {plan}
     
     Monitor the airspace to see if the conflict has been resolved or is in the process of being resolved. Return your answer as either: Conflicts resolved or Conflicts not resolved.
     """
     verifier_output = agent_executor_verifier.invoke({"input": verifier_prompt})
-    
     if 'not' or 'no' in verifier_output["output"].lower():
         continue
     else:
         exit()
-
-
