@@ -194,7 +194,7 @@ def GetBlueskyCommands(ids: str) -> str:
     Returns:
     - str: the commands from the BlueSky database for the given ids
     """
-    commands_lst = [item.strip() for item in ids.split(",")]
+    commands_lst = list(set([item.strip() for item in ids.split(",")]))
     documents_lst = collection.get(ids=commands_lst)["documents"]
     documents_str = ""
     for doc in documents_lst:
