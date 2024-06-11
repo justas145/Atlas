@@ -14,11 +14,12 @@ import chromadb
 import dotenv
 from langchain import agents, hub
 from langchain.agents import AgentExecutor, create_structured_chat_agent
+from langchain_community.chat_models import ChatOllama
 
 from langchain_core import messages
 from langchain_core.tools import tool as langchain_tool
 from langchain_groq import ChatGroq
-
+from langchain_openai import ChatOpenAI
 sys.path.append("../bluesky")
 from bluesky.network.client import Client
 
@@ -80,11 +81,14 @@ with open("prompts/conflict.txt", "r") as f:
 
 
 chat = ChatGroq(temperature=0.2, model_name=model_name)
-
-
+# chat = ChatOpenAI(temperature=0.2, model_name='gpt-4o')
+# chat = ChatOllama(
+#     base_url="https://ollama.junzis.com", model="mixtral:8x22b", temperature=0.2
+# )
 agent_tools_list_planner = agent_tools_list[0:2]
 agent_tool_list_controller = [agent_tools_list[i] for i in (0, 2)]
 agent_tool_list_retriever = [agent_tools_list[-1]]
+agent_tool_list_verifier = [agent_tools_list[i] for i in (0, 1, 4)]
 # Get the prompt to use - you can modify this!
 prompt = hub.pull("hwchase17/structured-chat-agent")
 agent_planner = create_structured_chat_agent(chat, agent_tools_list_planner, prompt)
@@ -113,6 +117,14 @@ agent_executor_retriever = AgentExecutor(
     handle_parsing_errors=True,
 )
 
+agent_verifier = create_structured_chat_agent(chat, agent_tool_list_verifier, prompt)
+agent_executor_verifier = AgentExecutor(
+    agent=agent_verifier,
+    tools=agent_tool_list_verifier,
+    verbose=True,
+    handle_parsing_errors=True,
+)
+
 # agent = agents.create_openai_tools_agent(chat, agent_tools_list, prompt)
 
 # agent_executor = agents.AgentExecutor(
@@ -121,52 +133,76 @@ agent_executor_retriever = AgentExecutor(
 
 # %%
 # planner
-start_input = """
-Analyze the conflicts between aircraft, identify the type of conflicts and the seperation requirements from ICAO. As a final answer provide an actionable plan to resolve the conflict. For example:
-1. <Aircraft ID> <Action> <Reason and ICAO requirement>.
-2. <Aircraft ID> <Action> <Reason and ICAO requirement>.
-3. <Aircraft ID> <Action> <Reason and ICAO requirement>.
-4. ...
-...
-"""
-
-planner_output = agent_executor_planner.invoke({"input": start_input})
-
-plan = planner_output["output"]
 
 
-# commands.txt path is base path + prompts + commands.txt
-commands_path = os.path.join(base_path, "prompts", "commands.txt")
+while True:
 
-# read commands and use base_commands variable
-with open(commands_path, "r") as f:
-    base_commands = f.read()
+    start_input = """
+    Analyze the conflicts between aircraft, identify the type of conflicts and the seperation requirements from ICAO. As a final answer provide an actionable plan to resolve the conflict. For example:
+    1. <Aircraft ID> <Action> <Reason and ICAO requirement>.
+    2. <Aircraft ID> <Action> <Reason and ICAO requirement>.
+    3. <Aircraft ID> <Action> <Reason and ICAO requirement>.
+    4. ...
+    ...
+    Always use absolute values and not relative values. For example use change heading to ABSOLUTE VALUE instead of change heading by RELATIVE VALUE.
+    If there are no conflicts, provide a message saying there are no conflicts.
+    """
 
-retriever_prompt = f"""Find all the necesarry commands that are needed to execute the plan plan.
+    planner_output = agent_executor_planner.invoke({"input": start_input})
 
-<Plan>: 
-{plan}
-<Plan>
+    plan = planner_output["output"]
 
-<Commands>
-{base_commands}
-<Commands>
+    if "no conflicts" in plan:
+        print(plan)
+        exit()
 
-Present your answer in this way:
-1. <Command> 
-<Description of command including the meanings of the arguments>
-<Command Syntax>
-2. ...
-3. ...
-"""
+    # commands.txt path is base path + prompts + commands.txt
+    commands_path = os.path.join(base_path, "prompts", "commands.txt")
 
-retriever_output = agent_executor_retriever.invoke({"input": retriever_prompt})
+    # read commands and use base_commands variable
+    with open(commands_path, "r") as f:
+        base_commands = f.read()
 
-bluesky_commands = retriever_output["output"]
+    retriever_prompt = f"""Find all the necesarry commands that are needed to execute the plan plan.
+
+    <Plan>: 
+    {plan}
+    <Plan>
+
+    <Commands>
+    {base_commands}
+    <Commands>
+
+    Present your answer in this way:
+    1. <Command> 
+    <Description of command including the meanings of the arguments>
+    <Command Syntax>
+    2. ...
+    3. ...
+    """
+
+    retriever_output = agent_executor_retriever.invoke({"input": retriever_prompt})
+
+    bluesky_commands = retriever_output["output"]
 
 
-controller_prompt = f"""Execute: {plan}
-Here are some commands that will help you execute the plan:
-{bluesky_commands}
-"""
-controller_output = agent_executor_controller.invoke({"input": controller_prompt})
+    controller_prompt = f"""Execute: {plan}
+    Here are some commands that will help you execute the plan:
+    {bluesky_commands}
+    """
+    controller_output = agent_executor_controller.invoke({"input": controller_prompt})
+    
+    
+    verifier_prompt = f""" Verify that the conflict has been resolved. This was the conflict resolution plan: 
+    {plan}
+    
+    Monitor the airspace to see if the conflict has been resolved or is in the process of being resolved. Return your answer as either: Conflicts resolved or Conflicts not resolved.
+    """
+    verifier_output = agent_executor_verifier.invoke({"input": verifier_prompt})
+    
+    if 'not' or 'no' in verifier_output["output"].lower():
+        continue
+    else:
+        exit()
+
+
