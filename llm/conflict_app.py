@@ -16,7 +16,7 @@ import streamlit as st
 from langchain.agents import Tool
 from langchain_experimental.utilities import PythonREPL
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
-from prompts.prompts import conflict_prompt
+from llm.prompts.agent_prompts import conflict_prompt
 from langchain_community.utilities.wolfram_alpha import WolframAlphaAPIWrapper
 import chromadb
 import chromadb.utils.embedding_functions as embedding_functions

@@ -55,7 +55,7 @@ def receive_bluesky_output():
     return complete_output
 
 
-@langchain_tool
+@langchain_tool("GETALLAIRCRAFTINFO")
 def GetAllAircraftInfo(command: str = "GETACIDS"):
     """
     Get each aircraft information at current time: position, heading (deg),
@@ -82,7 +82,7 @@ def GetAllAircraftInfo(command: str = "GETACIDS"):
     return sim_output
 
 
-@langchain_tool
+@langchain_tool("GETCONFLICTINFO")
 def GetConflictInfo(command: str = "SHOWTCPA"):
     """
     Use this tool to identify and get vital information on aircraft pairs in
@@ -106,12 +106,12 @@ def GetConflictInfo(command: str = "SHOWTCPA"):
     return sim_output
 
 
-@langchain_tool
+@langchain_tool("CONTINUEMONITORING")
 def ContinueMonitoring(duration: int = 5):
     """Monitor for conflicts between aircraft pairs for a specified time.
 
     Parameters:
-    - time (int): The time in seconds to monitor for conflicts. Default is 5 seconds.
+    - duration (int): The time in seconds to monitor for conflicts. Default is 5 seconds. Maximum duration is 15 seconds.
 
     Example usage:
     - ContinueMonitoring(5)
@@ -121,6 +121,7 @@ def ContinueMonitoring(duration: int = 5):
     """
     # ensure duration is an integer
     duration = int(duration)
+    duration = 15 if duration > 15 else duration
     time.sleep(duration)
     client.send_event(b"STACK", "SHOWTCPA")
     time.sleep(0.8)
@@ -128,7 +129,7 @@ def ContinueMonitoring(duration: int = 5):
     return sim_output
 
 
-@langchain_tool
+@langchain_tool("SENDCOMMAND")
 def SendCommand(command: str):
     """
     Sends a command with optional arguments to the simulator and returns the output.
@@ -163,7 +164,7 @@ def SendCommand(command: str):
     return sim_output
 
 
-@langchain_tool
+@langchain_tool("QUERYDATABASE")
 def QueryDatabase(input: str):
     """Query skill database
 
@@ -180,7 +181,7 @@ def QueryDatabase(input: str):
     query_results = collection.query(query_texts=[input], n_results=5)
     return query_results
 
-@langchain_tool
+@langchain_tool("GETBLUESKYCOMMANDS")
 def GetBlueskyCommands(ids: str) -> str:
     """
     Get the commands' documentation from the BlueSky database for the given ids.
@@ -194,7 +195,7 @@ def GetBlueskyCommands(ids: str) -> str:
     Returns:
     - str: the commands from the BlueSky database for the given ids
     """
-    commands_lst = [item.strip() for item in ids.split(",")]
+    commands_lst = list(set([item.strip() for item in ids.split(",")]))
     documents_lst = collection.get(ids=commands_lst)["documents"]
     documents_str = ""
     for doc in documents_lst:
@@ -210,3 +211,6 @@ agent_tools_list = [
     ContinueMonitoring,
     GetBlueskyCommands,
 ]
+
+
+agent_tool_dict = {tool.name: tool for tool in agent_tools_list}

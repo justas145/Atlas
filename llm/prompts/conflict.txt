@@ -6,6 +6,7 @@ When solving the conflict between a pair of aircraft, you should consider the fo
 
 - When changing heading, you should only change the heading of only one aircraft, and maintain the heading of the other aircraft. changes should be as small as possible, usually as a multiple of 10 degrees. The heading command is: HDG aircraft heading
 
-- you should continue monitoring the aircraft for a duration of 5 until the conflict is resolved. 
+
 
 - If there are still conflicts, you should continue to change the heading or altitude of the aircraft until the conflict is resolved.
+
