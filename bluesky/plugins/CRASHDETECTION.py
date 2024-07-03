@@ -80,7 +80,6 @@ def calculate_distance(ids, lats, longs, alts):
         for j in range(i + 1, len(ids)):
             horizontal_distance = haversine(lats[i], longs[i], lats[j], longs[j])
             alt_diff = (alts[j] - alts[i]) # alts already in meters
-            print(alts[i], alts[j], alt_diff)
             total_distance = math.sqrt(
                 horizontal_distance**2 + alt_diff**2
             )  # Pythagorean theorem

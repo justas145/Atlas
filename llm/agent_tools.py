@@ -122,11 +122,15 @@ def ContinueMonitoring(duration: int = 5):
     # ensure duration is an integer
     duration = int(duration)
     duration = 15 if duration > 15 else duration
-    time.sleep(duration)
     client.send_event(b"STACK", "SHOWTCPA")
     time.sleep(0.8)
-    sim_output = receive_bluesky_output()
-    return sim_output
+    conflict_info1 = receive_bluesky_output()
+    client.send_event(b"STACK", "SHOWTCPA")
+    time.sleep(duration)
+    conflict_info2 = receive_bluesky_output()
+
+    final_output = conflict_info1 + f"\n After {duration} seconds \n" + conflict_info2
+    return final_output
 
 
 @langchain_tool("SENDCOMMAND")
@@ -207,9 +211,7 @@ agent_tools_list = [
     GetAllAircraftInfo,
     GetConflictInfo,
     SendCommand,
-    QueryDatabase,
     ContinueMonitoring,
-    GetBlueskyCommands,
 ]
 
 
