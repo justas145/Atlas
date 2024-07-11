@@ -20,6 +20,33 @@ from langchain_groq import ChatGroq
 sys.path.append("../bluesky")
 from bluesky.network.client import Client
 
+from contextlib import contextmanager
+import sys
+import io
+
+
+class CaptureAndPrintConsoleOutput:
+    def __init__(self):
+        self.old_stdout = sys.stdout
+        self.output = []
+
+    def write(self, text):
+        self.output.append(text)
+        self.old_stdout.write(text)
+
+    def flush(self):
+        self.old_stdout.flush()
+
+    def getvalue(self):
+        return "".join(self.output)
+
+    def __enter__(self):
+        sys.stdout = self
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout = self.old_stdout
+
 
 # %%
 dotenv.load_dotenv("../.env")
@@ -55,7 +82,7 @@ initialize_client(client)
 # Vector DB
 collections = chroma_client.list_collections()
 collection_names = [collection.name for collection in collections]
-selected_collection = "default"
+selected_collection = "skill_manuals"
 
 collection = chroma_client.get_or_create_collection(
     name=selected_collection,
@@ -66,7 +93,6 @@ collection = chroma_client.get_or_create_collection(
 initialize_collection(collection)
 
 
-
 # %%
 
 prompt = hub.pull("hwchase17/openai-tools-agent")
@@ -74,8 +100,8 @@ prompt = hub.pull("hwchase17/openai-tools-agent")
 with open("prompts/system.txt", "r") as f:
     prompt.messages[0].prompt.template = f.read()
 
-with open("prompts/conflict.txt", "r") as f:
-    prompt.messages[0].prompt.template += f.read()
+# with open("prompts/conflict.txt", "r") as f:
+#     prompt.messages[0].prompt.template += f.read()
 
 
 chat = ChatGroq(temperature=temperature, model_name=model_name)
@@ -87,12 +113,11 @@ agent_executor = agents.AgentExecutor(
 
 
 # %%
-user_input = "solve aircraft conflict with heading changes"
+user_input = "solve aircraft conflict."
 
-out = agent_executor.invoke({"input": user_input})
+with CaptureAndPrintConsoleOutput() as output:
+    out = agent_executor.invoke({"input": user_input})
 
-# %%
-# chat_history = []
-# out = agent_executor.invoke({"input": user_input, "chat_history": chat_history})
-# chat_history.append(messages.HumanMessage(content=user_input))
-# chat_history.append(messages.AIMessage(content=out["output"]))
+console_output = output.getvalue()
+print("Captured Console Output:")
+print(type(console_output))

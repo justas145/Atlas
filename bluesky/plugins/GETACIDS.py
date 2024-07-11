@@ -40,7 +40,7 @@ def init_plugin():
 def get_aircraft_ids():
     '''Get all aircraft ids'''
     ac_ids_lst = traf.id
-    stack.stack('ECHO Aircraft ids: ' + str(traf.id))
+    stack.stack("ECHO Aircraft idx: " + str(traf.id))
     for ac in ac_ids_lst:
         stack.stack(ac)
 

@@ -7,7 +7,7 @@ from langchain_core.prompts import PromptTemplate
 #     4. ...
 #     ...
 
-    # If you will give action as for example 'turn  x degrees left/right' or 'climb/descent by x feet' I will kill you, because that is not ABSOLUTE VALUE, that is RELATIVE VALUE and we don't like RELATIVE VALUES.Correct way would be 'turn to y (0<y<360)' climb to ABSOLUTE VALUE.
+# If you will give action as for example 'turn  x degrees left/right' or 'climb/descent by x feet' I will kill you, because that is not ABSOLUTE VALUE, that is RELATIVE VALUE and we don't like RELATIVE VALUES.Correct way would be 'turn to y (0<y<360)' climb to ABSOLUTE VALUE.
 planner_prompt = PromptTemplate.from_template(
     """You are an air traffic controller who must solve aircraft conflicts according to ICAO standards. Check if there are conflicts and if so then provide an actionable plan to resolve the conflicts. 
     INSTRUCTIONS:
@@ -76,3 +76,41 @@ ICAO requirements:
 {icao_seperation_guidelines}
 """
 )
+
+
+conflict_solution_prompt = PromptTemplate.from_template(
+    """
+    You are an air traffic specialist. There was an aircraft conflict and this is the log that shows what was done to solve or not solve the conflict:
+    
+    {log}	
+
+    Describe the effectiveness of each action taken to manage an aircraft conflict, without using numbers. Define "effective" as any action that results in a reduction of conflict pairs. Explain why each action was either effective or ineffective by referencing the general outcome, such as changes in altitude or heading adjustments. Avoid specifics and keep the explanation concise. For instance, explain how increasing the altitude of one aircraft helped by reducing the proximity to another, or why maintaining the same heading did not resolve the conflict. Proceed to describe each action sequentially, focusing on the impact rather than the action itself.
+
+    Here is an example of how the Desired Result should look like:
+    Increasing the altitude of one aircraft effectively reduced its proximity to another, resolving part of the conflict. Subsequently, decreasing the altitude of another aircraft directly in front of the first adjusted aircraft further helped by separating their flight paths. A heading adjustment for one of the last two conflicting aircraft then successfully dispersed the remaining conflict. However, a command that did not alter the heading of an aircraft proved ineffective, as it failed to change the conflict situation.
+    """
+)
+
+conflict_description_prompt = PromptTemplate.from_template(
+  """
+  You are an air traffic specialist. There was an aircraft conflict and this is the log that shows what was done to solve or not solve the conflict:
+  
+  {log}
+  
+  Task: Transform the provided air traffic conflict log into a structured conflict report.
+      Desired Output Format: Conflict Report
+
+  - Number of Aircraft Involved: [Number and types of aircraft]
+
+  - Altitude: [Initial altitude of all involved aircraft].
+
+  - Heading: [Initial heading of all involved aircraft]
+
+  - Conflict formation:
+      Head-On Formation
+      T-Formation
+      Parallel Formation
+      Converging Formation
+  - Number of Commands sent:
+      Only integer, nothing more
+""")

@@ -2,11 +2,9 @@ When solving the conflict between a pair of aircraft, you should consider the fo
 
 - you can choose either altitude or heading changes unless you are told to use one specific strategy.
 
-- When changing altitude, you should only change the altitude of only one aircraft, and maintain the altitude of the other aircraft. changes should be as small as possible, usually a multiple of 1000 feet. The altitude command is: ALT aircraft altitude
+- When changing altitude, you should only change the altitude of only one aircraft, and maintain the altitude of the other aircraft.
 
-- When changing heading, you should only change the heading of only one aircraft, and maintain the heading of the other aircraft. changes should be as small as possible, usually as a multiple of 10 degrees. The heading command is: HDG aircraft heading
-
-
+- When changing heading, you should only change the heading of only one aircraft, and maintain the heading of the other aircraft.
 
 - If there are still conflicts, you should continue to change the heading or altitude of the aircraft until the conflict is resolved.
 
