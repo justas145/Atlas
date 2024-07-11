@@ -49,3 +49,6 @@ def show_conflicts_tcpa():
 
         conflict_info = f"{pair[0]} - {pair[1]} | TCPA: {tcpa_value:.2f} sec | QDR: {qdr_value:.2f} deg | Distance: {distance_value / 1852:.2f} Nautical miles | DCPA: {dcpa_value / 1852:.2f} Nautical miles | tLOS: {tLOS_value:.2f} sec"
         stack.stack(f'ECHO {conflict_info}')
+
+    num_ac_conf = len({ac for pair in sorted_tuples for ac in pair})
+    stack.stack(f'ECHO Number of aircraft in conflict: {num_ac_conf}')
