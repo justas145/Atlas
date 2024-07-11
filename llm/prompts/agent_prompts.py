@@ -78,7 +78,7 @@ ICAO requirements:
 )
 
 
-conflict_solution_description_prompt = PromptTemplate.from_template(
+conflict_solution_prompt = PromptTemplate.from_template(
     """
     You are an air traffic specialist. There was an aircraft conflict and this is the log that shows what was done to solve or not solve the conflict:
     
@@ -101,24 +101,16 @@ conflict_description_prompt = PromptTemplate.from_template(
       Desired Output Format: Conflict Report
 
   - Number of Aircraft Involved: [Number and types of aircraft]
-  - Conflict Type: 
-      Head-On Conflict
-      Converging Conflict
-      Crossing Conflict
-      Overtaking Conflict
-      Lateral Conflict
-      Vertical Conflict
-  - Altitude: [Initial altitude of all involved aircraft]
+
+  - Altitude: [Initial altitude of all involved aircraft].
 
   - Heading: [Initial heading of all involved aircraft]
 
   - Conflict formation:
       Head-On Formation
       T-Formation
-      Cross Formation
       Parallel Formation
       Converging Formation
-      Overtaking Formation
-      Stacked Formation
-      Star Formation
+  - Number of Commands sent:
+      Only integer, nothing more
 """)
