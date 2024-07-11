@@ -168,22 +168,46 @@ def SendCommand(command: str):
     return sim_output
 
 
-@langchain_tool("QUERYDATABASE")
-def QueryDatabase(input: str):
-    """Query skill database
-
-    If you want to send a command to a simulator, please first search for the appropriate command.
-    For example, if you want to create an aircraft, search for 'how do I create an aircraft'.
-
-    Parameters:
-    - input: str (the query to search for)
-
-    Returns:
-    - list: the top 5 results from the database
+@langchain_tool("QUERYCONFLICTS")
+def QueryConflicts(input: str, num_ac: int, conflict_formation: str):
     """
+    Query for a similar conflict and its resolution in the database.
+    """
+    where_full = {
+        "$and": [
+            {"num_ac": num_ac},
+            {"conflict_formation": conflict_formation},
+        ]
+    }
+    where_partial = {"num_ac": num_ac}
+    print(3)
 
-    query_results = collection.query(query_texts=[input], n_results=5)
-    return query_results
+    try:
+        query_results = collection.query(
+            query_texts=[input], n_results=1, where=where_full
+        )
+        print("Full query results:", query_results)
+        doc = query_results["documents"][0][0] if query_results["documents"] else ""
+        print(1)
+        if doc:
+            return doc
+    except Exception as e:
+        print("Error with full query:", e)
+
+    try:
+        query_results = collection.query(
+            query_texts=[input], n_results=1, where=where_partial
+        )
+        print("Partial query results:", query_results)
+        doc = query_results["documents"][0][0] if query_results["documents"] else ""
+        print(2)
+        if doc:
+            return doc
+    except Exception as e:
+        print("Error with partial query:", e)
+
+    return "No similar conflict found in the database."
+
 
 @langchain_tool("GETBLUESKYCOMMANDS")
 def GetBlueskyCommands(ids: str) -> str:
@@ -207,11 +231,30 @@ def GetBlueskyCommands(ids: str) -> str:
     return documents_str
 
 
+@langchain_tool("QUERYDATABASE")
+def QueryDatabase(input: str):
+    """Query skill database
+
+    If you want to send a command to a simulator, please first search for the appropriate command.
+    For example, if you want to create an aircraft, search for 'how do I create an aircraft'.
+
+    Parameters:
+    - input: str (the query to search for)
+
+    Returns:
+    - list: the top 5 results from the database
+    """
+
+    query_results = collection.query(query_texts=[input], n_results=5)
+    return query_results
+
+
 agent_tools_list = [
     GetAllAircraftInfo,
     GetConflictInfo,
     SendCommand,
     ContinueMonitoring,
+    QueryConflicts,
 ]
 
 
