@@ -9,7 +9,7 @@ import sys
 import time
 from contextlib import contextmanager
 from io import StringIO
-
+from utils.skill_manual_creation import create_skill_manual, update_skill_library
 import chromadb
 import dotenv
 from langchain import agents, hub
@@ -121,3 +121,7 @@ with CaptureAndPrintConsoleOutput() as output:
 console_output = output.getvalue()
 print("Captured Console Output:")
 print(type(console_output))
+
+
+skill_manual, metadata = create_skill_manual(console_output)
+update_skill_library(collection, skill_manual, metadata)
