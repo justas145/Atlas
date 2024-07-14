@@ -57,7 +57,7 @@ class Metadata(BaseModel):
     # 1. Each field is an `optional` -- this allows the model to decline to extract it!
     # 2. Each field has a `description` -- this description is used by the LLM.
     # Having a good description can help improve extraction results.
-    num_ac: Optional[str] = Field(default=None, description="Number of aircraft in conflict")
+    num_ac: Optional[int] = Field(default=None, description="Number of aircraft in conflict")
     conflict_formation: Optional[str] = Field(
         default=None, description="conflict formation"
     )
