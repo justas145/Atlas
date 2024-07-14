@@ -172,6 +172,11 @@ def SendCommand(command: str):
 def QueryConflicts(input: str, num_ac: int, conflict_formation: str):
     """
     Query for a similar conflict and its resolution in the database.
+
+    input: str (short description of the conflict)
+    num_ac: int (number of aircraft in conflict)
+    conflict_formation: str (formation of the conflict, options: Head-On Formation, T-Formation, Parallel Formation, Converging Formation)
+
     """
     where_full = {
         "$and": [
