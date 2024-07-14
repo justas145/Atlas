@@ -3,6 +3,7 @@ from agent_tools import (
     initialize_client,
     initialize_collection,
     agent_tools_list,
+    GetConflictInfo,
 )
 import os
 import sys
@@ -128,5 +129,8 @@ print("Captured Console Output:")
 print(type(console_output))
 
 
-skill_manual, metadata = create_skill_manual(console_output)
-update_skill_library(collection, skill_manual, metadata)
+# skill_manual, metadata = create_skill_manual(console_output)
+# update_skill_library(collection, skill_manual, metadata)
+
+final_conflict_check = GetConflictInfo("SHOWTCPA")
+print(final_conflict_check)
