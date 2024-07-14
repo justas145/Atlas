@@ -115,6 +115,11 @@ agent_executor = agents.AgentExecutor(
 # %%
 user_input = "solve aircraft conflict."
 
+scenario = "case1"
+client.send_event(b"STACK", f"IC simple/conflicts/2ac/{scenario}.scn")
+time.sleep(1.5)
+client.update()
+
 with CaptureAndPrintConsoleOutput() as output:
     out = agent_executor.invoke({"input": user_input})
 
