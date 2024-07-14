@@ -50,6 +50,11 @@ def init_plugin():
 ### provides the original implementation (see for example the asas/eby plugin).
 
 
+def log_crash(crash_info):
+    with open("output/crash_log.txt", "a") as file:
+        file.write(f"{crash_info}\n")
+
+
 import math
 
 
@@ -106,3 +111,5 @@ class Example(core.Entity):
         for id1, id2, distance in distance:
             if distance < 100:
                 print(f"CRASH: {id1} and {id2} are {distance} meters apart.")
+                log_crash(f"CRASH: {id1} and {id2} are {distance} meters apart.")
+
