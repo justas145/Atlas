@@ -7,7 +7,7 @@ from bluesky.core import Entity
 from bluesky.stack import command
 
 
-bs.settings.set_variable_defaults(asas_pzr=4.9, asas_pzh=999.0,
+bs.settings.set_variable_defaults(asas_pzr=4.9, asas_pzh=990.0,
                                   asas_dtlookahead=300.0)
 
 
