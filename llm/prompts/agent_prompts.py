@@ -17,12 +17,12 @@ planner_prompt = PromptTemplate.from_template(
     
     Do not introduce new conflicts in your plan, people lives depend on this plan
     
+    Here are the ICAO seperation guidelines:
+    {icao_seperation_guidelines}
 
     """
 )
 
-# Here are the ICAO seperation guidelines:
-# {icao_seperation_guidelines}
 
 executor_prompt = PromptTemplate.from_template(
     """

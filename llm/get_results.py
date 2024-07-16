@@ -19,6 +19,11 @@ import time
 from langchain import agents, hub
 from langchain_groq import ChatGroq
 from contextlib import contextmanager
+from prompts.agent_prompts import (
+    planner_prompt,
+    executor_prompt,
+    verifier_prompt,
+)
 
 dotenv.load_dotenv("../.env")
 # Usage
@@ -26,6 +31,9 @@ base_path = "../bluesky/scenario"  # Adjust this to your base directory
 target_path = (
     "../bluesky/scenario/TEST"  # Adjust this to the directory you want to search
 )
+
+with open("prompts/ICAO_seperation_guidelines.txt", "r") as f:
+    icao_seperation_guidelines = f.read()
 
 
 import os
@@ -107,6 +115,42 @@ class CaptureAndPrintConsoleOutput:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         sys.stdout = self.old_stdout
+
+
+class MultiAgent:
+    def __init__(self, agents, prompts, icao_seperation_guidelines):
+        self.agents = agents
+        self.prompts = prompts
+        self.icao_seperation_guidelines = icao_seperation_guidelines
+
+    def invoke(self, initial_input):
+        planner_prompt = self.prompts["planner"].format(
+            icao_seperation_guidelines=self.icao_seperation_guidelines
+        )
+        print("Planner Agent Running")
+        plan = self.agents["planner"].invoke({"input": planner_prompt})["output"]
+
+        if "no conflicts" in plan.lower():
+            return {"output": plan, "status": "resolved"}
+
+        while True:
+            controller_prompt = self.prompts["executor"].format(plan=plan)
+            print("Controller Agent Running")
+            controller_output = self.agents["controller"].invoke(
+                {"input": controller_prompt}
+            )["output"]
+
+            verifier_prompt = self.prompts["verifier"].format(
+                icao_seperation_guidelines=self.icao_seperation_guidelines, plan=plan
+            )
+            print("Verifier Agent Running")
+            verifier_output = self.agents["verifier"].invoke(
+                {"input": verifier_prompt}
+            )["output"]
+            if "no conflicts" in verifier_output.lower():
+                return {"output": verifier_output, "status": "resolved"}
+            else:
+                plan = verifier_output
 
 
 def initialize_simulator():
@@ -284,7 +328,7 @@ def remove_ansi_escape_sequences(text):
     return ansi_escape_pattern.sub("", text)
 
 
-def setup_agent(config):
+def setup_single_agent(config):
     # Load system prompts
     prompt = hub.pull("hwchase17/openai-tools-agent")
     with open("prompts/system.txt", "r") as f:
@@ -309,6 +353,49 @@ def setup_agent(config):
     agent = agents.create_openai_tools_agent(chat, tools_to_use, prompt)
     agent_executor = agents.AgentExecutor(agent=agent, tools=tools_to_use, verbose=True)
     return agent_executor
+
+
+def setup_multi_agent(config):
+    print('setting up multi agent with config:', config	)
+    agents_dict = {}
+    tool_sets = {
+        "planner": ["GETALLAIRCRAFTINFO", "GETCONFLICTINFO"],
+        "controller": ["SENDCOMMAND"],
+        "verifier": ["GETALLAIRCRAFTINFO", "GETCONFLICTINFO", "CONTINUEMONITORING"],
+    }
+
+    agents_prompts = {
+    'planner': planner_prompt,
+    'executor': executor_prompt,
+    'verifier': verifier_prompt
+    }
+
+    chat = ChatGroq(temperature=config["temperature"], model_name=config["model_name"])
+    prompt = hub.pull("hwchase17/openai-tools-agent")
+
+    for role, tool_names in tool_sets.items():
+        tools_to_use = [agent_tool_dict[name] for name in tool_names]
+        if config.get("use_skill_lib", False) and role in ["planner", "verifier"]:
+            print('using skill lib')
+            tools_to_use.append(agent_tool_dict["QUERYCONFLICTS"])
+        print('not using skill lib')
+        # TODO
+        # add the prompt for each role, now it is the same for all
+        agent = agents.create_openai_tools_agent(chat, tools_to_use, prompt)
+        agents_dict[role] = agents.AgentExecutor(
+            agent=agent, tools=tools_to_use, verbose=True
+        )
+
+    return MultiAgent(agents_dict, agents_prompts, icao_seperation_guidelines)
+
+def setup_agent(config):
+    if "multi" in config["type"]:
+        return setup_multi_agent(config)
+    elif "single" in config["type"]:
+        return setup_single_agent(config)
+    else:
+        raise ValueError(f"Invalid agent type: {config['type']}")
+
 
 client = initialize_simulator()
 scn_files = list_scn_files(base_path, target_path)
