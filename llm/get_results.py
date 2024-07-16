@@ -1,4 +1,5 @@
 import os
+import re
 import colorama
 colorama.init(autoreset=True)
 import csv
@@ -278,6 +279,11 @@ def save_results_to_csv(results, output_file):
             writer.writerow(result)
 
 
+def remove_ansi_escape_sequences(text):
+    ansi_escape_pattern = re.compile(r"\x1B[@-_][0-?]*[ -/]*[@-~]")
+    return ansi_escape_pattern.sub("", text)
+
+
 def setup_agent(config):
     # Load system prompts
     prompt = hub.pull("hwchase17/openai-tools-agent")
@@ -316,42 +322,50 @@ user_input = "Solve Air Traffic Conflicts"
 agent_config = config['agents'][0]
 print(agent_config)
 
-for agent_config in config['agents']:
-    agent_type = agent_config['type']
-    model_name = agent_config['model_name'].replace(' ', '_').replace('-', '_')
-    temperature = str(agent_config['temperature']).replace('.', 'p')
+for agent_config in config["agents"]:
+    agent_type = agent_config["type"]
+    model_name = agent_config["model_name"].replace(" ", "_").replace("-", "_")
+    temperature = str(agent_config["temperature"]).replace(".", "p")
 
     agent_executor = setup_agent(agent_config)
 
-    for scn in scn_files[0:1]:
+    # Path for the agent-specific CSV file
+    agent_csv_path = f"results/csv/{agent_type}/{model_name}_{temperature}/results.csv"
 
-        scenario_name = scn.split("/")[-1].replace(
-            ".scn", ""
-        )  # Adjust path handling as needed
-        recording_directory = f"results/recordings/{agent_type}/{model_name}_{temperature}"
+    for scn in scn_files[0:1]:
+        scenario_name = scn.split("/")[-1].replace(".scn", "")
+        recording_directory = (
+            f"results/recordings/{agent_type}/{model_name}_{temperature}"
+        )
         recording_file_name = f"{scenario_name}.avi"
 
         num_ac = get_num_ac_from_scenario(scn)
-        print(num_ac)
         load_and_run_scenario(client, scn)
-        print(scn)
         conflict_type = extract_conflict_type(scn)
-        print(conflict_type)
-        # # run agent based on config
+
         recorder = ScreenRecorder(
-        output_directory=recording_directory, file_name=recording_file_name)
+            output_directory=recording_directory, file_name=recording_file_name
+        )
         recorder.start_recording()
         with CaptureAndPrintConsoleOutput() as output:
             result = agent_executor.invoke({"input": user_input})
-        #time.sleep(10)
         recorder.stop_recording()
-        console_output = output.getvalue()
-        # # final conflict check
-        final_score, final_details = final_check()
-        print(final_score)
-        print(final_details)
-        # print(score)
-        # print(output)
-        # # get results
 
-        # # append results to results.csv
+        console_output = output.getvalue()
+        console_output = remove_ansi_escape_sequences(console_output)
+        final_score, final_details = final_check()
+
+        # Prepare the results dictionary
+        result_data = {
+            "scenario": scenario_name,
+            "agent_type": agent_type,
+            "model_name": model_name,
+            "temperature": temperature,
+            "score": final_score,
+            "log": console_output,
+            "final_details": final_details,
+        }
+
+        # Save results to both the central and agent-specific CSV files
+        save_results_to_csv([result_data], central_csv_path)
+        save_results_to_csv([result_data], agent_csv_path)
