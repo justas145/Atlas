@@ -107,9 +107,9 @@ class Example(core.Entity):
 
         distance = calculate_distance(ids, lats, longs, alts)
         # distance is [(id1, id2, distance), ...]
-        # check for crashes. crash is less than 100m
+        # check for crashes. crash is less than 300m
         for id1, id2, distance in distance:
-            if distance < 100:
+            if distance < 300:
                 print(f"CRASH: {id1} and {id2} are {distance} meters apart.")
                 log_crash(f"CRASH: {id1} and {id2} are {distance} meters apart.")
 
