@@ -1,5 +1,6 @@
 import os
 import re
+import itertools
 import colorama
 colorama.init(autoreset=True)
 import csv
@@ -18,6 +19,7 @@ from agent_tools import (
 import time
 from langchain import agents, hub
 from langchain_groq import ChatGroq
+from langchain_openai import ChatOpenAI
 from contextlib import contextmanager
 from prompts.agent_prompts import (
     planner_prompt,
@@ -200,10 +202,9 @@ def load_and_run_scenario(client, scenario_path):
 
         client.update()
         print(f"Loaded scenario: {scenario_path}")
-        time.sleep(1)  # Wait for the scenario to load
+        time.sleep(3)  # Wait for the scenario to load
         # clear the output buffer
         out = receive_bluesky_output()
-        print(out)
 
     except Exception as e:
         print(f"Failed to load scenario {scenario_path}: {str(e)}")
@@ -237,18 +238,35 @@ def get_num_ac_from_scenario(scenario_path):
         return None
 
 
+def try_get_conflict_info(max_attempts=3):
+    for attempt in range(max_attempts):
+        conflict_info = GetConflictInfo("SHOWTCPA")
+        if (
+            conflict_info.strip() and conflict_info.strip() != "Error"
+        ):  # Assume "Error" is a placeholder for any error message
+            return conflict_info  # Return valid data if non-empty and no error
+        else:
+            print(
+                f"Attempt {attempt + 1}: Failed to get valid conflict info. Retrying..."
+            )
+            time.sleep(2)  # Wait for 2 seconds before retrying
+
+    # If all attempts fail, handle it as needed
+    print("Failed to retrieve conflict information after several attempts.")
+    return None  # Or any other error handling mechanism
+
+
 def final_check(crash_log_path="../bluesky/output/crash_log.txt"):
     """
     Performs the final checks after the agent has completed its task.
 
     Args:
     crash_log_path (str): Path to the crash log file.
-    get_conflict_info (func): Function that checks for conflicts and returns conflict details.
 
     Returns:
     tuple: (score, details) where score is the evaluation score and details contain either crash or conflict information.
     """
-    # Check for a crash
+    # Check for a crash in the log file
     try:
         with open(crash_log_path, "r") as file:
             crash_info = file.read().strip()
@@ -261,13 +279,29 @@ def final_check(crash_log_path="../bluesky/output/crash_log.txt"):
         return None
 
     # Check for conflicts if no crash detected
-    conflict_info = GetConflictInfo("SHOWTCPA")
-    if (
-        conflict_info.strip() != "No conflicts detected."
-        
-    ):  # Adjusting condition to explicitly handle the no-conflict scenario
-        print(conflict_info)
-        return 0, conflict_info  # Conflicts detected, score 0, return conflict details
+    conflict_info = try_get_conflict_info()
+    if conflict_info is None:
+        return 1, "Conflict information could not be retrieved."  
+    if conflict_info.strip() != "No conflicts detected.":
+        # Parsing the conflict information for DCPA values
+        lines = conflict_info.strip().split("\n")[1:]  # Skip the header
+        crash_detected = False
+        for line in lines:
+            parts = line.split("|")
+            if len(parts) > 4:  # Ensure there are enough parts to extract DCPA
+                dcpa_nmi = float(
+                    parts[4].split(":")[1].strip().split(" ")[0]
+                )  # Extract DCPA value in nautical miles
+                dcpa_meters = dcpa_nmi * 1852  # Convert nautical miles to meters
+                if dcpa_meters <= 300:
+                    print(f'dcpa is {dcpa_meters}, crash detected!')
+                    crash_detected = True
+                    break
+
+        if crash_detected:
+            return -1, conflict_info  # Crash scenario detected due to DCPA threshold
+        else:
+            return 0, conflict_info  # Conflicts detected, but no crash
     else:
         return (
             1,
@@ -305,12 +339,17 @@ def save_results_to_csv(results, output_file):
     with open(output_file, "a", newline="", encoding="utf-8") as csvfile:
         fieldnames = [
             "scenario",
+            "num_aircraft",
+            "conflict_type",
             "agent_type",
             "model_name",
             "temperature",
+            "runtime",
+            "num_total_commands",
+            "num_send_commands",
             "score",
             "log",
-            "final_details",
+            "final_details"
         ]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
@@ -327,15 +366,21 @@ def remove_ansi_escape_sequences(text):
     ansi_escape_pattern = re.compile(r"\x1B[@-_][0-?]*[ -/]*[@-~]")
     return ansi_escape_pattern.sub("", text)
 
+def setup_chat_model(config, groq_api_key):
+    if 'gpt' in config["model_name"]:
+        chat = ChatOpenAI(temperature=config["temperature"], model_name=config["model_name"])
+    else:
+        chat = ChatGroq(temperature=config["temperature"], model_name=config["model_name"], api_key=groq_api_key)
+    return chat
 
-def setup_single_agent(config):
+def setup_single_agent(config, groq_api_key):
     # Load system prompts
     prompt = hub.pull("hwchase17/openai-tools-agent")
     with open("prompts/system.txt", "r") as f:
         prompt.messages[0].prompt.template = f.read()
     print('setting up agent with config:', config)
     # Initialize LLM model
-    chat = ChatGroq(temperature=config["temperature"], model_name=config["model_name"])
+    chat = setup_chat_model(config, groq_api_key)
     # Decide on tools to include based on the 'use_skill_lib' configuration
     if agent_config.get("use_skill_lib", False):
         tools_to_use = (
@@ -355,7 +400,7 @@ def setup_single_agent(config):
     return agent_executor
 
 
-def setup_multi_agent(config):
+def setup_multi_agent(config, groq_api_key):
     print('setting up multi agent with config:', config	)
     agents_dict = {}
     tool_sets = {
@@ -370,7 +415,7 @@ def setup_multi_agent(config):
     'verifier': verifier_prompt
     }
 
-    chat = ChatGroq(temperature=config["temperature"], model_name=config["model_name"])
+    chat = setup_chat_model(config, groq_api_key)
     prompt = hub.pull("hwchase17/openai-tools-agent")
 
     for role, tool_names in tool_sets.items():
@@ -388,13 +433,37 @@ def setup_multi_agent(config):
 
     return MultiAgent(agents_dict, agents_prompts, icao_seperation_guidelines)
 
-def setup_agent(config):
+def setup_agent(config, grop_api_key):
     if "multi" in config["type"]:
-        return setup_multi_agent(config)
+        return setup_multi_agent(config, grop_api_key)
     elif "single" in config["type"]:
-        return setup_single_agent(config)
+        return setup_single_agent(config, grop_api_key)
     else:
         raise ValueError(f"Invalid agent type: {config['type']}")
+
+
+def load_agent_configs(config):
+    agent_params = config["agents"]
+    # Generate all combinations of agent configurations
+    all_combinations = list(
+        itertools.product(
+            agent_params["types"],
+            agent_params["model_names"],
+            agent_params["temperatures"],
+            agent_params["use_skill_libs"],
+        )
+    )
+    # Convert combinations into dictionary format expected by the rest of your code
+    expanded_agents = []
+    for combo in all_combinations:
+        agent_dict = {
+            "type": combo[0],
+            "model_name": combo[1],
+            "temperature": combo[2],
+            "use_skill_lib": combo[3],
+        }
+        expanded_agents.append(agent_dict)
+    return expanded_agents
 
 
 client = initialize_simulator()
@@ -402,25 +471,36 @@ scn_files = list_scn_files(base_path, target_path)
 config = load_config("config/config1.yml")
 central_csv_path = "results/csv/all_results.csv"  # Central file for all results
 
+# retrieve groq api keys
+groq_api_keys = [os.getenv("GROQ_API_KEY"), os.getenv("GROQ_API_KEY_2")]
+key_index = 0  # Start with the first API key
+
 user_input = "Solve Air Traffic Conflicts"
 # load agent
 # agent = initialize_agent(config_path)
 
-agent_config = config['agents'][0]
-print(agent_config)
+agent_configs = load_agent_configs(config)
 
-for agent_config in config["agents"]:
+agent_configs = [
+    {
+        "type": "single_agent",
+        "model_name": "mixtral-8x7b-32768",
+        "temperature": 0.9,
+        "use_skill_lib": False,
+    }
+]
+scn_files = ["TEST/ac_4/t_formation_1.scn"]
+
+for agent_config in agent_configs:
     agent_type = agent_config["type"]
     model_name = agent_config["model_name"].replace(" ", "_").replace("-", "_")
     temperature = str(agent_config["temperature"]).replace(".", "p")
 
-    agent_executor = setup_agent(agent_config)
-
     # Path for the agent-specific CSV file
     agent_csv_path = f"results/csv/{agent_type}/{model_name}_{temperature}/results.csv"
 
-    for scn in scn_files[0:1]:
-        scenario_name = scn.split("/")[-1].replace(".scn", "")
+    for scn in scn_files:
+        scenario_name = "_".join(scn.split("/")[-2:]).replace(".scn", "")
         recording_directory = (
             f"results/recordings/{agent_type}/{model_name}_{temperature}"
         )
@@ -434,20 +514,56 @@ for agent_config in config["agents"]:
             output_directory=recording_directory, file_name=recording_file_name
         )
         recorder.start_recording()
-        with CaptureAndPrintConsoleOutput() as output:
-            result = agent_executor.invoke({"input": user_input})
+
+        success = False
+        for attempt in range(5):  # Retry up to 5 times
+            try:
+                with CaptureAndPrintConsoleOutput() as output:
+                    # Use the current API key to setup the agent
+                    agent_executor = setup_agent(agent_config, groq_api_keys[key_index])
+                    start_time = (
+                        time.perf_counter()
+                    )  # Record the start time with higher precision
+                    result = agent_executor.invoke({"input": user_input})
+                    elapsed_time = (
+                        time.perf_counter() - start_time
+                    )  # Calculate the elapsed time with higher precision
+                success = True
+                break  # Exit the retry loop if successful
+            except Exception as e:
+                print(f"Attempt {attempt + 1} failed, error: {e}")
+                if attempt < 4:  # Only sleep and swap keys if it's not the last attempt
+                    time.sleep(65)
+                    # Swap to the next API key
+                    key_index = 1 - key_index  # Toggle between 0 and 1
+
+        if not success:
+            print(f"Skipping scenario {scenario_name} after 5 failed attempts.")
+            console_output = 'skipped'  # Skip to the next scenario
+            elapsed_time = -1  # Mark the scenario as skipped
+        else:
+            console_output = output.getvalue()
+            console_output = remove_ansi_escape_sequences(console_output)
         recorder.stop_recording()
 
-        console_output = output.getvalue()
-        console_output = remove_ansi_escape_sequences(console_output)
         final_score, final_details = final_check()
+        num_send_commands = console_output.count("Invoking: `SENDCOMMAND`")
+        num_total_commands = console_output.count("Invoking:")
+
+        print(num_send_commands, num_total_commands)
+        print(elapsed_time)
 
         # Prepare the results dictionary
         result_data = {
             "scenario": scenario_name,
+            "num_aircraft": num_ac,
+            "conflict_type": conflict_type,
             "agent_type": agent_type,
             "model_name": model_name,
             "temperature": temperature,
+            "runtime": elapsed_time,
+            "num_total_commands": num_total_commands,
+            "num_send_commands": num_send_commands,
             "score": final_score,
             "log": console_output,
             "final_details": final_details,
