@@ -52,7 +52,9 @@ class CaptureAndPrintConsoleOutput:
 # %%
 dotenv.load_dotenv("../.env")
 
-temperature = 0.3
+# llama3-70b-8192
+# llama3-groq-70b-8192-tool-use-preview
+temperature = 1.2
 model_name = "llama3-70b-8192"
 
 
@@ -103,9 +105,9 @@ with open("prompts/system.txt", "r") as f:
 
 # with open("prompts/conflict.txt", "r") as f:
 #     prompt.messages[0].prompt.template += f.read()
+agent_tools_list = agent_tools_list[:-1]
 
-
-chat = ChatGroq(temperature=temperature, model_name=model_name)
+chat = ChatGroq(temperature=temperature, model_name=model_name, api_key=os.getenv("GROQ_API_KEY"))
 
 agent = agents.create_openai_tools_agent(chat, agent_tools_list, prompt)
 
@@ -114,7 +116,7 @@ agent_executor = agents.AgentExecutor(
 
 
 # %%
-user_input = "solve aircraft conflict."
+user_input = "You are an air traffic controller with tools. Solve aircraft conflict. Solve until there are no more conflicts"
 
 scenario = "case1"
 client.send_event(b"STACK", f"IC simple/conflicts/2ac/{scenario}.scn")
@@ -134,4 +136,3 @@ print(type(console_output))
 
 final_conflict_check = GetConflictInfo("SHOWTCPA")
 print(final_conflict_check)
-
