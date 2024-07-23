@@ -107,26 +107,28 @@ def GetConflictInfo(command: str = "SHOWTCPA"):
 
 
 @langchain_tool("CONTINUEMONITORING")
-def ContinueMonitoring(duration: int = 5):
+def ContinueMonitoring(duration: int = 8):
     """Monitor for conflicts between aircraft pairs for a specified time.
 
     Parameters:
-    - duration (int): The time in seconds to monitor for conflicts. Default is 5 seconds. Maximum duration is 15 seconds.
+    - duration (int): The time in seconds to monitor for conflicts. Default and min is 8 seconds. Maximum duration is 16 seconds.
 
     Example usage:
-    - ContinueMonitoring(5)
+    - ContinueMonitoring(8)
 
     Returns:
     - str: The conflict information between aircraft pairs throughout the monitoring period.
     """
     # ensure duration is an integer
     duration = int(duration)
-    duration = 15 if duration > 15 else duration
+    duration = 8 if duration < 8 else duration
+    duration = 16 if duration > 16 else duration
     client.send_event(b"STACK", "SHOWTCPA")
     time.sleep(0.8)
     conflict_info1 = receive_bluesky_output()
-    client.send_event(b"STACK", "SHOWTCPA")
     time.sleep(duration)
+    client.send_event(b"STACK", "SHOWTCPA")
+    time.sleep(0.8)
     conflict_info2 = receive_bluesky_output()
 
     final_output = conflict_info1 + f"\n After {duration} seconds \n" + conflict_info2
@@ -185,7 +187,6 @@ def QueryConflicts(input: str, num_ac: int, conflict_formation: str):
         ]
     }
     where_partial = {"num_ac": num_ac}
-    print(3)
 
     try:
         query_results = collection.query(
@@ -193,7 +194,6 @@ def QueryConflicts(input: str, num_ac: int, conflict_formation: str):
         )
         print("Full query results:", query_results)
         doc = query_results["documents"][0][0] if query_results["documents"] else ""
-        print(1)
         if doc:
             return doc
     except Exception as e:
@@ -205,7 +205,6 @@ def QueryConflicts(input: str, num_ac: int, conflict_formation: str):
         )
         print("Partial query results:", query_results)
         doc = query_results["documents"][0][0] if query_results["documents"] else ""
-        print(2)
         if doc:
             return doc
     except Exception as e:
