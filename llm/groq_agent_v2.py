@@ -55,8 +55,8 @@ dotenv.load_dotenv("../.env")
 # llama3-70b-8192
 # llama3-groq-70b-8192-tool-use-preview
 temperature = 1.2
-model_name = "llama3-70b-8192"
-
+model_name = "llama-3.1-70b-versatile"
+# llama-3.1-70b-versatile
 
 # %%
 # Initialization vector db
@@ -118,7 +118,7 @@ agent_executor = agents.AgentExecutor(
 # %%
 user_input = "You are an air traffic controller with tools. Solve aircraft conflict. Solve until there are no more conflicts"
 
-scenario = "case1"
+scenario = "case6"
 client.send_event(b"STACK", f"IC simple/conflicts/2ac/{scenario}.scn")
 time.sleep(1.5)
 client.update()
