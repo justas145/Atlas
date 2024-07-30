@@ -50,9 +50,24 @@ def init_plugin():
 ### provides the original implementation (see for example the asas/eby plugin).
 
 
-def log_crash(crash_info):
-    with open("output/crash_log.txt", "a") as file:
-        file.write(f"{crash_info}\n")
+def log_crash(id1, id2):
+    crash_info = f"CRASH: {id1} and {id2}"
+    try:
+        already_logged = False
+        with open("output/crash_log.txt", "r") as file:
+            for line in file:
+                if crash_info in line:
+                    already_logged = True
+                    break
+
+        if not already_logged:
+            with open("output/crash_log.txt", "a") as file:
+                file.write(f"{crash_info}\n")
+                print(crash_info)  # Also print to console
+    except FileNotFoundError:
+        with open("output/crash_log.txt", "w") as file:
+            file.write(f"{crash_info}\n")
+            print(crash_info)
 
 
 import math
@@ -99,7 +114,7 @@ class Example(core.Entity):
     # with the timed_function decorator
     @core.timed_function(name="CRASHDETECTION", dt=0.1)
     def update(self):
-        """Check if there are any aircraft within 100m of each other."""
+        """Check if there are any aircraft within 300m of each other."""
         ids = traf.id
         lats = traf.lat
         longs = traf.lon
@@ -110,6 +125,4 @@ class Example(core.Entity):
         # check for crashes. crash is less than 300m
         for id1, id2, distance in distance:
             if distance < 300:
-                print(f"CRASH: {id1} and {id2} are {distance} meters apart.")
-                log_crash(f"CRASH: {id1} and {id2} are {distance} meters apart.")
-
+                log_crash(id1, id2)
