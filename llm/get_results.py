@@ -31,26 +31,71 @@ dotenv.load_dotenv("../.env")
 # Usage
 base_path = "../bluesky/scenario"  # Adjust this to your base directory
 target_path = (
-    "../bluesky/scenario/TEST"  # Adjust this to the directory you want to search
+    "../bluesky/scenario/TEST/Big"  # Adjust this to the directory you want to search
 )
 
 with open("prompts/ICAO_seperation_guidelines.txt", "r") as f:
     icao_seperation_guidelines = f.read()
 
 
-import os
-import cv2
-import numpy as np
 from PIL import ImageGrab
 import pygetwindow as gw
 
+import yaml
 
 import cv2
 import numpy as np
-from PIL import ImageGrab
 import os
 import threading
 import time
+
+import logging
+import threading
+from watchdog.observers import Observer
+from watchdog.events import PatternMatchingEventHandler
+# Setup basic logging
+# logging.basicConfig(
+#     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+# )
+class CrashFileHandler(PatternMatchingEventHandler):
+    def __init__(self, callback):
+        super().__init__(patterns=["crash_log.txt"])  # Only monitor the crash log file
+        self.callback = callback
+        self.last_position = 0  # Track the last position read in the file
+
+    def on_modified(self, event):
+        logging.info(f"Modification detected in: {event.src_path}")
+        try:
+            with open(event.src_path, "r") as file:
+                file.seek(self.last_position)  # Move to the last read position
+                lines = file.readlines()
+                if lines:
+                    logging.info(f"Detected {len(lines)} new lines in the crash log.")
+                    for line in lines:
+                        self.callback(line.strip())
+                    self.last_position = (
+                        file.tell()
+                    )  # Update the last position after reading
+        except Exception as e:
+            logging.error(f"Error reading file {event.src_path}: {e}")
+
+
+def monitor_crashes(callback):
+    path_to_watch = "../bluesky/output"  # Make sure this is correct
+    event_handler = CrashFileHandler(callback=callback)
+    observer = Observer()
+    observer.schedule(event_handler, path=path_to_watch, recursive=False)
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
+
+
+def print_output(message):
+    print("Crash Alert:", message)
 
 
 class ScreenRecorder:
@@ -185,8 +230,6 @@ def list_scn_files(base_path, target_path):
                 scn_files.append(relative_path)
     return scn_files
 
-import yaml
-
 
 def load_config(config_path):
     with open(config_path, "r") as file:
@@ -202,7 +245,7 @@ def load_and_run_scenario(client, scenario_path):
 
         client.update()
         print(f"Loaded scenario: {scenario_path}")
-        time.sleep(3)  # Wait for the scenario to load
+        time.sleep(5)  # Wait for the scenario to load
         # clear the output buffer
         out = receive_bluesky_output()
 
@@ -228,8 +271,10 @@ def get_num_ac_from_scenario(scenario_path):
         # Count occurrences of ">CRE" to accurately count aircraft creation commands
         # This accounts for the format where "CRE" follows a timestamp and command prefix
         aircraft_count = content.count(">CRE")
+        aircraft_count2 = content.count(">CRECONFS")
 
-        return aircraft_count
+        total_aircraft_count = aircraft_count + aircraft_count2
+        return total_aircraft_count
     except FileNotFoundError:
         print(f"File not found: {full_path}")
         return None
@@ -341,6 +386,7 @@ def save_results_to_csv(results, output_file):
             "scenario",
             "num_aircraft",
             "conflict_type",
+            "conflict_with_dH",
             "agent_type",
             "model_name",
             "temperature",
@@ -481,86 +527,114 @@ user_input = "Solve Air Traffic Conflicts"
 
 agent_configs = load_agent_configs(config)
 
+agent_configs = [
+    {
+        "type": "single_agent",
+        "model_name": "llama3-70b-8192",
+        "temperature": 1.2,
+        "use_skill_lib": False,
+    },
+    {
+        "type": "single_agent",
+        "model_name": "gpt-4o",
+        "temperature": 0.3,
+        "use_skill_lib": False,
+    },
+]
 
+if __name__ == "__main__":
+    # Run the crash monitoring in a background thread
+    threading.Thread(target=monitor_crashes, args=(print_output,), daemon=True).start()
+    
+    ##############################
 
-for agent_config in agent_configs:
-    agent_type = agent_config["type"]
-    model_name = agent_config["model_name"].replace(" ", "_").replace("-", "_")
-    temperature = str(agent_config["temperature"]).replace(".", "p")
-
-    # Path for the agent-specific CSV file
-    agent_csv_path = f"results/csv/{agent_type}/{model_name}_{temperature}/results.csv"
+    
 
     for scn in scn_files:
-        scenario_name = "_".join(scn.split("/")[-2:]).replace(".scn", "")
-        recording_directory = (
-            f"results/recordings/{agent_type}/{model_name}_{temperature}"
-        )
-        recording_file_name = f"{scenario_name}.avi"
+        for agent_config in agent_configs:
+            agent_type = agent_config["type"]
+            model_name = agent_config["model_name"].replace(" ", "_").replace("-", "_")
+            temperature = str(agent_config["temperature"]).replace(".", "p")
 
-        num_ac = get_num_ac_from_scenario(scn)
-        load_and_run_scenario(client, scn)
-        conflict_type = extract_conflict_type(scn)
+            # Path for the agent-specific CSV file
+            agent_csv_path = f"results/csv/{agent_type}/{model_name}_{temperature}/results.csv"
+            if 'no_dH' in scn:
+                conflict_with_dH = False
+            elif 'dH' in scn:
+                conflict_with_dH = True
+            else:
+                conflict_with_dH = None
+            scenario_name = "_".join(scn.split("/")[-3:]).replace(".scn", "")
+            recording_directory = (
+                f"results/recordings/{agent_type}/{model_name}_{temperature}"
+            )
+            recording_file_name = f"{scenario_name}.avi"
 
-        recorder = ScreenRecorder(
-            output_directory=recording_directory, file_name=recording_file_name
-        )
-        recorder.start_recording()
+            num_ac = get_num_ac_from_scenario(scn)
+            load_and_run_scenario(client, scn)
+            conflict_type = extract_conflict_type(scn) 
 
-        success = False
-        for attempt in range(5):  # Retry up to 5 times
-            try:
-                with CaptureAndPrintConsoleOutput() as output:
-                    # Use the current API key to setup the agent
-                    agent_executor = setup_agent(agent_config, groq_api_keys[key_index])
-                    start_time = (
-                        time.perf_counter()
-                    )  # Record the start time with higher precision
-                    result = agent_executor.invoke({"input": user_input})
-                    elapsed_time = (
-                        time.perf_counter() - start_time
-                    )  # Calculate the elapsed time with higher precision
-                success = True
-                break  # Exit the retry loop if successful
-            except Exception as e:
-                print(f"Attempt {attempt + 1} failed, error: {e}")
-                if attempt < 4:  # Only sleep and swap keys if it's not the last attempt
-                    time.sleep(65)
-                    # Swap to the next API key
-                    key_index = 1 - key_index  # Toggle between 0 and 1
+            recorder = ScreenRecorder(
+                output_directory=recording_directory, file_name=recording_file_name
+            )
+            recorder.start_recording()
 
-        if not success:
-            print(f"Skipping scenario {scenario_name} after 5 failed attempts.")
-            console_output = 'skipped'  # Skip to the next scenario
-            elapsed_time = -1  # Mark the scenario as skipped
-        else:
-            console_output = output.getvalue()
-            console_output = remove_ansi_escape_sequences(console_output)
-        recorder.stop_recording()
+            success = False
+            for attempt in range(5):  # Retry up to 5 times
+                try:
+                    with CaptureAndPrintConsoleOutput() as output:
+                        # Use the current API key to setup the agent
+                        agent_executor = setup_agent(agent_config, groq_api_keys[key_index])
+                        start_time = (
+                            time.perf_counter()
+                        )  # Record the start time with higher precision
+                        result = agent_executor.invoke({"input": user_input})
+                        elapsed_time = (
+                            time.perf_counter() - start_time
+                        )  # Calculate the elapsed time with higher precision
+                    success = True
+                    break  # Exit the retry loop if successful
+                except Exception as e:
+                    print(f"Attempt {attempt + 1} failed, error: {e}")
+                    if attempt < 4:  # Only sleep and swap keys if it's not the last attempt
+                        time.sleep(5)
+                        # Swap to the next API key
+                        key_index = 1 - key_index  # Toggle between 0 and 1
 
-        final_score, final_details = final_check()
-        num_send_commands = console_output.count("Invoking: `SENDCOMMAND`")
-        num_total_commands = console_output.count("Invoking:")
+            if not success:
+                print(f"Skipping scenario {scenario_name} after 5 failed attempts.")
+                console_output = 'skipped'  # Skip to the next scenario
+                elapsed_time = -1  # Mark the scenario as skipped
+            else:
+                console_output = output.getvalue()
+                console_output = remove_ansi_escape_sequences(console_output)
+            recorder.stop_recording()
 
-        print(num_send_commands, num_total_commands)
-        print(elapsed_time)
+            final_score, final_details = final_check()
+            print('FINAL SCORE:' , final_score)
+            num_send_commands = console_output.count("Invoking: `SENDCOMMAND`")
+            num_total_commands = console_output.count("Invoking:")
 
-        # Prepare the results dictionary
-        result_data = {
-            "scenario": scenario_name,
-            "num_aircraft": num_ac,
-            "conflict_type": conflict_type,
-            "agent_type": agent_type,
-            "model_name": model_name,
-            "temperature": temperature,
-            "runtime": elapsed_time,
-            "num_total_commands": num_total_commands,
-            "num_send_commands": num_send_commands,
-            "score": final_score,
-            "log": console_output,
-            "final_details": final_details,
-        }
+            print(num_send_commands, num_total_commands)
+            print(elapsed_time)
 
-        # Save results to both the central and agent-specific CSV files
-        save_results_to_csv([result_data], central_csv_path)
-        save_results_to_csv([result_data], agent_csv_path)
+            # Prepare the results dictionary
+            result_data = {
+                "scenario": scenario_name,
+                "num_aircraft": num_ac,
+                "conflict_type": conflict_type,
+                "conflict_with_dH": conflict_with_dH,
+                "agent_type": agent_type,
+                "model_name": model_name,
+                "temperature": temperature,
+                "runtime": elapsed_time,
+                "num_total_commands": num_total_commands,
+                "num_send_commands": num_send_commands,
+                "score": final_score,
+                "log": console_output,
+                "final_details": final_details,
+            }
+
+            # Save results to both the central and agent-specific CSV files
+            save_results_to_csv([result_data], central_csv_path)
+            save_results_to_csv([result_data], agent_csv_path)

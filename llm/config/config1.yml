@@ -1,5 +1,5 @@
 agents:
   types: [single_agent]
-  model_names: [gpt-4o]
+  model_names: [llama3-70b-8192, gpt-4o]
   temperatures: [0.0, 0.3, 0.6, 0.9, 1.2]
   use_skill_libs: [false]

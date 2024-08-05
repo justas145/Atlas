@@ -58,9 +58,8 @@ def receive_bluesky_output():
 @langchain_tool("GETALLAIRCRAFTINFO")
 def GetAllAircraftInfo(command: str = "GETACIDS"):
     """
-    Get each aircraft information at current time: position (lat, lon), heading (deg),
-    track (deg), altitude (ft), V/S (vertical speed, feet per mintute), calibrated, true and ground
-    speed and mach number.
+    Get each aircraft information at current time: Position [Pos] (lat, lon), Heading [Hdg] (deg),
+    Track [Trk](deg), Altitude [Alt](ft), Vertical speed [V/S](feet per mintute. Negative V/S - flying down, Positive V/S - flying up, 0 - stays at same altitude), Speed [CAS/TAS/GS] (calibrated/true/ground air speed, knots per second) and mach number.
 
     Parameters:
     - command: str (default 'GETACIDS')

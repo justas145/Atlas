@@ -10,13 +10,13 @@ import sys
 import time
 from contextlib import contextmanager
 from io import StringIO
-from utils.skill_manual_creation import create_skill_manual, update_skill_library
 import chromadb
 import dotenv
 from langchain import agents, hub
 from langchain_core import messages
 from langchain_core.tools import tool as langchain_tool
 from langchain_groq import ChatGroq
+from langchain_openai import ChatOpenAI
 
 sys.path.append("../bluesky")
 from bluesky.network.client import Client
@@ -159,7 +159,25 @@ with open("prompts/system.txt", "r") as f:
 #     prompt.messages[0].prompt.template += f.read()
 agent_tools_list = agent_tools_list[:-1]
 
-chat = ChatGroq(temperature=temperature, model_name=model_name, api_key=os.getenv("GROQ_API_KEY"))
+
+from langchain_together import ChatTogether
+
+# choose from our 50+ models here: https://docs.together.ai/docs/inference-models
+# chat = ChatTogether(
+#     # together_api_key="YOUR_API_KEY",
+#     model="meta-llama/Meta-Llama-3-70B-Instruct-Turbo",
+# )
+chat = ChatGroq(temperature=temperature, model_name=model_name, api_key=os.getenv("GROQ_API_KEY_2"))
+chat = ChatOpenAI(temperature=0.3, model='gpt-4o')
+# from langchain_fireworks import Fireworks, ChatFireworks
+# from dotenv import load_dotenv, find_dotenv
+# import os
+
+# llm = ChatFireworks(
+#     api_key=os.getenv("FIREWORKS_API_KEY"),
+#     model="accounts/fireworks/models/llama-v3-70b-instruct",
+# )
+
 
 agent = agents.create_openai_tools_agent(chat, agent_tools_list, prompt)
 
@@ -170,7 +188,7 @@ agent_executor = agents.AgentExecutor(
 user_input = "You are an air traffic controller with tools. Solve aircraft conflict. Solve until there are no more conflicts"
 
 scenario = "case3"
-client.send_event(b"STACK", f"IC TEST/code_generated/conflict_t-formation_3.scn")
+client.send_event(b"STACK", f"IC TEST/Big/ac_3/dH/head-on_10.scn")
 time.sleep(1.5)
 client.update()
 
@@ -181,28 +199,6 @@ def run_ai():
         print("Captured Console Output:")
         print(type(console_output))
         return console_output
-
-# console_output = output.getvalue()
-# print("Captured Console Output:")
-# print(type(console_output))
-
-
-# skill_manual, metadata = create_skill_manual(console_output)
-# # update_skill_library(collection, skill_manual, metadata)
-
-# # save skill manual to temp.txt file
-# with open("tempskill_lib.txt", "w") as f:
-#     f.write(skill_manual)
-
-# with open("temp_console_out.txt", "w") as f:
-#     f.write(console_output)
-
-# print(metadata)
-
-
-# final_conflict_check = GetConflictInfo("SHOWTCPA")
-# print(final_conflict_check)
-
 
 if __name__ == "__main__":
     # Run the crash monitoring in a background thread
