@@ -58,9 +58,9 @@ def receive_bluesky_output():
 @langchain_tool("GETALLAIRCRAFTINFO")
 def GetAllAircraftInfo(command: str = "GETACIDS"):
     """
-    Get each aircraft information at current time: position, heading (deg),
-    track (deg), altitude, V/S (vertical speed), calibrated, true and ground
-    speed and mach number. Input is 'GETACIDS'.
+    Get each aircraft information at current time: position (lat, lon), heading (deg),
+    track (deg), altitude (ft), V/S (vertical speed, feet per mintute), calibrated, true and ground
+    speed and mach number.
 
     Parameters:
     - command: str (default 'GETACIDS')
@@ -74,7 +74,6 @@ def GetAllAircraftInfo(command: str = "GETACIDS"):
 
     command = command.replace('"', "").replace("'", "")
     command = command.split("\n")[0]
-    print(f"LLM input:{command}")
 
     client.send_event(b"STACK", "GETACIDS")
     time.sleep(0.8)
@@ -85,7 +84,7 @@ def GetAllAircraftInfo(command: str = "GETACIDS"):
 @langchain_tool("GETCONFLICTINFO")
 def GetConflictInfo(command: str = "SHOWTCPA"):
     """
-    Use this tool to identify and get vital information on aircraft pairs in
+    Use this tool to get information on aircraft pairs in
     conflict. It gives you Time to Closest Point of Approach (TCPA),
     Quadrantal Direction (QDR), separation distance, Closest Point of Approach
     distance (DCPA), and Time of Loss of Separation (tLOS).
@@ -117,7 +116,7 @@ def ContinueMonitoring(duration: int = 8):
     - ContinueMonitoring(8)
 
     Returns:
-    - str: The conflict information between aircraft pairs throughout the monitoring period.
+    - str: The conflict information at the start of duration and after duration seconds.
     """
     # ensure duration is an integer
     duration = int(duration)
@@ -156,6 +155,12 @@ def SendCommand(command: str):
     print(command)
     command = command.replace('"', "").replace("'", "")
     command = command.split("\n")[0]
+    
+    # fixes bug in the simulator, where default vertical speed is not 1500 when aircraft already has a vertical speed
+    if "ALT" in command:
+        # add a vertical speed of 1500 at the end of a command
+        command = command + " 1500"
+    
     client.send_event(b"STACK", command)
     time.sleep(0.8)
     sim_output = receive_bluesky_output()
@@ -165,7 +170,7 @@ def SendCommand(command: str):
         return (
             sim_output
             + "\n"
-            + "Please use a tool QueryDatabase to search for the correct command."
+            + "Please use a correct command."
         )
     return sim_output
 

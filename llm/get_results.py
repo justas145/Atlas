@@ -481,15 +481,7 @@ user_input = "Solve Air Traffic Conflicts"
 
 agent_configs = load_agent_configs(config)
 
-agent_configs = [
-    {
-        "type": "single_agent",
-        "model_name": "mixtral-8x7b-32768",
-        "temperature": 0.9,
-        "use_skill_lib": False,
-    }
-]
-scn_files = ["TEST/ac_4/t_formation_1.scn"]
+
 
 for agent_config in agent_configs:
     agent_type = agent_config["type"]
