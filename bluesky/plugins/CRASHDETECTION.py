@@ -126,3 +126,4 @@ class Example(core.Entity):
         for id1, id2, distance in distance:
             if distance < 300:
                 log_crash(id1, id2)
+                print(f"CRASH: {id1} and {id2}")

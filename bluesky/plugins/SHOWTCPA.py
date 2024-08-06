@@ -110,14 +110,8 @@ def show_conflicts_tcpa():
     stack.stack(f"ECHO Number of aircraft in conflict: {num_ac_conf}")
     # Display altitude information for each unique aircraft in conflict
     stack.stack("ECHO Aircraft Altitude Information:")
-    for aircraft in involved_aircraft:
-        index = ids.index(aircraft)
-        altitude_ft = alts[index] * 3.28084
-        vs_status = (
-            "level"
-            if round(float(vs[index]), 1) == 0.0
-            else ("ascending" if vs[index] > 0 else "descending")
-        )
-        stack.stack(
-            f"ECHO Aircraft {aircraft}: Altitude {altitude_ft:.2f} ft ({vs_status})"
-        )
+    # Display altitude information for all aircraft
+    for idx, aircraft in enumerate(ids):
+        altitude_ft = alts[idx] * 3.28084
+        vs_status = "level" if round(float(vs[idx]), 1) == 0.0 else ("ascending" if vs[idx] > 0 else "descending")
+        stack.stack(f"ECHO Aircraft {aircraft}: Altitude {altitude_ft:.2f} ft ({vs_status})")
