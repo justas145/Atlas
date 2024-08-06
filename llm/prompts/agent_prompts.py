@@ -174,7 +174,7 @@ dos_donts_list_transformation_prompt = PromptTemplate.from_template(
 )
 
 
-relative_values_dos_donts_list = PromptTemplate.from_template(
+relative_values_dos_donts_list_prompt = PromptTemplate.from_template(
     """
     You are an air traffic specialist. There have been commands sent to resolve an aircraft conflict. Here is a list of good and bad commands and the values of the aircraft before and after the commands were sent:
     <do's dont's list>
@@ -203,6 +203,7 @@ relative_values_dos_donts_list = PromptTemplate.from_template(
 final_dos_donts_prompt = PromptTemplate.from_template(
     """
     You are an air traffic specialist. There has been a conflict between aircrafts. This is a brief description of the conflict:
+    
     <conflict description>
     {conflict_description}
     <conflict description>
@@ -210,6 +211,7 @@ final_dos_donts_prompt = PromptTemplate.from_template(
     Here is a list of commands that were sent to resolve the conflict. Structure of the list is as follows:
     Sequence number | Command | Do's/Don'ts
     Do's are the commands that helped to resolve a conflict, Don'ts are the commands that did not help to resolve a conflict.
+    
     <commands list>
     {commands_list}
     <commands list>
@@ -217,6 +219,11 @@ final_dos_donts_prompt = PromptTemplate.from_template(
     (increasing heading means turning right, decreasing heading means turning left)
     
     Your task is to add a reason or insight to each command in the list. The reason should be a short explanation of why the command was helpful or not helpful in resolving the conflict.
+    
+    Only output the new list. The length of the list should be the same as the input list.
+    Sequence number | Command | Do's/Don'ts | Reason
+    
+    Do not make up new commands that were not in the original list. If original command list has 2 commands, then the output list should also have 2 commands. If it's 0 commands in the original list, then the output list should also have 0 commands. If it's 1 command in the original list, then the output list should also have 1 command.
     
     """
 )
