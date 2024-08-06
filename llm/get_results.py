@@ -17,6 +17,8 @@ from agent_tools import (
     agent_tool_dict,
 )
 import time
+from filelock import Timeout, FileLock
+import chromadb
 from langchain import agents, hub
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
@@ -208,6 +210,23 @@ def initialize_simulator():
 
     return client
 
+def initialize_experience_library():
+# Vector DB
+    selected_collection = "experience_library_v1"
+    base_path = os.path.dirname(__file__)
+    vectordb_path = os.path.join(base_path, "skills-library", "vectordb")
+    chroma_client = chromadb.PersistentClient(path=vectordb_path)
+    openai_ef = chromadb.utils.embedding_functions.OpenAIEmbeddingFunction(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        model_name="text-embedding-3-large",
+    )
+    collection = chroma_client.get_or_create_collection(
+        name=selected_collection,
+        embedding_function=openai_ef,
+        metadata={"hnsw:space": "cosine"},
+    )
+    # Initialize the collection in agent_tools
+    initialize_collection(collection)
 
 # get a list of scn files to load
 def list_scn_files(base_path, target_path):
@@ -270,11 +289,16 @@ def get_num_ac_from_scenario(scenario_path):
 
         # Count occurrences of ">CRE" to accurately count aircraft creation commands
         # This accounts for the format where "CRE" follows a timestamp and command prefix
-        aircraft_count = content.count(">CRE")
-        aircraft_count2 = content.count(">CRECONFS")
+        # Counting occurrences of '>CRE' and '>CRECONFS'
+        count_CRE = content.count(">CRE")  # This counts all instances starting with '>CRE', including '>CRECONFS'
+        count_CRECONFS = content.count(">CRECONFS")  # Specifically counts '>CRECONFS'
 
-        total_aircraft_count = aircraft_count + aircraft_count2
-        return total_aircraft_count
+        # Since '>CRECONFS' is also included in '>CRE' counts, adjust the count for '>CRE'
+        count_CRE_only = count_CRE - count_CRECONFS
+
+        # Combined count
+        total_aircraft_num = count_CRE_only + count_CRECONFS
+        return total_aircraft_num
     except FileNotFoundError:
         print(f"File not found: {full_path}")
         return None
@@ -378,34 +402,39 @@ def save_results_to_csv(results, output_file):
     # Ensure the directory exists
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
-    # Check if the file exists to determine if headers are needed
-    file_exists = os.path.isfile(output_file)
+    # Create a lock file path
+    lock_file = f"{output_file}.lock"
+    lock = FileLock(lock_file)
 
-    with open(output_file, "a", newline="", encoding="utf-8") as csvfile:
-        fieldnames = [
-            "scenario",
-            "num_aircraft",
-            "conflict_type",
-            "conflict_with_dH",
-            "agent_type",
-            "model_name",
-            "temperature",
-            "runtime",
-            "num_total_commands",
-            "num_send_commands",
-            "score",
-            "log",
-            "final_details"
-        ]
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    with lock:  # Acquire the lock
+        # Check if the file exists to determine if headers are needed
+        file_exists = os.path.isfile(output_file)
 
-        # Write header only if the file did not exist
-        if not file_exists:
-            writer.writeheader()
+        with open(output_file, "a", newline="", encoding="utf-8") as csvfile:
+            fieldnames = [
+                "scenario",
+                "num_aircraft",
+                "conflict_type",
+                "conflict_with_dH",
+                "agent_type",
+                "model_name",
+                "temperature",
+                "runtime",
+                "num_total_commands",
+                "num_send_commands",
+                "score",
+                "log",
+                "final_details",
+            ]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-        # Write results
-        for result in results:
-            writer.writerow(result)
+            # Write header only if the file did not exist
+            if not file_exists:
+                writer.writeheader()
+
+            # Write results
+            for result in results:
+                writer.writerow(result)
 
 
 def remove_ansi_escape_sequences(text):
@@ -422,8 +451,13 @@ def setup_chat_model(config, groq_api_key):
 def setup_single_agent(config, groq_api_key):
     # Load system prompts
     prompt = hub.pull("hwchase17/openai-tools-agent")
-    with open("prompts/system.txt", "r") as f:
-        prompt.messages[0].prompt.template = f.read()
+    if config.get("use_skill_lib", False):
+        print('loading system prompt with exp lib')
+        with open("prompts/system_with_exp_lib.txt", "r") as f:
+            prompt.messages[0].prompt.template = f.read()
+    else:
+        with open("prompts/system.txt", "r") as f:
+            prompt.messages[0].prompt.template = f.read()
     print('setting up agent with config:', config)
     # Initialize LLM model
     chat = setup_chat_model(config, groq_api_key)
@@ -436,7 +470,9 @@ def setup_single_agent(config, groq_api_key):
     else:
         # Exclude "QueryConflicts" tool if 'use_skill_lib' is False
         tools_to_use = [
-            tool for name, tool in agent_tool_dict.items() if name != "QUERYCONFLICTS"
+            tool
+            for name, tool in agent_tool_dict.items()
+            if name != "SearchExperienceLibrary"
         ]
         print('not using skill lib')
     tools_to_use = list(tools_to_use)
@@ -468,7 +504,7 @@ def setup_multi_agent(config, groq_api_key):
         tools_to_use = [agent_tool_dict[name] for name in tool_names]
         if config.get("use_skill_lib", False) and role in ["planner", "verifier"]:
             print('using skill lib')
-            tools_to_use.append(agent_tool_dict["QUERYCONFLICTS"])
+            tools_to_use.append(agent_tool_dict["SearchExperienceLibrary"])
         print('not using skill lib')
         # TODO
         # add the prompt for each role, now it is the same for all
@@ -511,7 +547,7 @@ def load_agent_configs(config):
         expanded_agents.append(agent_dict)
     return expanded_agents
 
-
+initialize_experience_library()
 client = initialize_simulator()
 scn_files = list_scn_files(base_path, target_path)
 config = load_config("config/config1.yml")
@@ -521,34 +557,34 @@ central_csv_path = "results/csv/all_results.csv"  # Central file for all results
 groq_api_keys = [os.getenv("GROQ_API_KEY"), os.getenv("GROQ_API_KEY_2")]
 key_index = 0  # Start with the first API key
 
-user_input = "Solve Air Traffic Conflicts"
+user_input = "You are an air traffic controller with tools. Solve aircraft conflict. Solve until there are no more conflicts."
 # load agent
 # agent = initialize_agent(config_path)
 
 agent_configs = load_agent_configs(config)
+
+record_screen = False
 
 agent_configs = [
     {
         "type": "single_agent",
         "model_name": "llama3-70b-8192",
         "temperature": 1.2,
-        "use_skill_lib": False,
+        "use_skill_lib": True,
     },
     {
         "type": "single_agent",
         "model_name": "gpt-4o",
         "temperature": 0.3,
-        "use_skill_lib": False,
+        "use_skill_lib": True,
     },
 ]
 
 if __name__ == "__main__":
     # Run the crash monitoring in a background thread
     threading.Thread(target=monitor_crashes, args=(print_output,), daemon=True).start()
-    
-    ##############################
 
-    
+    ##############################
 
     for scn in scn_files:
         for agent_config in agent_configs:
@@ -565,22 +601,23 @@ if __name__ == "__main__":
             else:
                 conflict_with_dH = None
             scenario_name = "_".join(scn.split("/")[-3:]).replace(".scn", "")
-            recording_directory = (
-                f"results/recordings/{agent_type}/{model_name}_{temperature}"
-            )
-            recording_file_name = f"{scenario_name}.avi"
 
             num_ac = get_num_ac_from_scenario(scn)
             load_and_run_scenario(client, scn)
             conflict_type = extract_conflict_type(scn) 
-
-            recorder = ScreenRecorder(
-                output_directory=recording_directory, file_name=recording_file_name
-            )
-            recorder.start_recording()
+            if record_screen:
+                recording_directory = (
+                    f"results/recordings/{agent_type}/{model_name}_{temperature}"
+                )
+                recording_file_name = f"{scenario_name}.avi"
+                recorder = ScreenRecorder(
+                    output_directory=recording_directory, file_name=recording_file_name
+                )
+                recorder.start_recording()
 
             success = False
             for attempt in range(5):  # Retry up to 5 times
+                key_index = 1 - key_index  # Toggle between 0 and 1
                 try:
                     with CaptureAndPrintConsoleOutput() as output:
                         # Use the current API key to setup the agent
@@ -599,7 +636,6 @@ if __name__ == "__main__":
                     if attempt < 4:  # Only sleep and swap keys if it's not the last attempt
                         time.sleep(5)
                         # Swap to the next API key
-                        key_index = 1 - key_index  # Toggle between 0 and 1
 
             if not success:
                 print(f"Skipping scenario {scenario_name} after 5 failed attempts.")
@@ -608,7 +644,9 @@ if __name__ == "__main__":
             else:
                 console_output = output.getvalue()
                 console_output = remove_ansi_escape_sequences(console_output)
-            recorder.stop_recording()
+            
+            if record_screen:
+                recorder.stop_recording()
 
             final_score, final_details = final_check()
             print('FINAL SCORE:' , final_score)
