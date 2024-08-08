@@ -27,6 +27,7 @@ from prompts.agent_prompts import (
     planner_prompt,
     executor_prompt,
     verifier_prompt,
+    extraction_prompt
 )
 
 dotenv.load_dotenv("../.env")
@@ -50,7 +51,8 @@ import numpy as np
 import os
 import threading
 import time
-
+from typing import Optional
+from langchain_core.pydantic_v1 import BaseModel, Field
 import logging
 import threading
 from watchdog.observers import Observer
@@ -98,6 +100,28 @@ def monitor_crashes(callback):
 
 def print_output(message):
     print("Crash Alert:", message)
+
+
+class PlanExists(BaseModel):
+    """Information about an aircraft conflict resolution plan."""
+
+    # This doc-string is sent to the LLM as the description of the schema Metadata,
+    # and it can help to improve extraction results.
+
+    # Note that:
+    # 1. Each field is an `optional` -- this allows the model to decline to extract it!
+    # 2. Each field has a `description` -- this description is used by the LLM.
+    # Having a good description can help improve extraction results.
+    plan_exists: Optional[bool] = Field(
+        default=None,
+        description="Whether a conflict resolution plan exists. Plan should include aircraft call signs and instructions for that aircraft. If not provided, set to False."
+    )
+extraction_plan_llm = ChatOpenAI(
+    temperature=0.3, model_name="gpt-4o-mini"
+)
+extraction_plan_runnable = (
+    extraction_prompt | extraction_plan_llm.with_structured_output(schema=PlanExists)
+)
 
 
 class ScreenRecorder:
@@ -179,7 +203,9 @@ class MultiAgent:
         print("Planner Agent Running")
         plan = self.agents["planner"].invoke({"input": planner_prompt})["output"]
 
-        if "no conflicts" in plan.lower():
+        plan_exists = extraction_plan_runnable.invoke({"text": plan}).plan_exists
+
+        if not plan_exists:
             return {"output": plan, "status": "resolved"}
 
         while True:
@@ -196,7 +222,9 @@ class MultiAgent:
             verifier_output = self.agents["verifier"].invoke(
                 {"input": verifier_prompt}
             )["output"]
-            if "no conflicts" in verifier_output.lower():
+            
+            plan_exists = extraction_plan_runnable.invoke({"text": verifier_output}).plan_exists
+            if not plan_exists:
                 return {"output": verifier_output, "status": "resolved"}
             else:
                 plan = verifier_output
@@ -483,38 +511,73 @@ def setup_single_agent(config, groq_api_key):
 
 
 def setup_multi_agent(config, groq_api_keys_lst):
-    print('setting up multi agent with config:', config	)
+    print("setting up multi agent with config:", config)
     agents_dict = {}
     tool_sets = {
-        "planner": ["GETALLAIRCRAFTINFO", "GETCONFLICTINFO"],
+        "planner": ["GETALLAIRCRAFTINFO", "CONTINUEMONITORING"],
         "controller": ["SENDCOMMAND"],
-        "verifier": ["GETALLAIRCRAFTINFO", "GETCONFLICTINFO", "CONTINUEMONITORING"],
+        "verifier": ["GETALLAIRCRAFTINFO", "CONTINUEMONITORING"],
     }
 
     agents_prompts = {
-    'planner': planner_prompt,
-    'executor': executor_prompt,
-    'verifier': verifier_prompt
+        "planner": planner_prompt,
+        "executor": executor_prompt,
+        "verifier": verifier_prompt,
     }
 
-    prompt = hub.pull("hwchase17/openai-tools-agent")
-
     for role, tool_names in tool_sets.items():
+        prompt_init = hub.pull("hwchase17/openai-tools-agent")
+        ### LOADING PROMPTS ###
+        if role == "planner":
+            if config.get("use_skill_lib", False):
+                print("loading system prompt with exp lib")
+                with open("prompts/system_with_exp_lib.txt", "r") as f:
+                    planner_system_prompt = prompt_init
+                    planner_system_prompt.messages[0].prompt.template = f.read()
+            else:
+                with open("prompts/planner_system.txt", "r") as f:
+                    planner_system_prompt = prompt_init
+                    planner_system_prompt.messages[0].prompt.template = f.read()
+        if role == "executor":
+            with open("prompts/executor_system.txt", "r") as f:
+                executor_system_prompt = prompt_init
+                executor_system_prompt.messages[0].prompt.template = f.read()
+        if role == "verifier":
+            if config.get("use_skill_lib", False):
+                print("loading system prompt with exp lib")
+                with open("prompts/system_with_exp_lib.txt", "r") as f:
+                    verifier_system_prompt = prompt_init
+                    verifier_system_prompt.messages[0].prompt.template = f.read()
+            else:
+                with open("prompts/verifier_system.txt", "r") as f:
+                    verifier_system_prompt = prompt_init
+                    verifier_system_prompt.messages[0].prompt.template = f.read()
+
+        ### LOADING PROMPTS ###
+
         groq_api_key = next(groq_key_generator)
         chat = setup_chat_model(config, groq_api_key)
         tools_to_use = [agent_tool_dict[name] for name in tool_names]
         if config.get("use_skill_lib", False) and role in ["planner", "verifier"]:
-            print('using skill lib')
+            print("using skill lib")
             tools_to_use.append(agent_tool_dict["SearchExperienceLibrary"])
-        print('not using skill lib')
+        print("not using skill lib")
         # TODO
         # add the prompt for each role, now it is the same for all
+
+        if role == "planner":
+            prompt = planner_system_prompt
+        elif role == "executor":
+            prompt = executor_system_prompt
+        elif role == "verifier":
+            prompt = verifier_system_prompt
         agent = agents.create_openai_tools_agent(chat, tools_to_use, prompt)
         agents_dict[role] = agents.AgentExecutor(
             agent=agent, tools=tools_to_use, verbose=True
         )
 
     return MultiAgent(agents_dict, agents_prompts, icao_seperation_guidelines)
+
 
 def setup_agent(config, grop_api_key_lst):
     if "multi" in config["type"]:
@@ -524,6 +587,36 @@ def setup_agent(config, grop_api_key_lst):
         return setup_single_agent(config, groq_api_key)
     else:
         raise ValueError(f"Invalid agent type: {config['type']}")
+
+
+class ListHandler(logging.Handler):
+    def __init__(self):
+        super().__init__()
+        self.log_messages = []
+
+    def emit(self, record):
+        self.log_messages.append(self.format(record))
+
+
+def monitor_too_many_requests():
+    # Configure a logger for capturing specific log messages
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
+    list_handler = ListHandler()
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    list_handler.setFormatter(formatter)
+    logger.addHandler(list_handler)
+
+    while True:
+        # Simulating continuous log capturing
+        time.sleep(0.5)  # Check every 0.5 seconds for new logs
+        for log in list_handler.log_messages:
+            if "429 Too Many Requests" in log:
+                # print_output("Too many requests, pausing operations...")
+                client.send_event(b"STACK", "HOLD")
+                list_handler.log_messages.clear()  # Clear the log messages after handling
+                break
 
 
 def load_agent_configs(config):
@@ -605,7 +698,8 @@ agent_configs = [
 if __name__ == "__main__":
     # Run the crash monitoring in a background thread
     threading.Thread(target=monitor_crashes, args=(print_output,), daemon=True).start()
-
+    # monitor too many request -> pause simulator in the background
+    threading.Thread(target=monitor_too_many_requests, daemon=True).start()
     ##############################
 
     for scn in scn_files:
@@ -665,7 +759,7 @@ if __name__ == "__main__":
             else:
                 console_output = output.getvalue()
                 console_output = remove_ansi_escape_sequences(console_output)
-            
+
             if record_screen:
                 recorder.stop_recording()
 
