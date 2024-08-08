@@ -482,7 +482,7 @@ def setup_single_agent(config, groq_api_key):
     return agent_executor
 
 
-def setup_multi_agent(config, groq_api_key):
+def setup_multi_agent(config, groq_api_keys_lst):
     print('setting up multi agent with config:', config	)
     agents_dict = {}
     tool_sets = {
@@ -497,10 +497,11 @@ def setup_multi_agent(config, groq_api_key):
     'verifier': verifier_prompt
     }
 
-    chat = setup_chat_model(config, groq_api_key)
     prompt = hub.pull("hwchase17/openai-tools-agent")
 
     for role, tool_names in tool_sets.items():
+        groq_api_key = next(groq_key_generator)
+        chat = setup_chat_model(config, groq_api_key)
         tools_to_use = [agent_tool_dict[name] for name in tool_names]
         if config.get("use_skill_lib", False) and role in ["planner", "verifier"]:
             print('using skill lib')
@@ -515,11 +516,12 @@ def setup_multi_agent(config, groq_api_key):
 
     return MultiAgent(agents_dict, agents_prompts, icao_seperation_guidelines)
 
-def setup_agent(config, grop_api_key):
+def setup_agent(config, grop_api_key_lst):
     if "multi" in config["type"]:
-        return setup_multi_agent(config, grop_api_key)
+        return setup_multi_agent(config, grop_api_key_lst)
     elif "single" in config["type"]:
-        return setup_single_agent(config, grop_api_key)
+        groq_api_key = next(groq_key_generator)
+        return setup_single_agent(config, groq_api_key)
     else:
         raise ValueError(f"Invalid agent type: {config['type']}")
 
@@ -547,6 +549,32 @@ def load_agent_configs(config):
         expanded_agents.append(agent_dict)
     return expanded_agents
 
+
+def load_groq_api_keys():
+    keys = []
+    # First, try to get the first API key without a suffix
+    first_key = os.getenv("GROQ_API_KEY")
+    if first_key:
+        keys.append(first_key)
+
+    # Start from 2 for the subsequent keys
+    index = 2
+    while True:
+        key_name = f"GROQ_API_KEY_{index}"
+        key = os.getenv(key_name)
+        if not key:
+            break
+        keys.append(key)
+        index += 1
+    return keys
+
+
+def cyclic_key_generator(keys):
+    while True:
+        for key in keys:
+            yield key
+
+
 initialize_experience_library()
 client = initialize_simulator()
 scn_files = list_scn_files(base_path, target_path)
@@ -554,8 +582,8 @@ config = load_config("config/config1.yml")
 central_csv_path = "results/csv/all_results.csv"  # Central file for all results
 
 # retrieve groq api keys
-groq_api_keys = [os.getenv("GROQ_API_KEY"), os.getenv("GROQ_API_KEY_2")]
-key_index = 0  # Start with the first API key
+groq_api_keys_lst = load_groq_api_keys()
+groq_key_generator = cyclic_key_generator(groq_api_keys_lst)
 
 user_input = "You are an air traffic controller with tools. Solve aircraft conflict. Solve until there are no more conflicts."
 # load agent
@@ -567,16 +595,10 @@ record_screen = False
 
 agent_configs = [
     {
-        "type": "single_agent",
+        "type": "multi_agnet",
         "model_name": "llama3-70b-8192",
         "temperature": 1.2,
-        "use_skill_lib": True,
-    },
-    {
-        "type": "single_agent",
-        "model_name": "gpt-4o",
-        "temperature": 0.3,
-        "use_skill_lib": True,
+        "use_skill_lib": False,
     },
 ]
 
@@ -617,11 +639,10 @@ if __name__ == "__main__":
 
             success = False
             for attempt in range(5):  # Retry up to 5 times
-                key_index = 1 - key_index  # Toggle between 0 and 1
                 try:
                     with CaptureAndPrintConsoleOutput() as output:
                         # Use the current API key to setup the agent
-                        agent_executor = setup_agent(agent_config, groq_api_keys[key_index])
+                        agent_executor = setup_agent(agent_config, groq_api_keys_lst)
                         start_time = (
                             time.perf_counter()
                         )  # Record the start time with higher precision
