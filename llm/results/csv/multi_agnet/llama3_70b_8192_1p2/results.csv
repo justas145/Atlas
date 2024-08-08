@@ -1,0 +1,44 @@
+scenario,num_aircraft,conflict_type,conflict_with_dH,agent_type,model_name,temperature,runtime,num_total_commands,num_send_commands,score,log,final_details
+ac_2_dH_converging_10,2,converging,True,multi_agnet,llama3_70b_8192,1p2,6.146068199999998,3,1,1,"setting up multi agent with config: {'type': 'multi_agnet', 'model_name': 'llama3-70b-8192', 'temperature': 1.2, 'use_skill_lib': False}
+not using skill lib
+not using skill lib
+not using skill lib
+Planner Agent Running
+
+
+> Entering new AgentExecutor chain...
+I'm ready to assist. Please provide the aircraft information, including their positions, headings, tracks, altitudes, speeds, and mach numbers. I will check for conflicts and provide an actionable plan to resolve them, if any.
+
+> Finished chain.
+Controller Agent Running
+
+
+> Entering new AgentExecutor chain...
+
+Invoking: `SENDCOMMAND` with `{'command': 'Get Aircraft Information'}`
+
+
+Unknown command: Get
+
+Please use a correct command.<tool-use,{""tool_calls"":[{""id"":""pending"",""type"":""function"",""function"":{""name"":""SENDCOMMAND""},""parameters"":{""command"":""LIST""}}]}</tool-use>
+
+> Finished chain.
+Verifier Agent Running
+
+
+> Entering new AgentExecutor chain...
+
+Invoking: `GETALLAIRCRAFTINFO` with `{'command': 'GETACIDS'}`
+
+
+GETACIDS 
+Aircraft idx: []
+
+Invoking: `GETCONFLICTINFO` with `{'command': 'SHOWTCPA'}`
+
+
+No conflicts detected.
+NO CONFLICTS
+
+> Finished chain.
+",No crashes or conflicts detected.
