@@ -40,7 +40,7 @@ from prompts.agent_prompts import (
 # %%
 dotenv.load_dotenv("../.env")
 
-temperature = 0.4
+temperature = 1.2
 model_name = "Llama3-70b-8192"
 chat = ChatGroq(temperature=temperature, model_name=model_name)
 
@@ -101,18 +101,19 @@ def get_intermediate_steps(data):
     return "\n\n".join(steps_summary)
 
 
-# chat = ChatOpenAI(temperature=0.2, model_name='gpt-4o')
+chat = ChatOpenAI(temperature=0.2, model_name='gpt-4o')
 # chat = ChatOllama(
 #     base_url="https://ollama.junzis.com", model="mixtral:8x22b", temperature=0.2
 # )
 agent_tools_list_planner = [agent_tool_dict[tool] for tool in ["GETALLAIRCRAFTINFO", "GETCONFLICTINFO"]]
 agent_tools_list_controller = [agent_tool_dict[tool] for tool in ["SENDCOMMAND"]]
 agent_tools_list_verifier = [
-    agent_tool_dict[tool] for tool in ["GETALLAIRCRAFTINFO", "GETCONFLICTINFO", "CONTINUEMONITORING"]
+    agent_tool_dict[tool] for tool in ["GETALLAIRCRAFTINFO", "CONTINUEMONITORING"]
 ]
 
 
 system_prompt = hub.pull("hwchase17/openai-tools-agent")
+
 
 
 agent_planner = create_openai_tools_agent(chat, agent_tools_list_planner, system_prompt)
