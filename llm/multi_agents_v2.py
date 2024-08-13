@@ -42,8 +42,8 @@ with open("prompts/ICAO_seperation_guidelines.txt", "r") as f:
     icao_seperation_guidelines = f.read()
 
 
-from PIL import ImageGrab
-import pygetwindow as gw
+#from PIL import ImageGrab
+#import pygetwindow as gw
 
 import yaml
 

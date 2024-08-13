@@ -42,7 +42,7 @@ with open("prompts/ICAO_seperation_guidelines.txt", "r") as f:
 
 
 from PIL import ImageGrab
-import pygetwindow as gw
+#import pygetwindow as gw
 
 import yaml
 
@@ -671,6 +671,8 @@ def cyclic_key_generator(keys):
 initialize_experience_library()
 client = initialize_simulator()
 scn_files = list_scn_files(base_path, target_path)
+
+print(scn_files)
 config = load_config("config/config1.yml")
 central_csv_path = "results/csv/all_results.csv"  # Central file for all results
 
@@ -688,7 +690,7 @@ record_screen = False
 
 agent_configs = [
     {
-        "type": "multi_agnet",
+        "type": "single_agent",
         "model_name": "llama3-70b-8192",
         "temperature": 1.2,
         "use_skill_lib": False,
