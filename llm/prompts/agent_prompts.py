@@ -27,6 +27,8 @@ from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 planner_prompt = PromptTemplate.from_template(
     """
     Check the airspace and if there are conflicts provide the actionable plan.
+    
+    Remeber: either vertical seperation of 2000 ft between all aircraft in conflict or horizontal seperation of 5 nautical miles between all aircraft in conflict.
     """
 )
 
@@ -246,12 +248,14 @@ extraction_prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            "You are an expert extraction algorithm. "
-            "Only extract relevant information from the text."
+            "You are an expert in extracting information about aircraft conflict resolution plans. "
+            "Your task is to determine if there is a detailed plan for resolving aircraft conflicts. "
+            "A plan typically includes specific actions, call signs, and instructions. "
+            "Identify if such details are present. If the text only states 'NO CONFLICTS' without any plan details, "
+            "this should be considered as having no plan."
+            "Sometimes a plan can be present together with a comment that there are no conflicts. "
+            "In such cases, the plan should still be considered as present.",
         ),
-        # Please see the how-to about improving performance with
-        # reference examples.
-        # MessagesPlaceholder('examples'),
         ("human", "{text}"),
     ]
 )

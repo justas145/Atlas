@@ -21,6 +21,8 @@ from agent_tools import (
 import time
 from filelock import Timeout, FileLock
 import chromadb
+from typing import Optional
+from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain import agents, hub
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
@@ -29,6 +31,7 @@ from prompts.agent_prompts import (
     planner_prompt,
     executor_prompt,
     verifier_prompt,
+    extraction_prompt,
 )
 
 dotenv.load_dotenv("../.env")
@@ -42,8 +45,8 @@ with open("prompts/ICAO_seperation_guidelines.txt", "r") as f:
     icao_seperation_guidelines = f.read()
 
 
-#from PIL import ImageGrab
-#import pygetwindow as gw
+# from PIL import ImageGrab
+# import pygetwindow as gw
 
 import yaml
 
@@ -82,6 +85,27 @@ class CaptureAndPrintConsoleOutput:
         sys.stdout = self.old_stdout
 
 
+class PlanExists(BaseModel):
+    """Information about an aircraft conflict resolution plan."""
+
+    # This doc-string is sent to the LLM as the description of the schema Metadata,
+    # and it can help to improve extraction results.
+
+    # Note that:
+    # 1. Each field is an `optional` -- this allows the model to decline to extract it!
+    # 2. Each field has a `description` -- this description is used by the LLM.
+    # Having a good description can help improve extraction results.
+    plan_exists: Optional[bool] = Field(
+        default=None,
+        description="Whether an aircraft conflict resolution plan exists. Plan typically includes aircraft call signs and instructions for that aircraft. If not provided, set to False. If provided, set to True. If the plan is provided and there is a comment that there are no conflicts or any other comments, set to True.",
+    )
+
+
+extraction_plan_llm = ChatOpenAI(temperature=0.0, model_name="gpt-4o-mini")
+extraction_plan_runnable = (
+    extraction_prompt | extraction_plan_llm.with_structured_output(schema=PlanExists)
+)
+
 class MultiAgent:
     def __init__(self, agents, prompts, icao_seperation_guidelines):
         self.agents = agents
@@ -94,6 +118,7 @@ class MultiAgent:
         )
         print("Planner Agent Running")
         plan = self.agents["planner"].invoke({"input": planner_prompt})["output"]
+        
 
         if "no conflicts" in plan.lower() and len(plan) < 100:
             return {"output": plan, "status": "resolved"}
@@ -381,12 +406,12 @@ user_input = "You are an air traffic controller with tools. Solve aircraft confl
 
 
 record_screen = False
-
+# llama3-70b-8192
 agent_configs = [
     {
         "type": "multi_agnet",
-        "model_name": "llama3-70b-8192",
-        "temperature": 1.2,
+        "model_name": "gpt-4o",
+        "temperature": 0.3,
         "use_skill_lib": False,
     },
 ]
@@ -397,42 +422,57 @@ if __name__ == "__main__":
     # Run the crash monitoring in a background thread
     # ac_4_no_dH_parallel_5
     # ac_2_dH_head-on_8
-    scn_files = ["TEST/Big/ac_2/dH/head-on_8.scn"]
+    scn_files = ["TEST/Big/ac_2/dH/head-on_9.scn"]
     for scn in scn_files:
         for agent_config in agent_configs:
-            agent_type = agent_config["type"]
-            model_name = agent_config["model_name"].replace(" ", "_").replace("-", "_")
+            
+            rerun_scenario = True
+            attempts_count = 0
+            max_attempts = 5
+            
+            while rerun_scenario and attempts_count < max_attempts:
+                attempts_count += 1
+                
+                agent_type = agent_config["type"]
+                model_name = agent_config["model_name"].replace(" ", "_").replace("-", "_")
 
-            scenario_name = "_".join(scn.split("/")[-3:]).replace(".scn", "")
+                scenario_name = "_".join(scn.split("/")[-3:]).replace(".scn", "")
 
-            load_and_run_scenario(client, scn)
+                load_and_run_scenario(client, scn)
 
-            success = False
-            for attempt in range(5):  # Retry up to 5 times
-                try:
-                    with CaptureAndPrintConsoleOutput() as output:
-                        # Use the current API key to setup the agent
-                        agent_executor = setup_agent(agent_config, groq_api_keys_lst)
-                        start_time = (
-                            time.perf_counter()
-                        )  # Record the start time with higher precision
-                        result = agent_executor.invoke({"input": user_input})
-                        elapsed_time = (
-                            time.perf_counter() - start_time
-                        )  # Calculate the elapsed time with higher precision
-                    success = True
-                    break  # Exit the retry loop if successful
-                except Exception as e:
-                    print(f"Attempt {attempt + 1} failed, error: {e}")
-                    if (
-                        attempt < 4
-                    ):  # Only sleep and swap keys if it's not the last attempt
-                        time.sleep(5)
-                        # Swap to the next API key
+                success = False
+                # for attempt in range(5):  # Retry up to 5 times
+                #     try:
+                #         with CaptureAndPrintConsoleOutput() as output:
+                #             # Use the current API key to setup the agent
+                #             agent_executor = setup_agent(agent_config, groq_api_keys_lst)
+                #             start_time = (
+                #                 time.perf_counter()
+                #             )  # Record the start time with higher precision
+                #             result = agent_executor.invoke({"input": user_input})
+                #             elapsed_time = (
+                #                 time.perf_counter() - start_time
+                #             )  # Calculate the elapsed time with higher precision
+                #         success = True
+                #         break  # Exit the retry loop if successful
+                #     except Exception as e:
+                #         print(f"Attempt {attempt + 1} failed, error: {e}")
+                #         if (
+                #             attempt < 4
+                #         ):  # Only sleep and swap keys if it's not the last attempt
+                #             time.sleep(5)
+                #             # Swap to the next API key
 
-            if not success:
-                print(f"Skipping scenario {scenario_name} after 5 failed attempts.")
-                console_output = "skipped"  # Skip to the next scenario
-                elapsed_time = -1  # Mark the scenario as skipped
-            else:
-                console_output = output.getvalue()
+                # if not success:
+                #     print(f"Skipping scenario {scenario_name} after 5 failed attempts.")
+                #     console_output = "skipped"  # Skip to the next scenario
+                #     elapsed_time = -1  # Mark the scenario as skipped
+                # else:
+                #     console_output = output.getvalue()
+                
+                
+                console_output = 'testing bababab tool-use>'
+                rerun_scenario = 'tool-use>' in console_output  # Check if rerun is needed
+                if rerun_scenario:
+                    print(f"Rerunning scenario {scenario_name} due to detection of 'tool-use>' in output.")
+
