@@ -690,13 +690,13 @@ record_screen = False
 
 agent_configs = [
     {
-        "type": "single_agent",
+        "type": "multi_agent",
         "model_name": "llama3-70b-8192",
-        "temperature": 1.2,
+        "temperature": 0.3,
         "use_skill_lib": False,
     },
     {
-        "type": "single_agent",
+        "type": "multi_agent",
         "model_name": "gpt-4o-2024-08-06",
         "temperature": 0.3,
         "use_skill_lib": False,
