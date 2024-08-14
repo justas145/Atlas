@@ -410,7 +410,7 @@ record_screen = False
 agent_configs = [
     {
         "type": "multi_agnet",
-        "model_name": "gpt-4o",
+        "model_name": "llama3-70b-8192",
         "temperature": 0.3,
         "use_skill_lib": False,
     },
@@ -422,7 +422,7 @@ if __name__ == "__main__":
     # Run the crash monitoring in a background thread
     # ac_4_no_dH_parallel_5
     # ac_2_dH_head-on_8
-    scn_files = ["TEST/Big/ac_2/dH/head-on_9.scn"]
+    scn_files = ["TEST/Big/ac_4/dH/head-on_9.scn"]
     for scn in scn_files:
         for agent_config in agent_configs:
             
@@ -441,38 +441,36 @@ if __name__ == "__main__":
                 load_and_run_scenario(client, scn)
 
                 success = False
-                # for attempt in range(5):  # Retry up to 5 times
-                #     try:
-                #         with CaptureAndPrintConsoleOutput() as output:
-                #             # Use the current API key to setup the agent
-                #             agent_executor = setup_agent(agent_config, groq_api_keys_lst)
-                #             start_time = (
-                #                 time.perf_counter()
-                #             )  # Record the start time with higher precision
-                #             result = agent_executor.invoke({"input": user_input})
-                #             elapsed_time = (
-                #                 time.perf_counter() - start_time
-                #             )  # Calculate the elapsed time with higher precision
-                #         success = True
-                #         break  # Exit the retry loop if successful
-                #     except Exception as e:
-                #         print(f"Attempt {attempt + 1} failed, error: {e}")
-                #         if (
-                #             attempt < 4
-                #         ):  # Only sleep and swap keys if it's not the last attempt
-                #             time.sleep(5)
-                #             # Swap to the next API key
+                for attempt in range(5):  # Retry up to 5 times
+                    try:
+                        with CaptureAndPrintConsoleOutput() as output:
+                            # Use the current API key to setup the agent
+                            agent_executor = setup_agent(agent_config, groq_api_keys_lst)
+                            start_time = (
+                                time.perf_counter()
+                            )  # Record the start time with higher precision
+                            result = agent_executor.invoke({"input": user_input})
+                            elapsed_time = (
+                                time.perf_counter() - start_time
+                            )  # Calculate the elapsed time with higher precision
+                        success = True
+                        break  # Exit the retry loop if successful
+                    except Exception as e:
+                        print(f"Attempt {attempt + 1} failed, error: {e}")
+                        if (
+                            attempt < 4
+                        ):  # Only sleep and swap keys if it's not the last attempt
+                            time.sleep(5)
+                            # Swap to the next API key
 
-                # if not success:
-                #     print(f"Skipping scenario {scenario_name} after 5 failed attempts.")
-                #     console_output = "skipped"  # Skip to the next scenario
-                #     elapsed_time = -1  # Mark the scenario as skipped
-                # else:
-                #     console_output = output.getvalue()
+                if not success:
+                    print(f"Skipping scenario {scenario_name} after 5 failed attempts.")
+                    console_output = "skipped"  # Skip to the next scenario
+                    elapsed_time = -1  # Mark the scenario as skipped
+                else:
+                    console_output = output.getvalue()
                 
                 
-                console_output = 'testing bababab tool-use>'
                 rerun_scenario = 'tool-use>' in console_output  # Check if rerun is needed
                 if rerun_scenario:
                     print(f"Rerunning scenario {scenario_name} due to detection of 'tool-use>' in output.")
-
