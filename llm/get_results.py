@@ -42,7 +42,7 @@ with open("prompts/ICAO_seperation_guidelines.txt", "r") as f:
 
 
 from PIL import ImageGrab
-#import pygetwindow as gw
+# import pygetwindow as gw
 
 import yaml
 
@@ -114,11 +114,11 @@ class PlanExists(BaseModel):
     # Having a good description can help improve extraction results.
     plan_exists: Optional[bool] = Field(
         default=None,
-        description="Whether a conflict resolution plan exists. Plan should include aircraft call signs and instructions for that aircraft. If not provided, set to False."
+        description="Whether an aircraft conflict resolution plan exists. Plan typically includes aircraft call signs and instructions for that aircraft. If not provided, set to False. If provided, set to True. If the plan is provided and there is a comment that there are no conflicts or any other comments, set to True.",
     )
-extraction_plan_llm = ChatOpenAI(
-    temperature=0.3, model_name="gpt-4o-mini"
-)
+
+
+extraction_plan_llm = ChatOpenAI(temperature=0.0, model_name="gpt-4o-mini")
 extraction_plan_runnable = (
     extraction_prompt | extraction_plan_llm.with_structured_output(schema=PlanExists)
 )
@@ -695,6 +695,12 @@ agent_configs = [
         "temperature": 1.2,
         "use_skill_lib": False,
     },
+    {
+        "type": "single_agent",
+        "model_name": "gpt-4o-2024-08-06",
+        "temperature": 0.3,
+        "use_skill_lib": False,
+    },
 ]
 
 if __name__ == "__main__":
@@ -706,64 +712,76 @@ if __name__ == "__main__":
 
     for scn in scn_files:
         for agent_config in agent_configs:
-            agent_type = agent_config["type"]
-            model_name = agent_config["model_name"].replace(" ", "_").replace("-", "_")
-            temperature = str(agent_config["temperature"]).replace(".", "p")
 
-            # Path for the agent-specific CSV file
-            agent_csv_path = f"results/csv/{agent_type}/{model_name}_{temperature}/results.csv"
-            if 'no_dH' in scn:
-                conflict_with_dH = False
-            elif 'dH' in scn:
-                conflict_with_dH = True
-            else:
-                conflict_with_dH = None
-            scenario_name = "_".join(scn.split("/")[-3:]).replace(".scn", "")
+            # Initialize variables for rerun logic
+            rerun_scenario = True
+            attempts_count = 0
+            max_attempts = 5
+            while rerun_scenario and attempts_count < max_attempts:
+                attempts_count += 1
 
-            num_ac = get_num_ac_from_scenario(scn)
-            load_and_run_scenario(client, scn)
-            conflict_type = extract_conflict_type(scn) 
-            if record_screen:
-                recording_directory = (
-                    f"results/recordings/{agent_type}/{model_name}_{temperature}"
-                )
-                recording_file_name = f"{scenario_name}.avi"
-                recorder = ScreenRecorder(
-                    output_directory=recording_directory, file_name=recording_file_name
-                )
-                recorder.start_recording()
+                agent_type = agent_config["type"]
+                model_name = agent_config["model_name"].replace(" ", "_").replace("-", "_")
+                temperature = str(agent_config["temperature"]).replace(".", "p")
 
-            success = False
-            for attempt in range(5):  # Retry up to 5 times
-                try:
-                    with CaptureAndPrintConsoleOutput() as output:
-                        # Use the current API key to setup the agent
-                        agent_executor = setup_agent(agent_config, groq_api_keys_lst)
-                        start_time = (
-                            time.perf_counter()
-                        )  # Record the start time with higher precision
-                        result = agent_executor.invoke({"input": user_input})
-                        elapsed_time = (
-                            time.perf_counter() - start_time
-                        )  # Calculate the elapsed time with higher precision
-                    success = True
-                    break  # Exit the retry loop if successful
-                except Exception as e:
-                    print(f"Attempt {attempt + 1} failed, error: {e}")
-                    if attempt < 4:  # Only sleep and swap keys if it's not the last attempt
-                        time.sleep(5)
-                        # Swap to the next API key
+                # Path for the agent-specific CSV file
+                agent_csv_path = f"results/csv/{agent_type}/{model_name}_{temperature}/results.csv"
+                if 'no_dH' in scn:
+                    conflict_with_dH = False
+                elif 'dH' in scn:
+                    conflict_with_dH = True
+                else:
+                    conflict_with_dH = None
+                scenario_name = "_".join(scn.split("/")[-3:]).replace(".scn", "")
 
-            if not success:
-                print(f"Skipping scenario {scenario_name} after 5 failed attempts.")
-                console_output = 'skipped'  # Skip to the next scenario
-                elapsed_time = -1  # Mark the scenario as skipped
-            else:
-                console_output = output.getvalue()
-                console_output = remove_ansi_escape_sequences(console_output)
+                num_ac = get_num_ac_from_scenario(scn)
+                load_and_run_scenario(client, scn)
+                conflict_type = extract_conflict_type(scn) 
+                if record_screen:
+                    recording_directory = (
+                        f"results/recordings/{agent_type}/{model_name}_{temperature}"
+                    )
+                    recording_file_name = f"{scenario_name}.avi"
+                    recorder = ScreenRecorder(
+                        output_directory=recording_directory, file_name=recording_file_name
+                    )
+                    recorder.start_recording()
 
-            if record_screen:
-                recorder.stop_recording()
+                success = False
+                for attempt in range(5):  # Retry up to 5 times
+                    try:
+                        with CaptureAndPrintConsoleOutput() as output:
+                            # Use the current API key to setup the agent
+                            agent_executor = setup_agent(agent_config, groq_api_keys_lst)
+                            start_time = (
+                                time.perf_counter()
+                            )  # Record the start time with higher precision
+                            result = agent_executor.invoke({"input": user_input})
+                            elapsed_time = (
+                                time.perf_counter() - start_time
+                            )  # Calculate the elapsed time with higher precision
+                        success = True
+                        break  # Exit the retry loop if successful
+                    except Exception as e:
+                        print(f"Attempt {attempt + 1} failed, error: {e}")
+                        if attempt < 4:  # Only sleep and swap keys if it's not the last attempt
+                            time.sleep(5)
+                            # Swap to the next API key
+
+                if not success:
+                    print(f"Skipping scenario {scenario_name} after 5 failed attempts.")
+                    console_output = 'skipped'  # Skip to the next scenario
+                    elapsed_time = -1  # Mark the scenario as skipped
+                else:
+                    console_output = output.getvalue()
+                    console_output = remove_ansi_escape_sequences(console_output)
+
+                if record_screen:
+                    recorder.stop_recording()
+                    
+                rerun_scenario = 'tool-use>' in console_output
+                if rerun_scenario:
+                    print('reruning the scenario, because of TOOL ERROR')
 
             final_score, final_details = final_check()
             print('FINAL SCORE:' , final_score)
