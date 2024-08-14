@@ -41,6 +41,9 @@ executor_prompt = PromptTemplate.from_template(
     Heading command: HDG <Aircraft Call Sign> <Heading>. Heading is between 0 and 360
     
     Altitude command: ALT <Aircraft Call Sign> <Altitude>. Altitude is in feet.
+    
+
+    Once you have executed the commands from the plan, finish the task by responding with: TASK COMPLETE
     """
 )
 
