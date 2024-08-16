@@ -44,4 +44,4 @@ def get_aircraft_ids():
     for ac in ac_ids_lst:
         stack.stack(ac)
 
-    return ac_ids_lst
+    #return ac_ids_lst
