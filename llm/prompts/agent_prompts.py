@@ -130,15 +130,7 @@ conflict_description_prompt = PromptTemplate.from_template(
 
   - Number of Aircraft Involved: [number of aircraft involved in the conflict and their call signs for reference]
   
-  - relative position description [describe how each aircraft are positioned relative to one another without numbers, look into Pos and Alt. Use call signs for reference]
-
-  - Heading: [describe how each aircraft are heading relative to one another without numbers, look into Hdg and Trk. Use call signs for reference]
-  
-  - Distance: [Initial distance between the aircraft in nautical miles]
-  
-  - Speed: [relative speed of all involved aircraft, horizontal and vertical]
-    
-  - time to closest point of approach (TCPA): [Initial time to closest point of approach in seconds]
+  - relative conflict description [describe how each aircraft are positioned relative to all other aircraft without numbers, look into Pos and Alt. describe how each aircraft are heading relative to one another aircraft without numbers, look into Hdg and Trk. Check if any aircraft are acending or descending, look into V/S (ascending if positive, descending if negative and level is zero). Use call signs for reference. Make the description as detailed and as clear as possible. Rember - no numbers and keep it up to 4 sentences]
 
   - Conflict formation (no need to explain your choice):
       * Head-On Formation (aircraft are flying directly towards each other facing each other)
@@ -188,6 +180,8 @@ dos_donts_list_transformation_prompt = PromptTemplate.from_template(
     4 | ALT AC1 BBB | Don'ts
     Current altitude of AC1: BBB
     ...
+    
+    Only output transformed list, nothing more.
     """
 )
 
@@ -214,7 +208,39 @@ relative_values_dos_donts_list_prompt = PromptTemplate.from_template(
     1 | Increase (if Y>X)/decrease (if Y<X) altitude of AC1 by abs(Y - X) ft| Do's
     2 | Increase (if W>Z)/decrease (if W<Z) heading of AC2 by abs(W - Z) deg| Don'ts
     
+    Output only the transformed list.
+    
     """
+)
+
+anonymous_values_dos_donts_list_prompt = PromptTemplate.from_template(
+    """
+    here is a list of do's and don'ts commands for air traffic control:
+
+    <do's dont's list>
+    {dos_donts_list}
+    <do's dont's list>
+
+    Task: Transform a list of air traffic control commands into general descriptions using the following guidelines:
+
+
+    Use "a small heading amount" for changes of up to 10 degrees.
+    Use "a moderate heading shift" for changes between 11 to 30 degrees.
+    Use "a significant heading turn" for changes greater than 30 degrees.
+
+    Use "a slight adjustment" for changes of up to 1000 feet.
+    Use "a moderate altitude change" for changes between 1000 and 3000 feet.
+    Use "a significant altitude change" for changes greater than 3000 feet.
+    
+    For example if the command would be to increase/decrease heading by 5 degrees for aircraft AC1, the transformed command would be increase/decrease heading by a small heading amount for aircraft AC1.
+
+
+    Output format:
+
+    keep the list format the same:
+    1  | transformed description | do's or don'ts 
+    ...
+"""
 )
 
 
@@ -247,18 +273,18 @@ final_dos_donts_prompt = PromptTemplate.from_template(
 )
 
 
-extraction_prompt = ChatPromptTemplate.from_messages(
+extraction_metada_prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            "You are an expert in extracting information about aircraft conflict resolution plans. "
-            "Your task is to determine if there is a detailed plan for resolving aircraft conflicts. "
-            "A plan typically includes specific actions, call signs, and instructions. "
-            "Identify if such details are present. If the text only states 'NO CONFLICTS' without any plan details, "
-            "this should be considered as having no plan."
-            "Sometimes a plan can be present together with a comment that there are no conflicts. "
-            "In such cases, the plan should still be considered as present.",
+            "You are an expert extraction algorithm. "
+            "Only extract relevant information from the text. "
+            "If you do not know the value of an attribute asked to extract, "
+            "return null for the attribute's value.",
         ),
+        # Please see the how-to about improving performance with
+        # reference examples.
+        # MessagesPlaceholder('examples'),
         ("human", "{text}"),
     ]
 )

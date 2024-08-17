@@ -10,6 +10,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 import uuid
 from typing import Optional
+from langchain_openai import ChatOpenAI
 from langchain_core.pydantic_v1 import BaseModel, Field
 # Adds the directory containing 'prompts' to the Python path
 sys.path.append(
@@ -21,7 +22,8 @@ from agent_prompts import (
     dos_donts_list_transformation_prompt,
     relative_values_dos_donts_list_prompt,
     final_dos_donts_prompt,
-    extraction_prompt,
+    extraction_metada_prompt,
+    anonymous_values_dos_donts_list_prompt,
 )
 
 load_dotenv(find_dotenv())
@@ -36,10 +38,9 @@ openai_ef = chromadb.utils.embedding_functions.OpenAIEmbeddingFunction(
     api_key=os.getenv("OPENAI_API_KEY"),
     model_name="text-embedding-3-large",
 )
-# chroma_client.delete_collection("experience_library_v1")
-#chroma_client.delete_collection("experience_library_v1")
+# chroma_client.delete_collection("experience_library_v2")
 collection = chroma_client.get_or_create_collection(
-    name="experience_library_v1",
+    name="experience_library_v2",
     embedding_function=openai_ef,
     metadata={"hnsw:space": "cosine"},
 )
@@ -66,7 +67,7 @@ def get_next_key():
 
 
 class Metadata(BaseModel):
-    """Information about an aircraft conflict."""
+    """Information about an air traffic conflict."""
 
     # This doc-string is sent to the LLM as the description of the schema Metadata,
     # and it can help to improve extraction results.
@@ -75,66 +76,37 @@ class Metadata(BaseModel):
     # 1. Each field is an `optional` -- this allows the model to decline to extract it!
     # 2. Each field has a `description` -- this description is used by the LLM.
     # Having a good description can help improve extraction results.
-    num_ac: Optional[str] = Field(
-        default=None, description="Number of aircraft in conflict. If not provided, set to 'Not provided'."
+    num_ac: Optional[int] = Field(
+        default=None, description="Number of aircraft in conflict"
     )
     conflict_formation: Optional[str] = Field(
-        default=None,
-        description="conflict formation. If not provided, set to 'Not provided'.",
-    )
-    min_distance: Optional[float] = Field(
-        default=None, description="Minimum distance between aircraft in nautical miles. If not provided, set to -1"
-    )
-    min_tcpa: Optional[float] = Field(
-        default=None, description="Minimum time to closest point of approach in seconds. If not provided, set to -1."
+        default=None, description="conflict formation"
     )
 
 
 def extract_commands(data):
     lines = data.split("\n")
     result = []
-    capture_next_line = False  # Flag to start capturing next line
-    monitoring_active = False  # Flag to handle continued monitoring results
-    wait_for_conflict_status = False  # Flag to capture conflict status after delay
+    capture_flag = False  # Flag to start capturing after certain keywords
 
     for line in lines:
         line = line.strip()
-        if "Invoking:" in line:
-            if "SENDCOMMAND" in line or "GETCONFLICTINFO" in line:
-                result.append(line)
-                capture_next_line = True  # Start capturing next relevant output
-            elif "CONTINUEMONITORING" in line:
-                result.append(line)
-                monitoring_active = True  # Start monitoring section
-            else:
-                capture_next_line = False  # Ensure no capture unless specified
-                monitoring_active = False  # Stop monitoring unless specified
-                wait_for_conflict_status = False  # Reset waiting status
-        elif capture_next_line:
-            if "Command executed successfully." in line:
-                result.append(line)
-                capture_next_line = False  # Command feedback captured, stop capturing
-            elif (
-                "Number of aircraft in conflict:" in line
+        if "Invoking:" in line and "`GETALLAIRCRAFTINFO`" not in line:
+            result.append(line)
+            capture_flag = True  # Start capturing the results after invoking
+        elif capture_flag:
+            if (
+                "Number of aircraft pairs in conflict:" in line
                 or "No conflicts detected" in line
             ):
                 result.append(line)
-                capture_next_line = False  # Stop capturing unless it's monitoring
-        elif monitoring_active:
-            if "After" in line:
+                capture_flag = False  # Stop capturing after conflict info
+            elif "Command executed successfully." in line:
                 result.append(line)
-                wait_for_conflict_status = (
-                    True  # After stating delay, wait for conflict status
-                )
-            elif wait_for_conflict_status and (
-                "Number of aircraft in conflict:" in line
-                or "No conflicts detected" in line
-            ):
+                capture_flag = False  # Stop capturing after command execution
+            elif "Crash Alert:" in line:
                 result.append(line)
-                monitoring_active = False  # End monitoring on conflict info
-                wait_for_conflict_status = False  # Reset waiting status
-        elif "Crash Alert:" in line:
-            result.append(line)  # Capture crash alerts as they appear
+                capture_flag = False  # Include crash alerts and stop capturing
 
     return "\n".join(result)
 
@@ -157,7 +129,11 @@ def extract_conflict_info(data):
             if (
                 any(
                     keyword in line
-                    for keyword in ["GETALLAIRCRAFTINFO", "GETCONFLICTINFO"]
+                    for keyword in [
+                        "GETALLAIRCRAFTINFO",
+                        "GETCONFLICTINFO",
+                        "CONTINUEMONITORING",
+                    ]
                 )
                 and line not in sections_captured
             ):
@@ -190,15 +166,36 @@ def extract_aircraft_init_info(text):
 
     return "\n".join(result)
 
-def create_experience_doc(console_output):
-    api_key = get_next_key()  # Get the next API key for this call
-    temperature = 0.4
-    model_name = "llama3-70b-8192"
-    llm = ChatGroq(temperature=temperature, model_name=model_name, api_key=api_key) | StrOutputParser()
 
-    extraction_llm = ChatGroq(temperature=temperature, model_name=model_name, api_key=api_key)
-    extraction_runnable = extraction_prompt | extraction_llm.with_structured_output(
-        schema=Metadata
+def replace_flight_names(text):
+    # Create a pattern that matches "flight" followed by a number, case insensitive
+    pattern = re.compile(r"flight(\d+)", re.IGNORECASE)
+
+    # Define a function to determine the replacement based on the captured number
+    def replace(match):
+        number = int(match.group(1))  # The number following "flight"
+        return f"AIRCRAFT_{chr(64 + number)}"  # Convert number to letter (1 -> A, 2 -> B, etc.)
+
+    # Use the sub method to replace all occurrences using the replace function
+    result = pattern.sub(replace, text)
+    return result
+
+
+def create_experience_doc(console_output, model_name="llama3-70b-8192", temperature=0.3):
+    model_name = model_name.replace('_', '-')
+    if 'gpt' in model_name:
+        print("Using OpenAI model")
+        llm = ChatOpenAI(temperature=temperature, model_name=model_name) | StrOutputParser()
+        extraction_llm= ChatOpenAI(temperature=temperature, model_name=model_name)
+
+    else:
+        print("Using Groq model")
+        api_key = get_next_key()  # Get the next API key for this call
+        llm = ChatGroq(temperature=temperature, model_name=model_name, api_key=api_key) | StrOutputParser()
+        extraction_llm = ChatGroq(temperature=temperature, model_name=model_name, api_key=api_key)
+    extraction_runnable = (
+        extraction_metada_prompt
+        | extraction_llm.with_structured_output(schema=Metadata)
     )
     # Process the input data
     processed_log_commands = extract_commands(console_output)
@@ -224,15 +221,21 @@ def create_experience_doc(console_output):
         relative_values_dos_donts_list_prompt.format(dos_donts_list=dos_donts_list_transformation)
     )
 
-    final_dos_donts_list = llm.invoke(
-        final_dos_donts_prompt.format(
-            conflict_description=conflict_description,
-            commands_list=relative_values_dos_donts_list,
+    anonymous_values_dos_donts_list = llm.invoke(
+        anonymous_values_dos_donts_list_prompt.format(
+            dos_donts_list=relative_values_dos_donts_list
         )
     )
 
+    final_dos_donts_list = llm.invoke(
+        final_dos_donts_prompt.format(
+            conflict_description=conflict_description,
+            commands_list=anonymous_values_dos_donts_list,
+        )
+    )
 
     experience_doc = conflict_description + "\n\n" + final_dos_donts_list
+    experience_doc = replace_flight_names(experience_doc)
 
     # print(experience_doc)
     metadata = extraction_runnable.invoke({"text": conflict_description})
@@ -251,7 +254,7 @@ def update_experience_library(collection, skill_manual, metadata):
     # }
 
     uuid4 = uuid.uuid4()
-    
+
     try:
         collection.upsert(
             ids=[str(uuid4)],
@@ -260,8 +263,6 @@ def update_experience_library(collection, skill_manual, metadata):
                 {
                     "num_ac": metadata.num_ac,
                     "conflict_formation": metadata.conflict_formation,
-                    "min_distance": metadata.min_distance,
-                    "min_tcpa": metadata.min_tcpa,
                 }
             ],
         )
@@ -270,7 +271,8 @@ def update_experience_library(collection, skill_manual, metadata):
         print(f"Error adding skill manual to the collection: {e}")
 
 import pandas as pd
-csv_path = '../results/csv/all_results.csv'
+
+csv_path = "../results/main/sa_no_exp_V2.csv"
 data = pd.read_csv(csv_path)
 
 # Define the maximum number of attempts
@@ -278,15 +280,23 @@ max_attempts = 5
 
 # Iterate over each row in the DataFrame
 for index, row in data.iterrows():
-    print(index)
+    if row["num_send_commands"] > 6:
+        print(f"Skipping row {index} as num_send_commands is greater than 6.")
+        continue
+
+    print(f"Processing row {index}")
     console_output = row["log"]
+    model_name = row["model_name"]
 
     # Attempt to create the experience document and metadata up to `max_attempts` times
     for attempt in range(max_attempts):
         try:
-            experience_doc, metadata = create_experience_doc(console_output)
+            experience_doc, metadata = create_experience_doc(console_output, model_name)
+            print(experience_doc)
+            print(metadata)
             # If successful, update the experience library and break the retry loop
             update_experience_library(collection, experience_doc, metadata)
+            print(f"Successfully updated library for row {index}")
             break
         except Exception as e:
             print(f"Attempt {attempt + 1} failed for row {index}, error: {e}")

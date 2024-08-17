@@ -226,13 +226,13 @@ with open("prompts/system_with_exp_lib.txt", "r") as f:
 # with open("prompts/conflict.txt", "r") as f:
 #     prompt.messages[0].prompt.template += f.read()
 
-del agent_tools_list[1]
-del agent_tools_list[-1]
+# del agent_tools_list[1]
+# del agent_tools_list[-1]
 
-agent_tools_list = agent_tools_list
+# agent_tools_list = agent_tools_list
 
 
-chat = ChatGroq(temperature=temperature, model_name=model_name, api_key=os.getenv("GROQ_API_KEY_3"))
+#chat = ChatGroq(temperature=temperature, model_name=model_name, api_key=os.getenv("GROQ_API_KEY_3"))
 chat = ChatOpenAI(temperature=0.3, model="gpt-4o")
 
 
@@ -256,7 +256,7 @@ scenario = "case3"
 # ac_4_no_dH_parallel_1
 # ac_4_no_dH_t-formation_1
 # ac_4_no_dH_t-formation_3
-client.send_event(b"STACK", f"IC TEST/Big/ac_4/no_dH/t-formation_3.scn")
+client.send_event(b"STACK", f"IC TEST/Big/ac_3/no_dH/t-formation_3.scn")
 time.sleep(1.5)
 useless = client.update()
 useless =  receive_bluesky_output()
