@@ -240,7 +240,7 @@ def initialize_simulator():
 
 def initialize_experience_library():
 # Vector DB
-    selected_collection = "experience_library_v1"
+    selected_collection = "experience_library_v2"
     base_path = os.path.dirname(__file__)
     vectordb_path = os.path.join(base_path, "skills-library", "vectordb")
     chroma_client = chromadb.PersistentClient(path=vectordb_path)
@@ -500,7 +500,7 @@ def setup_single_agent(config, groq_api_key):
         tools_to_use = [
             tool
             for name, tool in agent_tool_dict.items()
-            if name != "SearchExperienceLibrary"
+            if name != "SEARCHEXPERIENCELIBRARY"
         ]
         print('not using skill lib')
     tools_to_use = list(tools_to_use)
@@ -531,7 +531,7 @@ def setup_multi_agent(config, groq_api_keys_lst):
         if role == "planner":
             if config.get("use_skill_lib", False):
                 print("loading system prompt with exp lib")
-                with open("prompts/system_with_exp_lib.txt", "r") as f:
+                with open("prompts/planner_system_with_exp_lib.txt", "r") as f:
                     planner_system_prompt = prompt_init
                     planner_system_prompt.messages[0].prompt.template = f.read()
             else:
@@ -545,7 +545,7 @@ def setup_multi_agent(config, groq_api_keys_lst):
         if role == "verifier":
             if config.get("use_skill_lib", False):
                 print("loading system prompt with exp lib")
-                with open("prompts/system_with_exp_lib.txt", "r") as f:
+                with open("prompts/verifier_system_with_exp_lib.txt", "r") as f:
                     verifier_system_prompt = prompt_init
                     verifier_system_prompt.messages[0].prompt.template = f.read()
             else:
@@ -560,10 +560,8 @@ def setup_multi_agent(config, groq_api_keys_lst):
         tools_to_use = [agent_tool_dict[name] for name in tool_names]
         if config.get("use_skill_lib", False) and role in ["planner", "verifier"]:
             print("using skill lib")
-            tools_to_use.append(agent_tool_dict["SearchExperienceLibrary"])
+            tools_to_use.append(agent_tool_dict["SEARCHEXPERIENCELIBRARY"])
         print("not using skill lib")
-        # TODO
-        # add the prompt for each role, now it is the same for all
 
         if role == "planner":
             prompt = planner_system_prompt
@@ -693,13 +691,25 @@ agent_configs = [
         "type": "multi_agent",
         "model_name": "llama3-70b-8192",
         "temperature": 0.3,
-        "use_skill_lib": False,
+        "use_skill_lib": True,
     },
     {
         "type": "multi_agent",
         "model_name": "gpt-4o-2024-08-06",
         "temperature": 0.3,
-        "use_skill_lib": False,
+        "use_skill_lib": True,
+    },
+    {
+        "type": "single_agent",
+        "model_name": "llama3-70b-8192",
+        "temperature": 0.3,
+        "use_skill_lib": True,
+    },
+    {
+        "type": "single_agent",
+        "model_name": "gpt-4o-2024-08-06",
+        "temperature": 0.3,
+        "use_skill_lib": True,
     },
 ]
 
