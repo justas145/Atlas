@@ -174,54 +174,33 @@ def SearchExperienceLibrary(
     conflict_description: str,
     num_ac: int,
     conflict_formation: str,
-    min_distance: float,
-    min_tcpa: float,
 ):
     """
     Search in the experience library for a similar conflict and its resolution. Only use it after you aquired aircraft information and conflict details.
 
-    :param conflict_description: Description of the conflict in a couple of sentences, e.g., how each aircraft are positioned and headed relative to one another without numbers.
+    :param conflict_description: Detailed description of the conflict in a couple of sentences, e.g., how each aircraft are positioned and headed relative to one another without numbers.
     :param num_ac: Number of aircraft involved in the conflict.
     :param conflict_formation: Formation of the conflict, options include "Head-On Formation", "T-Formation", "Parallel Formation", "Converging Formation".
-    :param min_distance: Minimum distance between aircraft in conflict.
-    :param min_tcpa: Minimum time to closest point of approach in seconds.
-    :return: Document with similar conflict and advices on how to resolve it.
+    :return: Document with similar conflict and advices on how to resolve it or no document if nothing similar was found.
     """
 
-    test_exp = """
-    Here is a similar conflict from the past:
-    
-    Aircraft_A is north of Aircraft_B, with Aircraft_B being at a slightly lower latitude. Both aircraft are at the same altitude.  Aircraft_A is heading northeast, while Aircraft_B is heading southeast, resulting in a converging path.
-    
-    Here is are the do's and don'ts to resolve the conflict:
-    1 | Decrease altitude of Aircraft_A by less than 1000 ft | Don't | Decreasing altitude would not have helped as both aircraft are at the same altitude, and the conflict is due to their converging headings.
-    2 | Increase heading of Aircraft_B by more than 40 deg | Do | Turning Aircraft_B further to the right would have increased the horizontal seperation enough.
-    
-    Take inspiration from the above conflict and advices to resolve the current conflict.
-    """
-    return test_exp
     where_full = {
         "$and": [
             {"num_ac": num_ac},
             {"conflict_formation": conflict_formation},
-            {"min_distance": {"$lte": min_distance}},
-            {"min_tcpa": {"$lte": min_tcpa}},
+
         ]
     }
 
     where_partial_1 = {
         "$and": [
             {"num_ac": num_ac},
-            {"conflict_formation": conflict_formation},
         ]
     }
-
-    where_partial_2 = {"num_ac": num_ac}
 
     search_orders = [
         (where_full, "Full"),
         (where_partial_1, "Partial 1"),
-        (where_partial_2, "Partial 2"),
         (None, "No filters"),
     ]
 
@@ -233,7 +212,7 @@ def SearchExperienceLibrary(
             if query_results["documents"] and query_results["documents"][0]:
                 doc = query_results["documents"][0][0]
                 print(f"{label} query results:", doc)
-                return doc
+                return doc + "\n\n" + "Remember this is only a similar conflict and not identical. Use the information wisely."
         except Exception as e:
             print(f"Error with {label} query:", e)
 
