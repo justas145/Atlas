@@ -205,7 +205,7 @@ openai_ef = chromadb.utils.embedding_functions.OpenAIEmbeddingFunction(
 # Vector DB
 collections = chroma_client.list_collections()
 collection_names = [collection.name for collection in collections]
-selected_collection = "experience_library_v1"
+selected_collection = "experience_library_v2"
 
 collection = chroma_client.get_or_create_collection(
     name=selected_collection,
@@ -232,8 +232,8 @@ with open("prompts/system_with_exp_lib.txt", "r") as f:
 # agent_tools_list = agent_tools_list
 
 
-#chat = ChatGroq(temperature=temperature, model_name=model_name, api_key=os.getenv("GROQ_API_KEY_3"))
-chat = ChatOpenAI(temperature=0.3, model="gpt-4o")
+chat = ChatGroq(temperature=temperature, model_name=model_name, api_key=os.getenv("GROQ_API_KEY_3"))
+#chat = ChatOpenAI(temperature=0.3, model="gpt-4o")
 
 
 agent = agents.create_openai_tools_agent(chat, agent_tools_list, prompt)

@@ -288,3 +288,20 @@ extraction_metada_prompt = ChatPromptTemplate.from_messages(
         ("human", "{text}"),
     ]
 )
+
+
+extraction_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are an expert in extracting information about aircraft conflict resolution plans. "
+            "Your task is to determine if there is a detailed plan for resolving aircraft conflicts. "
+            "A plan typically includes specific actions, call signs, and instructions. "
+            "Identify if such details are present. If the text only states 'NO CONFLICTS' without any plan details, "
+            "this should be considered as having no plan."
+            "Sometimes a plan can be present together with a comment that there are no conflicts. "
+            "In such cases, the plan should still be considered as present.",
+        ),
+        ("human", "{text}"),
+    ]
+)

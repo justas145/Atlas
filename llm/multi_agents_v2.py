@@ -154,7 +154,7 @@ def initialize_simulator():
 
 def initialize_experience_library():
     # Vector DB
-    selected_collection = "experience_library_v1"
+    selected_collection = "experience_library_v2"
     base_path = os.path.dirname(__file__)
     vectordb_path = os.path.join(base_path, "skills-library", "vectordb")
     chroma_client = chromadb.PersistentClient(path=vectordb_path)
@@ -220,11 +220,10 @@ def setup_single_agent(config, groq_api_key):
         )  # Use all available tools if skill lib is to be used
         print("using skill lib")
     else:
-        # Exclude "QueryConflicts" tool if 'use_skill_lib' is False
         tools_to_use = [
             tool
             for name, tool in agent_tool_dict.items()
-            if name != "SearchExperienceLibrary"
+            if name != "SEARCHEXPERIENCELIBRARY"
         ]
         print("not using skill lib")
     tools_to_use = list(tools_to_use)
@@ -255,7 +254,7 @@ def setup_multi_agent(config, groq_api_keys_lst):
         if role == "planner":
             if config.get("use_skill_lib", False):
                 print("loading system prompt with exp lib")
-                with open("prompts/system_with_exp_lib.txt", "r") as f:
+                with open("prompts/planner_system_with_exp_lib.txt", "r") as f:
                     planner_system_prompt = prompt_init
                     planner_system_prompt.messages[0].prompt.template = f.read()
             else:
@@ -269,14 +268,14 @@ def setup_multi_agent(config, groq_api_keys_lst):
         if role == "verifier":
             if config.get("use_skill_lib", False):
                 print("loading system prompt with exp lib")
-                with open("prompts/system_with_exp_lib.txt", "r") as f:
+                with open("prompts/verifier_system_with_exp_lib.txt", "r") as f:
                     verifier_system_prompt = prompt_init
                     verifier_system_prompt.messages[0].prompt.template = f.read()
             else:
                 with open("prompts/verifier_system.txt", "r") as f:
                     verifier_system_prompt = prompt_init
                     verifier_system_prompt.messages[0].prompt.template = f.read()
-        
+
         ### LOADING PROMPTS ###
 
         groq_api_key = next(groq_key_generator)
@@ -284,11 +283,9 @@ def setup_multi_agent(config, groq_api_keys_lst):
         tools_to_use = [agent_tool_dict[name] for name in tool_names]
         if config.get("use_skill_lib", False) and role in ["planner", "verifier"]:
             print("using skill lib")
-            tools_to_use.append(agent_tool_dict["SearchExperienceLibrary"])
+            tools_to_use.append(agent_tool_dict["SEARCHEXPERIENCELIBRARY"])
         print("not using skill lib")
-        # TODO
-        # add the prompt for each role, now it is the same for all
-        
+
         if role == "planner":
             prompt = planner_system_prompt
         elif role == "executor":
@@ -407,12 +404,13 @@ user_input = "You are an air traffic controller with tools. Solve aircraft confl
 
 record_screen = False
 # llama3-70b-8192
+# gp
 agent_configs = [
     {
         "type": "multi_agnet",
-        "model_name": "llama3-70b-8192",
+        "model_name": "gpt-4o",
         "temperature": 0.3,
-        "use_skill_lib": False,
+        "use_skill_lib": True,
     },
 ]
 
@@ -422,7 +420,7 @@ if __name__ == "__main__":
     # Run the crash monitoring in a background thread
     # ac_4_no_dH_parallel_5
     # ac_2_dH_head-on_8
-    scn_files = ["TEST/Big/ac_4/dH/head-on_9.scn"]
+    scn_files = ["TEST/Big/ac_2/dH/head-on_9.scn"]
     for scn in scn_files:
         for agent_config in agent_configs:
             

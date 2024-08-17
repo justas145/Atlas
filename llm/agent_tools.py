@@ -211,7 +211,6 @@ def SearchExperienceLibrary(
             )
             if query_results["documents"] and query_results["documents"][0]:
                 doc = query_results["documents"][0][0]
-                print(f"{label} query results:", doc)
                 return doc + "\n\n" + "Remember this is only a similar conflict and not identical. Use the information wisely."
         except Exception as e:
             print(f"Error with {label} query:", e)
@@ -403,7 +402,6 @@ def generate_compact_conflict_report(
 
 agent_tools_list = [
     GetAllAircraftInfo,
-    GetConflictInfo,
     SendCommand,
     ContinueMonitoring,
     SearchExperienceLibrary,
