@@ -111,6 +111,38 @@ def extract_commands(data):
     return "\n".join(result)
 
 
+# Process the input data
+processed_log_commands = extract_commands(console_output)
+print(processed_log_commands)
+
+
+def filter_first_instance_only(text):
+    keywords = ["GETALLAIRCRAFTINFO", "GETCONFLICTINFO", "CONTINUEMONITORING"]
+    lines = text.split("\n")
+    result = []
+    captured = set()
+    capture = False
+
+    for line in lines:
+        if any(f"Invoking: `{keyword}`" in line for keyword in keywords):
+            section_keyword = next(
+                keyword for keyword in keywords if f"Invoking: `{keyword}`" in line
+            )
+            if section_keyword not in captured:
+                capture = True
+                captured.add(section_keyword)
+                if (
+                    result
+                ):  # Add a new line before starting a new section if the result is not empty
+                    result.append("")
+            else:
+                capture = False  # Stop capturing lines if this section starts again
+        if capture:
+            result.append(line)  # Append the line to the result if we are capturing
+
+    return "\n".join(result)
+
+
 def extract_conflict_info(data):
     lines = data.split("\n")
     result = []
@@ -122,20 +154,20 @@ def extract_conflict_info(data):
         line = line.strip()
         if "Invoking:" in line:
             if section_data:  # There's collected data from the previous section
-                result.extend(section_data)  # Append collected data to the result
-                sections_captured.add(current_section)  # Mark the section as captured
+                if current_section not in sections_captured:
+                    result.extend(section_data)  # Append collected data to the result
+                    sections_captured.add(
+                        current_section
+                    )  # Mark the section as captured
                 section_data = []  # Reset for the next section
 
-            if (
-                any(
-                    keyword in line
-                    for keyword in [
-                        "GETALLAIRCRAFTINFO",
-                        "GETCONFLICTINFO",
-                        "CONTINUEMONITORING",
-                    ]
-                )
-                and line not in sections_captured
+            if any(
+                keyword in line
+                for keyword in [
+                    "GETALLAIRCRAFTINFO",
+                    "GETCONFLICTINFO",
+                    "CONTINUEMONITORING",
+                ]
             ):
                 current_section = line  # Start a new section
             else:
@@ -148,7 +180,10 @@ def extract_conflict_info(data):
     if section_data and current_section not in sections_captured:
         result.extend(section_data)
 
-    return "\n".join(result)
+    output = "\n".join(result)
+    clean_output = filter_first_instance_only(output)
+
+    return clean_output
 
 
 def extract_aircraft_init_info(text):
@@ -242,7 +277,7 @@ def create_experience_doc(console_output, model_name="llama3-70b-8192", temperat
     return experience_doc, metadata
 
 
-def update_experience_library(collection, skill_manual, metadata):
+def update_experience_library(collection, skill_manual, metadata, model_name):
     # get documents by metadata filter
     # where = {
     #     "$and": [
@@ -263,6 +298,8 @@ def update_experience_library(collection, skill_manual, metadata):
                 {
                     "num_ac": metadata.num_ac,
                     "conflict_formation": metadata.conflict_formation,
+                    "model_name": model_name,
+                    
                 }
             ],
         )
@@ -280,8 +317,8 @@ max_attempts = 5
 
 # Iterate over each row in the DataFrame
 for index, row in data.iterrows():
-    if row["num_send_commands"] > 6:
-        print(f"Skipping row {index} as num_send_commands is greater than 6.")
+    if row["num_send_commands"] > 7:
+        print(f"Skipping row {index} as num_send_commands is greater than 7.")
         continue
 
     print(f"Processing row {index}")
@@ -295,7 +332,7 @@ for index, row in data.iterrows():
             print(experience_doc)
             print(metadata)
             # If successful, update the experience library and break the retry loop
-            update_experience_library(collection, experience_doc, metadata)
+            update_experience_library(collection, experience_doc, metadata, model_name)
             print(f"Successfully updated library for row {index}")
             break
         except Exception as e:
