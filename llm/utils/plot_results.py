@@ -24,9 +24,24 @@ def load_and_prepare_data(csv_path):
     except AttributeError:
         print("Temperature column is already float")
 
-    # Add the experience_library column as specified
+    # replace model names instead of _ with -
+    df["model_name"] = df["model_name"].str.replace("_", "-")
+    
+    # if gpt-4o is in model name then replace it with GPT-4o entirely
+    # if llama is in model name then replace it with Llama-70B entirely
+    # Custom function to replace specific model names
+    def replace_model_name(model_name):
+        if 'gpt-4o' in model_name:
+            return 'GPT-4o'
+        elif 'llama' in model_name:
+            return 'Llama-70B'
+        return model_name
 
-    # df["experience_library"] = False
+    # Apply the custom function to the model_name column
+    df["model_name"] = df["model_name"].apply(replace_model_name)
+    
+
+    
     return df
 
 
@@ -187,9 +202,12 @@ def plot_total_scores(df):
     plt.title("Total Score by Model, Agent Type, and Experience Library")
     plt.xlabel("Model Name")
     plt.ylabel("Total Score")
-    plt.legend(title="Agent Type/Experience")
-    plt.xticks(rotation=45)
+    plt.legend(framealpha=0.15,title="Agent Type/Experience")
+    # plt.xticks(rotation=45)
+    # Automatically adjust layout to avoid cutting off elements
+    
     plt.grid(True)
+    plt.tight_layout()
     save_path = os.path.join(figures_directory, "bar_chart_total_score.pdf")
     plt.savefig(save_path)
     plt.close()
@@ -216,9 +234,13 @@ def plot_average_scores(df):
     plt.title("Average Score by Model")
     plt.xlabel("Model Name")
     plt.ylabel("Average Score")
-    plt.legend(title="Agent Type/Experience")
-    plt.xticks(rotation=45)
+    plt.legend(framealpha=0.15,title="Agent Type/Experience")
+    # plt.xticks(rotation=45)
     plt.grid(True)
+    plt.tight_layout()
+
+    # Automatically adjust layout to avoid cutting off elements
+
     save_path = os.path.join(figures_directory, "bar_chart_avg_score.pdf")
     plt.savefig(save_path)
     plt.close()
@@ -245,9 +267,12 @@ def plot_average_num_tools_used(df):
     plt.title("Average Number of Tools Used by Model")
     plt.xlabel("Model Name")
     plt.ylabel("Average Number of Tools Used")
-    plt.legend(title="Agent Type/Experience")
-    plt.xticks(rotation=45)
+    plt.legend(framealpha=0.15,title="Agent Type/Experience")
+    # plt.xticks(rotation=45)
     plt.grid(True)
+    plt.tight_layout()
+    # Automatically adjust layout to avoid cutting off elements
+    
     save_path = os.path.join(figures_directory, "bar_chart_avg_num_tools_used.pdf")
     plt.savefig(save_path)
     plt.close()
@@ -274,9 +299,12 @@ def plot_average_num_commands_sents(df):
     plt.title("Average Number of Commands Sent by Model")
     plt.xlabel("Model Name")
     plt.ylabel("Average Number of Commands Sent")
-    plt.legend(title="Agent Type/Experience")
-    plt.xticks(rotation=45)
+    plt.legend(framealpha=0.15,title="Agent Type/Experience")
+    # plt.xticks(rotation=45)
     plt.grid(True)
+    plt.tight_layout()
+    # Automatically adjust layout to avoid cutting off elements
+    
     save_path = os.path.join(figures_directory, "bar_chart_avg_num_commands_sent.pdf")
     plt.savefig(save_path)
     plt.close()
@@ -303,9 +331,12 @@ def plot_success_rates(df):
     plt.title("Success Rate by Model")
     plt.xlabel("Model Name")
     plt.ylabel("Success Rate")
-    plt.legend(title="Agent Type/Experience")
-    plt.xticks(rotation=45)
+    plt.legend(framealpha=0.15,title="Agent Type/Experience")
+    # plt.xticks(rotation=45)
     plt.grid(True)
+    plt.tight_layout()
+    # Automatically adjust layout to avoid cutting off elements
+    
     save_path = os.path.join(figures_directory, "bar_chart_success_rate.pdf")
     plt.savefig(save_path)
     plt.close()
@@ -338,8 +369,9 @@ def plot_total_score_by_aircraft(df):
         plt.title(f"Total Score by Number of Aircraft for {model}")
         plt.xlabel("Number of Aircraft")
         plt.ylabel("Total Score")
-        plt.legend(title="Agent Type/Experience")
+        plt.legend(framealpha=0.15,title="Agent Type/Experience")
         plt.grid(True)
+        plt.tight_layout()
         save_path = os.path.join(
             figures_directory,
             f"total_score_by_aircraft_{model.replace(':', '_').replace(' ', '_')}.pdf",
@@ -372,8 +404,9 @@ def plot_average_score_by_aircraft(df):
         plt.title(f"Average Score by Number of Aircraft for {model}")
         plt.xlabel("Number of Aircraft")
         plt.ylabel("Average Score")
-        plt.legend(title="Agent Type/Experience")
+        plt.legend(framealpha=0.15,title="Agent Type/Experience")
         plt.grid(True)
+        plt.tight_layout()
         save_path = os.path.join(
             figures_directory,
             f"average_score_by_aircraft_{model.replace(':', '_').replace(' ', '_')}.pdf",
@@ -406,8 +439,9 @@ def plot_average_num_tools_used_by_aircraft(df):
         plt.title(f"Average Number of Tools Used by Number of Aircraft for {model}")
         plt.xlabel("Number of Aircraft")
         plt.ylabel("Average Number of Tools Used")
-        plt.legend(title="Agent Type/Experience")
+        plt.legend(framealpha=0.15,title="Agent Type/Experience")
         plt.grid(True)
+        plt.tight_layout()
         save_path = os.path.join(
             figures_directory,
             f"average_num_tools_used_by_aircraft_{model.replace(':', '_').replace(' ', '_')}.pdf",
@@ -440,8 +474,9 @@ def plot_average_num_commands_sent_by_aircraft(df):
         plt.title(f"Average Number of Commands Sent by Number of Aircraft for {model}")
         plt.xlabel("Number of Aircraft")
         plt.ylabel("Average Number of Commands Sent")
-        plt.legend(title="Agent Type/Experience")
+        plt.legend(framealpha=0.15,title="Agent Type/Experience")
         plt.grid(True)
+        plt.tight_layout()
         save_path = os.path.join(
             figures_directory,
             f"average_num_commands_sent_by_aircraft_{model.replace(':', '_').replace(' ', '_')}.pdf",
@@ -475,8 +510,9 @@ def plot_success_rate_by_aircraft(df):
         plt.title(f"Success Rate by Number of Aircraft for {model}")
         plt.xlabel("Number of Aircraft")
         plt.ylabel("Success Rate")
-        plt.legend(title="Agent Type/Experience")
+        plt.legend(framealpha=0.15,title="Agent Type/Experience")
         plt.grid(True)
+        plt.tight_layout()
 
         # Ensure that the y-axis starts at zero
         plt.ylim(0, 1)
@@ -513,9 +549,12 @@ def plot_total_score_by_conflict_type(df):
         plt.title(f"Total Score by Conflict Type for {model}")
         plt.xlabel("Conflict Type")
         plt.ylabel("Total Score")
-        plt.legend(title="Agent Type/Experience")
-        plt.xticks(rotation=45)
+        plt.legend(framealpha=0.15,title="Agent Type/Experience")
+        # plt.xticks(rotation=45)
         plt.grid(True)
+        plt.tight_layout()
+        # Automatically adjust layout to avoid cutting off elements
+        
         save_path = os.path.join(
             figures_directory,
             f"total_score_by_conflict_type_{model.replace(':', '_').replace(' ', '_')}.pdf",
@@ -547,9 +586,12 @@ def plot_average_score_by_conflict_type(df):
         plt.title(f"Average Score by Conflict Type for {model}")
         plt.xlabel("Conflict Type")
         plt.ylabel("Average Score")
-        plt.legend(title="Agent Type/Experience")
-        plt.xticks(rotation=45)
+        plt.legend(framealpha=0.15,title="Agent Type/Experience")
+        # plt.xticks(rotation=45)
         plt.grid(True)
+        plt.tight_layout()
+        # Automatically adjust layout to avoid cutting off elements
+        
         save_path = os.path.join(
             figures_directory,
             f"average_score_by_conflict_type_{model.replace(':', '_').replace(' ', '_')}.pdf",
@@ -580,16 +622,19 @@ def plot_average_num_tools_sent_by_conflict_type(df):
         plt.title(f"Average Number of Tools Used by Conflict Type for {model}")
         plt.xlabel("Conflict Type")
         plt.ylabel("Average Number of Tools Used")
-        plt.legend(title="Agent Type/Experience")
-        plt.xticks(rotation=45)
+        plt.legend(framealpha=0.15,title="Agent Type/Experience")
+        # plt.xticks(rotation=45)
         plt.grid(True)
+        plt.tight_layout()
+        # Automatically adjust layout to avoid cutting off elements
+        
         save_path = os.path.join(
             figures_directory,
             f"average_num_tools_used_by_conflict_type_{model.replace(':', '_').replace(' ', '_')}.pdf",
         )
         plt.savefig(save_path)
         plt.close()
-        
+
 def plot_average_num_commands_sent_by_conflict_type(df):
     models = df["model_name"].unique()
     for model in models:
@@ -613,9 +658,12 @@ def plot_average_num_commands_sent_by_conflict_type(df):
         plt.title(f"Average Number of Commands Sent by Conflict Type for {model}")
         plt.xlabel("Conflict Type")
         plt.ylabel("Average Number of Commands Sent")
-        plt.legend(title="Agent Type/Experience")
-        plt.xticks(rotation=45)
+        plt.legend(framealpha=0.15,title="Agent Type/Experience")
+        # plt.xticks(rotation=45)
         plt.grid(True)
+        plt.tight_layout()
+        # Automatically adjust layout to avoid cutting off elements
+        
         save_path = os.path.join(
             figures_directory,
             f"average_num_commands_sent_by_conflict_type_{model.replace(':', '_').replace(' ', '_')}.pdf",
@@ -647,9 +695,12 @@ def plot_success_rate_by_conflict_type(df):
         plt.title(f"Success Rate by Conflict Type for {model}")
         plt.xlabel("Conflict Type")
         plt.ylabel("Success Rate")
-        plt.legend(title="Agent Type/Experience")
-        plt.xticks(rotation=45)
+        plt.legend(framealpha=0.15,title="Agent Type/Experience")
+        # plt.xticks(rotation=45)
         plt.grid(True)
+        plt.tight_layout()
+        # Automatically adjust layout to avoid cutting off elements
+        
         save_path = os.path.join(
             figures_directory,
             f"success_rate_by_conflict_type_{model.replace(':', '_').replace(' ', '_')}.pdf",
@@ -660,7 +711,7 @@ def plot_success_rate_by_conflict_type(df):
 
 if __name__ == "__main__":
     setup_matplotlib()
-    csv_path = "../results/dummy.csv"
+    csv_path = "../results/main/final_combined_V2.csv"
     figures_directory = "../results/figures"
     df = load_and_prepare_data(csv_path)
     total_scores, average_scores, success_rate, success_rate_group_ac, success_rate_group_ct, average_num_tools_used, average_num_commands_sent = (
@@ -684,4 +735,3 @@ if __name__ == "__main__":
     plot_average_num_tools_sent_by_conflict_type(average_num_tools_used)
     plot_average_num_commands_sent_by_conflict_type(average_num_commands_sent)
     plot_success_rate_by_conflict_type(success_rate_group_ct) 
-    
