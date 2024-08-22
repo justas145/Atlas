@@ -229,7 +229,7 @@ def setup_single_agent(config, groq_api_key):
     tools_to_use = list(tools_to_use)
     # Create and return the agent
     agent = agents.create_openai_tools_agent(chat, tools_to_use, prompt)
-    agent_executor = agents.AgentExecutor(agent=agent, tools=tools_to_use, verbose=True)
+    agent_executor = agents.AgentExecutor(agent=agent, tools=tools_to_use, verbose=True, return_intermediate_steps=True)
     return agent_executor
 
 
@@ -404,13 +404,14 @@ user_input = "You are an air traffic controller with tools. Solve aircraft confl
 
 record_screen = False
 # llama3-70b-8192
-# gp
+# llama-3.1-70b-versatile
+# gpt-4o-2024-08-06
 agent_configs = [
     {
-        "type": "multi_agnet",
-        "model_name": "gpt-4o",
+        "type": "single_agent",
+        "model_name": "gpt-4o-2024-08-06",
         "temperature": 0.3,
-        "use_skill_lib": True,
+        "use_skill_lib": False,
     },
 ]
 
@@ -420,17 +421,19 @@ if __name__ == "__main__":
     # Run the crash monitoring in a background thread
     # ac_4_no_dH_parallel_5
     # ac_2_dH_head-on_8
-    scn_files = ["TEST/Big/ac_2/dH/head-on_9.scn"]
+    # ac_4_no_dH_t-formation_1
+    # ac_4_no_dH_t-formation_5
+    scn_files = ["TEST/Big/ac_4/no_dH/t-formation_5.scn"]
     for scn in scn_files:
         for agent_config in agent_configs:
-            
+
             rerun_scenario = True
             attempts_count = 0
             max_attempts = 5
-            
+
             while rerun_scenario and attempts_count < max_attempts:
                 attempts_count += 1
-                
+
                 agent_type = agent_config["type"]
                 model_name = agent_config["model_name"].replace(" ", "_").replace("-", "_")
 
@@ -467,8 +470,9 @@ if __name__ == "__main__":
                     elapsed_time = -1  # Mark the scenario as skipped
                 else:
                     console_output = output.getvalue()
-                
-                
+
                 rerun_scenario = 'tool-use>' in console_output  # Check if rerun is needed
                 if rerun_scenario:
                     print(f"Rerunning scenario {scenario_name} due to detection of 'tool-use>' in output.")
+
+print(result)
