@@ -85,7 +85,7 @@ def GetConflictInfo(command: str = "SHOWTCPA"):
     """
     Use this tool to get information on aircraft pairs in
     conflict. It gives you Time to Closest Point of Approach (TCPA),
-    Quadrantal Direction (QDR), separation distance, Closest Point of Approach
+    Heading Difference, separation distance, Closest Point of Approach
     distance (DCPA), and Time of Loss of Separation (tLOS).
 
     Parameters:
@@ -178,9 +178,9 @@ def SearchExperienceLibrary(
     """
     Search in the experience library for a similar conflict and its resolution. Only use it after you aquired aircraft information and conflict details.
 
-    :param conflict_description: Detailed description of the conflict in a couple of sentences, e.g., how each aircraft are positioned and headed relative to one another without numbers.
+    :param conflict_description: Detailed description of the conflict in a couple of sentences, e.g., how each aircraft are positioned, headed relative to one another and if any aircraft ascending/descending or all level by only using words. Don't use numbers.
     :param num_ac: Number of aircraft involved in the conflict.
-    :param conflict_formation: Formation of the conflict, options include "Head-On Formation", "T-Formation", "Parallel Formation", "Converging Formation".
+    :param conflict_formation: Formation of the conflict, options include "Head-On Formation" (heading difference around 180 deg), "T-Formation" (heading difference around 90 or 270 deg), "Parallel Formation" (heading difference around 0 deg), "Converging Formation" (else).
     :return: Document with similar conflict and advices on how to resolve it or no document if nothing similar was found.
     """
 
@@ -266,13 +266,13 @@ def ContinueMonitoring(duration: int = 10):
     """Monitor for conflicts between aircraft pairs for a specified time.
 
     Parameters:
-    - duration (int): The time in seconds to monitor for conflicts. Default is 10 seconds, minimum is 8 seconds, maximum duration is 16 seconds.
+    - duration (int): The time in seconds to monitor for conflicts. minimum is 10 seconds (good if you haven't sent any commands yet), maximum duration is 20 seconds (good if you have sent commands already).
 
     Returns:
     - str: A compact representation of conflict information initially and changes after the specified duration.
     """
     # Ensure duration is within the allowed range
-    duration = max(8, min(duration, 16))
+    duration = max(10, min(duration, 20))
     client.send_event(b"STACK", "OP")
     client.send_event(b"STACK", "SHOWTCPA")
     time.sleep(1)
@@ -295,25 +295,25 @@ def ContinueMonitoring(duration: int = 10):
 
 
 def parse_conflict_data(conflict_output):
-    """Parse the conflict output into a structured dictionary and capture the number of aircraft in conflict."""
+    """Parse the conflict output into a structured dictionary and capture the number of aircraft pairs in conflict."""
     if "No conflicts detected." in conflict_output:
         return {}, {}, 0  # Include zero as the number of aircraft in conflicts
 
     conflict_info = {}
     altitude_info = {}
-    conflict_pattern = r"(\w+ - \w+) \| TCPA: ([-\d\.]+) sec \| QDR: ([-\d\.]+) deg \| Distance: ([-\d\.]+) Nautical miles \| Vertical Separation: ([-\d\.]+) ft \| Horizontal Distance: ([-\d\.]+) Nautical miles \| DCPA: ([-\d\.]+) Nautical miles \| tLOS: ([-\d\.]+) sec"
+    conflict_pattern = r"(\w+ - \w+) \| TCPA: ([-\d\.]+) sec \| Heading Difference: ([-\d\.]+) deg \| Distance: ([-\d\.]+) Nautical miles \| Vertical Separation: ([-\d\.]+) ft \| Horizontal Distance: ([-\d\.]+) Nautical miles \| DCPA: ([-\d\.]+) Nautical miles \| tLOS: ([-\d\.]+) sec"
 
     altitude_pattern = (
         r"Aircraft (\w+): Altitude ([\d\.]+) ft \((ascending|descending|level)\)"
     )
-    num_conflicts_pattern = r"Number of aircraft in conflict: (\d+)"
+    num_conflicts_pattern = r"Number of aircraft pairs in conflict: (\d+)"
 
     # Parsing conflict data
     conflict_matches = re.findall(conflict_pattern, conflict_output)
     for match in conflict_matches:
         conflict_info[match[0]] = {
             "TCPA": float(match[1]),
-            "QDR": float(match[2]),
+            "Heading Difference": float(match[2]),
             "Distance": float(match[3]),
             "Vertical Separation": float(match[4]),
             "Horizontal Distance": float(match[5]),
@@ -340,7 +340,7 @@ def generate_compact_conflict_report(
     report = ["Aircraft Pairs in Conflict and their TCPA (sec):"]
     units = {
         "TCPA": "sec",
-        "QDR": "deg",
+        "Heading Difference": "deg",
         "Distance": "Nautical miles",
         "Vertical Separation": "ft",
         "Horizontal Distance": "Nautical miles",
@@ -366,11 +366,9 @@ def generate_compact_conflict_report(
                 for field in updated_data[key]
             )
             report.append(f"{key} | New conflict detected | {new_conflict_values} \n")
-            
-    
-    if num_conflicts > 0:  # Include number of aircraft in conflicts if relevant
-        report.append(f"Number of aircraft in conflict: {num_conflicts}\n")
 
+    if num_conflicts > 0:  # Include number of aircraft in conflicts if relevant
+        report.append(f"Number of aircraft pairs in conflict: {num_conflicts}\n")
 
     # Append altitude information for all aircraft if available
     if initial_altitudes and updated_altitudes:  # Check if any altitude data exists
