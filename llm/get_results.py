@@ -453,6 +453,8 @@ def save_results_to_csv(results, output_file):
                 "score",
                 "log",
                 "final_details",
+                "json_results",
+                "experience_library"
             ]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
@@ -816,6 +818,8 @@ if __name__ == "__main__":
                 "score": final_score,
                 "log": console_output,
                 "final_details": final_details,
+                "json_results": result,
+                "experience_library": agent_config.get("use_skill_lib", False),
             }
 
             # Save results to both the central and agent-specific CSV files
