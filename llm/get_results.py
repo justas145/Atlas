@@ -506,7 +506,7 @@ def setup_single_agent(config, groq_api_key):
     tools_to_use = list(tools_to_use)
     # Create and return the agent
     agent = agents.create_openai_tools_agent(chat, tools_to_use, prompt)
-    agent_executor = agents.AgentExecutor(agent=agent, tools=tools_to_use, verbose=True)
+    agent_executor = agents.AgentExecutor(agent=agent, tools=tools_to_use, verbose=True, return_intermediate_steps=True)
     return agent_executor
 
 
@@ -571,7 +571,7 @@ def setup_multi_agent(config, groq_api_keys_lst):
             prompt = verifier_system_prompt
         agent = agents.create_openai_tools_agent(chat, tools_to_use, prompt)
         agents_dict[role] = agents.AgentExecutor(
-            agent=agent, tools=tools_to_use, verbose=True
+            agent=agent, tools=tools_to_use, verbose=True, return_intermediate_steps=True
         )
 
     return MultiAgent(agents_dict, agents_prompts, icao_seperation_guidelines)
