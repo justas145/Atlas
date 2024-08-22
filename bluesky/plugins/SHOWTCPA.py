@@ -71,10 +71,12 @@ def show_conflicts_tcpa():
         longs = traf.lon
         alts = traf.alt
         vs = traf.vs
-
+        heading = traf.hdg
         # Indices of the pair in the aircraft list
         index_0 = ids.index(pair[0])
         index_1 = ids.index(pair[1])
+
+        d_hdg = abs(heading[index_0] - heading[index_1])
 
         # Calculate horizontal distance using haversine function
         horizontal_distance_m = haversine(
@@ -89,7 +91,6 @@ def show_conflicts_tcpa():
             abs(alts[index_0] - alts[index_1]) * 3.28084
         )  # Convert meters to feet
 
-
         # Record involved aircraft
         involved_aircraft.update(pair)
 
@@ -97,7 +98,8 @@ def show_conflicts_tcpa():
         conflict_info = (
             f"{pair[0]} - {pair[1]} | "
             f"TCPA: {tcpa_value:.2f} sec | "
-            f"QDR: {qdr_value:.2f} deg | "
+            #f"QDR: {qdr_value:.2f} deg | "
+            f"Heading Difference: {d_hdg:.2f} deg | "
             f"Distance: {horizontal_distance_nm:.2f} Nautical miles | "
             f"Vertical Separation: {vertical_distance_ft:.2f} ft | "
             f"Horizontal Distance: {horizontal_distance_nm:.2f} Nautical miles | "
@@ -106,8 +108,8 @@ def show_conflicts_tcpa():
         )
         stack.stack(f"ECHO {conflict_info}")
 
-    num_ac_conf = len(involved_aircraft)
-    stack.stack(f"ECHO Number of aircraft in conflict: {num_ac_conf}")
+    num_ac_pairs_conf = len(sorted_tuples)
+    stack.stack(f"ECHO Number of aircraft pairs in conflict: {num_ac_pairs_conf}")
     # Display altitude information for each unique aircraft in conflict
     stack.stack("ECHO Aircraft Altitude Information:")
     # Display altitude information for all aircraft
