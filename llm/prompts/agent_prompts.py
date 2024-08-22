@@ -102,7 +102,7 @@ do_and_dont_list_prompt = PromptTemplate.from_template(
     <log>
     {log}
     <log>
-    You must make a Do's and Don't list of commands (look at SENDCOMMAND).  The command would go to Do's if it removed at least 1 conflict pair and would go to Don'ts if it didn't remove it. 
+    You must make a Do's and Don't list of commands (look at SENDCOMMAND).  The command would go to Do's if it removed at least 1 conflict pair and would go to Don'ts if it didn't remove it or even added a conflict pair. 
     Do not include the command in the list at all if there is no information on how many conflict pairs that command removed. Completely ignore it. 
     If there was a Crash Alert the only commands that would go to Do's are the ones that reduced the Number of aircraft in conflict. Commands that happened after the Crash Alert must not be included in the list. 
     
@@ -110,7 +110,7 @@ do_and_dont_list_prompt = PromptTemplate.from_template(
     
     
     Output format:
-    Sequence number | Command | Do's/Don'ts
+    Sequence number | Command | Do's/Don'ts (Do's if it removed at least 1 conflict pair, Don'ts if it didn't remove it or even added a conflict pair)
     
     Do not need explanation, just the list.
     
@@ -132,11 +132,11 @@ conflict_description_prompt = PromptTemplate.from_template(
   
   - relative conflict description [describe how each aircraft are positioned relative to all other aircraft without numbers, look into Pos and Alt. describe how each aircraft are heading relative to one another aircraft without numbers, look into Hdg and Trk. Check if any aircraft are acending or descending, look into V/S (ascending if positive, descending if negative and level is zero). Use call signs for reference. Make the description as detailed and as clear as possible. Rember - no numbers and keep it up to 4 sentences]
 
-  - Conflict formation (no need to explain your choice):
-      * Head-On Formation (aircraft are flying directly towards each other facing each other)
-      * Perpediculat Formation (aircraft are flying into each other from perpendicular directions)
-      * Parallel Formation (aircraft are flying in the same direction)
-      * Converging Formation (aircraft are flying towards the same point from different directions, but not head on or perpendicular)
+  - Conflict formation (no need to explain your choice, only a single formation type should be selected based on majority of the conflicts):
+      * Head-On Formation (aircraft are flying directly towards each other facing each other, 180 heading difference)
+      * Perpediculat Formation (aircraft are flying into each other from perpendicular directions, 90 or 270 heading difference)	
+      * Parallel Formation (aircraft are flying in the same direction, 0 heading difference)
+      * Converging Formation (aircraft are flying towards the same point from different directions, but not head on or perpendicular, any other heading difference)
       
   Do not add any additional information that is not present in the log.
 """
@@ -164,22 +164,28 @@ dos_donts_list_transformation_prompt = PromptTemplate.from_template(
 
     Transform the provided commands in the do's and don'ts list into this type of list as seen in the example below:
     
-    Current altitude of AC1: ...
+    Current altitude of AC1: Initial altitude of AC1
     1 | ALT AC1 XXX | Do's
-    Current altitude of AC: XXX
+    New altitude of AC: XXX
     
-    Current heading of AC2: ...
+    Current heading of AC2: Initial heading of AC2
     2 | HDG AC2 YYY | Don'ts
-    Current heading of AC2: YYY
+    New heading of AC2: YYY
     
-    Current heading of AC3: ...
+    Current heading of AC3: Initial heading of AC
     3 | HDG AC3 ZZZ | Do's
-    Current heading of AC3: ZZZ
+    New heading of AC3: ZZZ
     
-    Current altitude of AC1: XXX
-    4 | ALT AC1 BBB | Don'ts
-    Current altitude of AC1: BBB
     ...
+    
+    If there is another same type of command for the same aircraft, still use initial altitude/heading for current value. For example:
+    Current altitude of AC9: Initial altitude of AC9
+    4 | ALT AC9 AAA | Do's
+    New altitude of AC9: AAA
+    
+    Current altitude of AC9: Initial altitude of AC9
+    5 | ALT AC9 BBB | Don'ts
+    New altitude of AC9: BBB
     
     Only output transformed list, nothing more.
     """
@@ -213,41 +219,40 @@ relative_values_dos_donts_list_prompt = PromptTemplate.from_template(
     """
 )
 
-anonymous_values_dos_donts_list_prompt = PromptTemplate.from_template(
-    """
-    here is a list of do's and don'ts commands for air traffic control:
+# anonymous_values_dos_donts_list_prompt = PromptTemplate.from_template(
+#     """
+#     here is a list of do's and don'ts commands for air traffic control:
 
-    <do's dont's list>
-    {dos_donts_list}
-    <do's dont's list>
+#     <do's dont's list>
+#     {dos_donts_list}
+#     <do's dont's list>
 
-    Task: Transform a list of air traffic control commands into general descriptions using the following guidelines:
-
-
-    Use "a small heading amount" for changes of up to 10 degrees.
-    Use "a moderate heading shift" for changes between 11 to 30 degrees.
-    Use "a significant heading turn" for changes greater than 30 degrees.
-
-    Use "a slight adjustment" for changes of up to 1000 feet.
-    Use "a moderate altitude change" for changes between 1000 and 3000 feet.
-    Use "a significant altitude change" for changes greater than 3000 feet.
-    
-    For example if the command would be to increase/decrease heading by 5 degrees for aircraft AC1, the transformed command would be increase/decrease heading by a small heading amount for aircraft AC1.
+#     Task: Transform a list of air traffic control commands into general descriptions using the following guidelines:
 
 
-    Output format:
+#     Use "a small heading amount" for changes of up to 10 degrees.
+#     Use "a moderate heading shift" for changes between 11 to 30 degrees.
+#     Use "a significant heading turn" for changes greater than 30 degrees.
 
-    keep the list format the same:
-    1  | transformed description | do's or don'ts 
-    ...
-"""
-)
+#     Use "a slight adjustment" for changes of up to 1000 feet.
+#     Use "a moderate altitude change" for changes between 1000 and 3000 feet.
+#     Use "a significant altitude change" for changes greater than 3000 feet.
+
+#     For example if the command would be to increase/decrease heading by 5 degrees for aircraft AC1, the transformed command would be increase/decrease heading by a small heading amount for aircraft AC1.
+
+
+#     Output format:
+
+#     keep the list format the same:
+#     1  | transformed description | do's or don'ts
+#     ...
+# """
+# )
 
 
 final_dos_donts_prompt = PromptTemplate.from_template(
     """
     You are an air traffic specialist. There has been a conflict between aircrafts. This is a brief description of the conflict:
-    
     <conflict description>
     {conflict_description}
     <conflict description>
@@ -255,23 +260,19 @@ final_dos_donts_prompt = PromptTemplate.from_template(
     Here is a list of commands that were sent to resolve the conflict. Structure of the list is as follows:
     Sequence number | Command | Do's/Don'ts
     Do's are the commands that helped to resolve a conflict, Don'ts are the commands that did not help to resolve a conflict.
-    
     <commands list>
     {commands_list}
     <commands list>
     
     (increasing heading means turning right, decreasing heading means turning left)
     
-    Your task is to add a reason or insight to each command in the list. The reason should be a short explanation of why the command was helpful or not helpful in resolving the conflict.
+    Your task is to add a reason or insight to each command in the list. The reason should be a short explanation of why the command was helpful or not helpful in resolving the conflict. Try to be as detailed as possible and use the information from the conflict description to provide the reason. Look at the sequance of the commands. For example if first command instructs aircraft to climb by X and third command instructs different aircraft to climb by X also even though they were at same level, then the third command is not helpful as it is climbing to same flight level as the first aircraft.
     
-    Only output the new list. The length of the list should be the same as the input list.
-    Sequence number | Command | Do's/Don'ts | Reason
     
-    Do not make up new commands that were not in the original list. If original command list has 2 commands, then the output list should also have 2 commands. If it's 0 commands in the original list, then the output list should also have 0 commands. If it's 1 command in the original list, then the output list should also have 1 command.
+    Output only the transformed list.
     
     """
 )
-
 
 extraction_metada_prompt = ChatPromptTemplate.from_messages(
     [
