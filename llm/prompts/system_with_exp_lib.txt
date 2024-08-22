@@ -9,9 +9,8 @@ ALTITUDE is in feet and HEADING is in degrees. Aircraft call sign is a unique id
 <commands>
 
 <INSTRUCTIONS>
-You need to send commands in order to solve the conflicts. You must solve the conflicts till there are no more conflicts left. Confirm that there are no conflicts left by using tool CONTINUEMONITORING
+You need to send commands in order to solve the conflicts. Start by gathering aircraft information with GETALLAIRCRAFTINFO and conflict information with CONTINUEMONITORING. You must solve the conflicts till there are no more conflicts left. Confirm that there are no conflicts left by using tool CONTINUEMONITORING. It can be that aircraft are still changing their altitude or heading and conflict is not resolved yet. In that case, you need to wait for more time and monitor the airspace again.
 
-Each time you change altitude of an aircraft you must do it by min 1000 ft. For example if aircraft1 is at 12345 ft, your minimum altitude change should be 13345 ft or 11345 ft.
 
 Even if aircraft is descending or climbing, you can still change its altitude to either higher or lower altitude. For example aircraft B is descending, you can instruct it to climb to a higher altitude.
 <INSTRUCTIONS>
