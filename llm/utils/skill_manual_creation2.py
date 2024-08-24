@@ -23,7 +23,7 @@ from agent_prompts import (
     relative_values_dos_donts_list_prompt,
     final_dos_donts_prompt,
     extraction_metada_prompt,
-    anonymous_values_dos_donts_list_prompt,
+    # anonymous_values_dos_donts_list_prompt,
 )
 
 load_dotenv(find_dotenv())
@@ -38,9 +38,9 @@ openai_ef = chromadb.utils.embedding_functions.OpenAIEmbeddingFunction(
     api_key=os.getenv("OPENAI_API_KEY"),
     model_name="text-embedding-3-large",
 )
-# chroma_client.delete_collection("experience_library_v2")
+#chroma_client.delete_collection("experience_library_v3")
 collection = chroma_client.get_or_create_collection(
-    name="experience_library_v2",
+    name="experience_library_v3",
     embedding_function=openai_ef,
     metadata={"hnsw:space": "cosine"},
 )
@@ -109,11 +109,6 @@ def extract_commands(data):
                 capture_flag = False  # Include crash alerts and stop capturing
 
     return "\n".join(result)
-
-
-# Process the input data
-processed_log_commands = extract_commands(console_output)
-print(processed_log_commands)
 
 
 def filter_first_instance_only(text):
@@ -256,50 +251,40 @@ def create_experience_doc(console_output, model_name="llama3-70b-8192", temperat
         relative_values_dos_donts_list_prompt.format(dos_donts_list=dos_donts_list_transformation)
     )
 
-    anonymous_values_dos_donts_list = llm.invoke(
-        anonymous_values_dos_donts_list_prompt.format(
-            dos_donts_list=relative_values_dos_donts_list
-        )
-    )
-
     final_dos_donts_list = llm.invoke(
         final_dos_donts_prompt.format(
             conflict_description=conflict_description,
-            commands_list=anonymous_values_dos_donts_list,
+            commands_list=relative_values_dos_donts_list,
         )
     )
 
     experience_doc = conflict_description + "\n\n" + final_dos_donts_list
     experience_doc = replace_flight_names(experience_doc)
 
+    conflict_description = replace_flight_names(conflict_description)
+    final_dos_donts_list = replace_flight_names(final_dos_donts_list)
+
     # print(experience_doc)
     metadata = extraction_runnable.invoke({"text": conflict_description})
-    return experience_doc, metadata
+    return experience_doc, metadata, conflict_description, final_dos_donts_list
 
 
-def update_experience_library(collection, skill_manual, metadata, model_name):
-    # get documents by metadata filter
-    # where = {
-    #     "$and": [
-    #         {"num_ac": metadata.num_ac},
-    #         {"conflict_type": metadata.conflict_type},
-    #         {"conflict_formation": metadata.conflict_formation},
-    #         {"num_commands": metadata.num_commands}
-    #     ]
-    # }
+def update_experience_library(
+    collection, conflict_description, final_dos_donts_list, metadata, model_name
+):
 
     uuid4 = uuid.uuid4()
 
     try:
         collection.upsert(
             ids=[str(uuid4)],
-            documents=[skill_manual],
+            documents=[conflict_description],
             metadatas=[
                 {
                     "num_ac": metadata.num_ac,
                     "conflict_formation": metadata.conflict_formation,
                     "model_name": model_name,
-                    
+                    "commands": final_dos_donts_list,
                 }
             ],
         )
@@ -307,9 +292,10 @@ def update_experience_library(collection, skill_manual, metadata, model_name):
     except Exception as e:
         print(f"Error adding skill manual to the collection: {e}")
 
+
 import pandas as pd
 
-csv_path = "../results/main/sa_no_exp_V2.csv"
+csv_path = "../results/main/sa_ma_no_exp_V3.csv"
 data = pd.read_csv(csv_path)
 
 # Define the maximum number of attempts
@@ -320,21 +306,45 @@ for index, row in data.iterrows():
     if row["num_send_commands"] > 7:
         print(f"Skipping row {index} as num_send_commands is greater than 7.")
         continue
+    if 'multi' in row["agent_type"].lower().strip():
+        print(f"Skipping row {index} as agent_type is multi.")
+        continue
 
     print(f"Processing row {index}")
+    print(row["agent_type"])
     console_output = row["log"]
     model_name = row["model_name"]
 
     # Attempt to create the experience document and metadata up to `max_attempts` times
     for attempt in range(max_attempts):
         try:
-            experience_doc, metadata = create_experience_doc(console_output, model_name)
-            print(experience_doc)
-            print(metadata)
-            # If successful, update the experience library and break the retry loop
-            update_experience_library(collection, experience_doc, metadata, model_name)
+            experience_doc, metadata, conflict_description, final_dos_donts_list = (
+                create_experience_doc(console_output, model_name)
+            )
+
+            # Check if 'please' is in the experience document
+            if "please" in experience_doc.lower():
+                print("Generated Experience Document contains 'please':")
+                print(experience_doc)
+
+                # Ask for user input to decide whether to keep the experience document
+                user_input = (
+                    input("Do you want to keep this document? [y/n]: ").strip().lower()
+                )
+                if user_input == "n":
+                    print(f"Skipping row {index} as per user input.")
+                    break  # Move to the next data row
+
+            # If successful and user decided to keep, update the experience library
+            update_experience_library(
+                collection,
+                conflict_description,
+                final_dos_donts_list,
+                metadata,
+                model_name,
+            )
             print(f"Successfully updated library for row {index}")
-            break
+            break  # Break the retry loop after successful update
         except Exception as e:
             print(f"Attempt {attempt + 1} failed for row {index}, error: {e}")
             if attempt == max_attempts - 1:

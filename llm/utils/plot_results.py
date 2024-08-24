@@ -49,14 +49,14 @@ def calculate_scores(df):
 
     # Total score by model, agent type, experience library, and num_aircraft
     total_scores = (
-        df.groupby(["model_name", "agent_type", "experience_library", "num_aircraft", "conflict_type"])
+        df.groupby(["model_name", "agent_type", "experience_library", "num_aircraft", "conflict_type", "conflict_with_dH"])
         .score.sum()
         .reset_index()
     )
 
     # Average score by model, agent type, experience library, and num_aircraft
     average_scores = (
-        df.groupby(["model_name", "agent_type", "experience_library", "num_aircraft", "conflict_type"])
+        df.groupby(["model_name", "agent_type", "experience_library", "num_aircraft", "conflict_type", "conflict_with_dH"])
         .score.mean()
         .reset_index()
     )
@@ -143,7 +143,6 @@ def calculate_scores(df):
     success_rate_group_ac["success_rate"] = (
         success_rate_group_ac["success_count"] / success_rate_group_ac["total_count"]
     )
-
     # Success rate calculations with conflict_type
     success_counts_group_ct = (
         df[df["score"] == 1]
@@ -169,12 +168,40 @@ def calculate_scores(df):
         success_rate_group_ct["success_count"] / success_rate_group_ct["total_count"]
     )
 
+    # Success rate calculations with dH
+    success_counts_group_dh = (
+        df[df["score"] == 1]
+        .groupby(["model_name", "agent_type", "experience_library", "conflict_with_dH"])
+        .size()
+        .reset_index(name="success_count")
+    )
+    total_counts_group_dh = (
+        df.groupby(
+            ["model_name", "agent_type", "experience_library", "conflict_with_dH"]
+        )
+        .size()
+        .reset_index(name="total_count")
+    )
+    success_rate_group_dh = pd.merge(
+        success_counts_group_dh,
+        total_counts_group_dh,
+        on=["model_name", "agent_type", "experience_library", "conflict_with_dH"],
+        how="outer",  # Use outer join to include all combinations
+    ).fillna(
+        0
+    )  # Fill NaN values with 0 for success_count
+
+    success_rate_group_dh["success_rate"] = (
+        success_rate_group_ct["success_count"] / success_rate_group_ct["total_count"]
+    )
+
     return (
         total_scores,
         average_scores,
         success_rate,
         success_rate_group_ac,
         success_rate_group_ct,
+        success_rate_group_dh,
         average_num_tools_used,
         average_num_commands_sent,
     )
@@ -700,7 +727,7 @@ def plot_success_rate_by_conflict_type(df):
         plt.grid(True)
         plt.tight_layout()
         # Automatically adjust layout to avoid cutting off elements
-        
+
         save_path = os.path.join(
             figures_directory,
             f"success_rate_by_conflict_type_{model.replace(':', '_').replace(' ', '_')}.pdf",
@@ -709,12 +736,154 @@ def plot_success_rate_by_conflict_type(df):
         plt.close()
 
 
+def plot_total_score_by_dH(df):
+    models = df["model_name"].unique()
+    for model in models:
+        plt.figure(figsize=(12, 8))
+        model_data = df[
+            df["model_name"] == model
+        ].copy()  # Make a copy to avoid SettingWithCopyWarning
+        model_data.loc[:, "hue_label"] = (
+            model_data["agent_type"].str.replace("_", " ").str.title()
+            + " with"
+            + model_data["experience_library"].apply(
+                lambda x: " Experience" if x else "out Experience"
+            )
+        )
+
+        # Mapping True/False to descriptive labels
+        model_data["conflict_with_dH"] = model_data["conflict_with_dH"].map(
+            {
+                True: "Heterogeneous Altitude Conflict",
+                False: "Homogeneous Altitude Conflict",
+            }
+        )
+
+        sns.barplot(
+            x="conflict_with_dH",
+            y="score",
+            hue="hue_label",
+            data=model_data,
+            palette="husl",
+            errorbar=None,
+            estimator=sum,  # Ensure the estimator is sum to aggregate scores correctly
+        )
+
+        plt.title(f"Total Score by Altitude Conflict Type for {model}")
+        plt.xlabel("Altitude Conflict Type")
+        plt.ylabel("Total Score")
+        plt.legend(framealpha=0.15, title="Agent Type/Experience")
+        plt.grid(True)
+        plt.tight_layout()
+
+        save_path = os.path.join(
+            figures_directory,
+            f"total_score_by_alt_conflict_{model.replace(':', '_').replace(' ', '_')}.pdf",
+        )
+        plt.savefig(save_path)
+        plt.close()
+
+
+def plot_average_score_by_dH(df):
+    models = df["model_name"].unique()
+    for model in models:
+        plt.figure(figsize=(12, 8))
+        model_data = df[df["model_name"] == model].copy()
+
+        # Mapping True/False to more descriptive labels
+        model_data["conflict_with_dH"] = model_data["conflict_with_dH"].map(
+            {
+                True: "Heterogeneous Altitude Conflict",
+                False: "Homogeneous Altitude Conflict",
+            }
+        )
+
+        model_data.loc[:, "hue_label"] = (
+            model_data["agent_type"].str.replace("_", " ").str.title()
+            + " with"
+            + model_data["experience_library"].apply(
+                lambda x: " Experience" if x else "out Experience"
+            )
+        )
+
+        sns.barplot(
+            x="conflict_with_dH",
+            y="score",
+            hue="hue_label",
+            data=model_data,
+            palette="husl",
+            errorbar=None,
+        )
+
+        plt.title(f"Average Score by Altitude Conflict Type for {model}")
+        plt.xlabel("Altitude Conflict Type")
+        plt.ylabel("Average Score")
+        plt.legend(framealpha=0.15, title="Agent Type/Experience")
+        plt.grid(True)
+        plt.tight_layout()
+
+        save_path = os.path.join(
+            figures_directory,
+            f"average_score_by_alt_conflict_{model.replace(':', '_').replace(' ', '_')}.pdf",
+        )
+        plt.savefig(save_path)
+        plt.close()
+
+
+def plot_success_rate_by_dH(df):
+    models = df["model_name"].unique()
+    for model in models:
+        plt.figure(figsize=(12, 8))
+        model_data = df[df["model_name"] == model].copy()
+        model_data.loc[:, "hue_label"] = (
+            model_data["agent_type"].str.replace("_", " ").str.title()
+            + " with"
+            + model_data["experience_library"].apply(
+                lambda x: " Experience" if x else "out Experience"
+            )
+        )
+
+        # Map True/False to descriptive labels for altitude conflict
+        model_data["conflict_with_dH"] = model_data["conflict_with_dH"].map(
+            {
+                True: "Heterogeneous Altitude Conflict",
+                False: "Homogeneous Altitude Conflict",
+            }
+        )
+
+        sns.barplot(
+            x="conflict_with_dH",
+            y="success_rate",
+            hue="hue_label",
+            data=model_data,
+            palette="husl",
+            errorbar=None,
+        )
+
+        plt.title(f"Success Rate by Altitude Conflict Type for {model}")
+        plt.xlabel("Altitude Conflict Type")
+        plt.ylabel("Success Rate")
+        plt.legend(framealpha=0.15, title="Agent Type/Experience")
+        plt.grid(True)
+        plt.tight_layout()
+
+        # Ensure that the y-axis starts at zero and ends at 100%
+        # plt.ylim(0, 100)
+
+        save_path = os.path.join(
+            figures_directory,
+            f"success_rate_by_altitude_conflict_{model.replace(':', '_').replace(' ', '_')}.pdf",
+        )
+        plt.savefig(save_path)
+        plt.close()
+
+
 if __name__ == "__main__":
     setup_matplotlib()
-    csv_path = "../results/main/final_combined_V2.csv"
+    csv_path = "../results/main/final_combined_V3.csv"
     figures_directory = "../results/figures"
     df = load_and_prepare_data(csv_path)
-    total_scores, average_scores, success_rate, success_rate_group_ac, success_rate_group_ct, average_num_tools_used, average_num_commands_sent = (
+    total_scores, average_scores, success_rate, success_rate_group_ac, success_rate_group_ct, success_rate_group_dh, average_num_tools_used, average_num_commands_sent = (
         calculate_scores(df)
     )
 
@@ -735,3 +904,7 @@ if __name__ == "__main__":
     plot_average_num_tools_sent_by_conflict_type(average_num_tools_used)
     plot_average_num_commands_sent_by_conflict_type(average_num_commands_sent)
     plot_success_rate_by_conflict_type(success_rate_group_ct) 
+
+    plot_total_score_by_dH(total_scores)
+    plot_average_score_by_dH(average_scores)
+    plot_success_rate_by_dH(success_rate_group_dh)
