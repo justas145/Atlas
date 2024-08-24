@@ -14,7 +14,7 @@ from agent_tools import (
     initialize_client,
     initialize_collection,
     agent_tools_list,
-    GetConflictInfo,
+    #GetConflictInfo,
     receive_bluesky_output,
     agent_tool_dict,
 )
@@ -154,7 +154,7 @@ def initialize_simulator():
 
 def initialize_experience_library():
     # Vector DB
-    selected_collection = "experience_library_v2"
+    selected_collection = "experience_library_v3"
     base_path = os.path.dirname(__file__)
     vectordb_path = os.path.join(base_path, "skills-library", "vectordb")
     chroma_client = chromadb.PersistentClient(path=vectordb_path)
@@ -409,9 +409,9 @@ record_screen = False
 agent_configs = [
     {
         "type": "single_agent",
-        "model_name": "gpt-4o-2024-08-06",
+        "model_name": "llama3-70b-8192",
         "temperature": 0.3,
-        "use_skill_lib": False,
+        "use_skill_lib": True,
     },
 ]
 
@@ -423,7 +423,11 @@ if __name__ == "__main__":
     # ac_2_dH_head-on_8
     # ac_4_no_dH_t-formation_1
     # ac_4_no_dH_t-formation_5
-    scn_files = ["TEST/Big/ac_4/no_dH/t-formation_5.scn"]
+    # ac_3_dH_parallel_6
+    # ac_2_dH_head-on_7
+    # ac_3_dH_head-on_10
+    # ac_3_dH_t-formation_8
+    scn_files = ["TEST/Big/ac_3/dH/t-formation_8.scn"]
     for scn in scn_files:
         for agent_config in agent_configs:
 
