@@ -183,18 +183,20 @@ def SearchExperienceLibrary(
     :param conflict_formation: Formation of the conflict, options include "Head-On Formation" (heading difference around 180 deg), "T-Formation" (heading difference around 90 or 270 deg), "Parallel Formation" (heading difference around 0 deg), "Converging Formation" (else).
     :return: Document with similar conflict and advices on how to resolve it or no document if nothing similar was found.
     """
-
+    # llama3_70b_8192
+    # gpt_4o_2024_08_06
     where_full = {
         "$and": [
             {"num_ac": num_ac},
             {"conflict_formation": conflict_formation},
-
+            {"model_name": "gpt_4o_2024_08_06"},
         ]
     }
 
     where_partial_1 = {
         "$and": [
             {"num_ac": num_ac},
+            {"model_name": "gpt_4o_2024_08_06"},
         ]
     }
 
@@ -209,9 +211,11 @@ def SearchExperienceLibrary(
             query_results = collection.query(
                 query_texts=[conflict_description], n_results=1, where=where
             )
+            # print(query_results)
             if query_results["documents"] and query_results["documents"][0]:
-                doc = query_results["documents"][0][0]
-                return doc + "\n\n" + "Remember this is only a similar conflict and not identical. Use the information wisely."
+
+                doc = query_results["documents"][0][0] + "\n\n" + query_results["metadatas"][0][0]["commands"]
+                return doc #+ "\n\n" + "Remember this is only a similar conflict and not identical. Use the information wisely."
         except Exception as e:
             print(f"Error with {label} query:", e)
 
