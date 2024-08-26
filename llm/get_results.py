@@ -240,7 +240,7 @@ def initialize_simulator():
 
 def initialize_experience_library():
 # Vector DB
-    selected_collection = "experience_library_v2"
+    selected_collection = "experience_library_v3"
     base_path = os.path.dirname(__file__)
     vectordb_path = os.path.join(base_path, "skills-library", "vectordb")
     chroma_client = chromadb.PersistentClient(path=vectordb_path)
