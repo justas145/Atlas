@@ -427,7 +427,15 @@ if __name__ == "__main__":
     # ac_2_dH_head-on_7
     # ac_3_dH_head-on_10
     # ac_3_dH_t-formation_8
-    scn_files = ["TEST/Big/ac_3/dH/t-formation_8.scn"]
+    # ac_4_no_dH_converging_5
+    # ac_4_no_dH_parallel_3
+    # ac_4_no_dH_t-formation_1
+    # ac_4_no_dH_head-on_2
+    # ac_4_no_dH_parallel_5
+    # ac_2_dH_converging_10
+    # ac_2_dH_t-formation_10
+
+    scn_files = ["TEST/Big/ac_2/dH/t-formation_10.scn"]
     for scn in scn_files:
         for agent_config in agent_configs:
 
@@ -443,10 +451,9 @@ if __name__ == "__main__":
 
                 scenario_name = "_".join(scn.split("/")[-3:]).replace(".scn", "")
 
-                load_and_run_scenario(client, scn)
-
                 success = False
                 for attempt in range(5):  # Retry up to 5 times
+                    load_and_run_scenario(client, scn)
                     try:
                         with CaptureAndPrintConsoleOutput() as output:
                             # Use the current API key to setup the agent
