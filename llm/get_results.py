@@ -747,7 +747,6 @@ if __name__ == "__main__":
                 scenario_name = "_".join(scn.split("/")[-3:]).replace(".scn", "")
 
                 num_ac = get_num_ac_from_scenario(scn)
-                load_and_run_scenario(client, scn)
                 conflict_type = extract_conflict_type(scn) 
                 if record_screen:
                     recording_directory = (
@@ -761,6 +760,7 @@ if __name__ == "__main__":
 
                 success = False
                 for attempt in range(5):  # Retry up to 5 times
+                    load_and_run_scenario(client, scn)
                     try:
                         with CaptureAndPrintConsoleOutput() as output:
                             # Use the current API key to setup the agent
@@ -790,8 +790,9 @@ if __name__ == "__main__":
 
                 if record_screen:
                     recorder.stop_recording()
-                    
-                rerun_scenario = 'tool-use>' in console_output
+
+                rerun_scenario = "tool-use>" in console_output or console_output.count(
+                    "Invoking: `SENDCOMMAND`") == 0
                 if rerun_scenario:
                     print('reruning the scenario, because of TOOL ERROR')
 
