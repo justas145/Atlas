@@ -178,9 +178,10 @@ def SearchExperienceLibrary(
     """
     Search in the experience library for a similar conflict and its resolution. Only use it after you aquired aircraft information and conflict details.
 
-    :param conflict_description: Detailed description of the conflict in a couple of sentences, e.g., how each aircraft are positioned, headed relative to one another and if any aircraft ascending/descending or all level by only using words. Don't use numbers.
-    :param num_ac: Number of aircraft involved in the conflict.
-    :param conflict_formation: Formation of the conflict, options include "Head-On Formation" (heading difference around 180 deg), "T-Formation" (heading difference around 90 or 270 deg), "Parallel Formation" (heading difference around 0 deg), "Converging Formation" (else).
+    :param conflict_description: Detailed description of the conflict in a couple of sentences, e.g., how each aircraft are positioned, headed relative to one another and most importantly if any aircraft are ascending/descending or all level by only using words. Don't use numbers.
+    :param num_ac: Total number of aircraft in airspace
+    :param conflict_formation: Formation of the conflict, options include "Head-On Formation" (majority heading differences are 180 deg), "T-Formation" (majority heading differences 90, 270 deg), "Parallel Formation" (majority heading differences 0 deg), "Converging Formation" (
+        heading differences other than 0, 90, 180, or 270 degrees).
     :return: Document with similar conflict and advices on how to resolve it or no document if nothing similar was found.
     """
     # llama3_70b_8192
