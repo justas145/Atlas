@@ -1,0 +1,14 @@
+PAN: Pan
+Move the screen to a specific location. A text parameter is required to determine the direction of panning.
+The destination can be multiple data types:
+The coordinates of panning will be at the center of the new view. No zooming (in or out) is performed with this function.
+If a direction is given, the view will pan horizontally in the indicated direction.
+The directions ABOVE and UP are synonyms for this function.
+Usage:
+PAN latlon/acid/airport/waypoint/direction
+
+Arguments:
+
+Name     | Type | Required | Description    
+---------+------+----------+----------------
+location | txt  | yes      | pan destination

@@ -1,0 +1,22 @@
+CRE: Cre
+Create an aircraft at specified coordinates.
+For creating multiple randomly located aircraft, see MCRE.
+Usage:
+CRE acid,type,lat,lon,hdg,alt,spd
+
+Arguments:
+
+Name | Type      | Required | Description                  
+-----+-----------+----------+------------------------------
+acid | txt       | yes      | Unique aircraft callsign     
+type | txt       | yes      | ICAO aircraft type designator
+lat  | float     | yes      | Latitude                     
+lon  | float     | yes      | Longitude                    
+hdg  | float     | yes      | Heading [deg] [1]            
+alt  | float/txt | yes      | Altitude [2]                 
+spd  | float     | yes      | Aircraft speed               
+
+
+[1] The heading of the aircraft can be given by clicking the screen with the mouse. The aircraft will fly from its start coordinates, heading towards the clicked location.
+[2] Altitude can be given as altitude [ft] or flight level [-]. In order to give the altitude as flight level, use the letters "FL".
+Examples
