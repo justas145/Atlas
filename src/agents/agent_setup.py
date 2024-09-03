@@ -16,6 +16,7 @@ from prompts.agent_prompts import (
     extraction_prompt,
 )
 from typing import Optional
+from langchain_core.messages import AIMessageChunk
 
 
 def setup_chat_model(config, groq_api_key):
@@ -52,7 +53,7 @@ def setup_single_agent(config, groq_api_key):
         )  # Use all available tools if skill lib is to be used
         print("using skill lib")
     else:
-        # Exclude "QueryConflicts" tool if 'use_skill_lib' is False
+        # Exclude "SEARCHEXPERIENCELIBRARY" tool if 'use_skill_lib' is False
         tools_to_use = [
             tool
             for name, tool in agent_tool_dict.items()
@@ -174,19 +175,50 @@ extraction_plan_runnable = (
 )
 
 
-class MultiAgent:
+def process_agent_output(agent_executor, user_input, voice_mode, audio_queue=None):
+    result = None
+    if isinstance(agent_executor, MultiAgent):
+        # Handle MultiAgent case
+        result = agent_executor.invoke({"input": user_input}, audio_queue, voice_mode)
+        return result["output"] if isinstance(result, dict) and "output" in result else result
+    else:
+        # Handle single agent case
+        if voice_mode in ['1-way', '2-way']:
+            for step in agent_executor.iter({"input": user_input}):
+                if isinstance(step, dict) and 'intermediate_step' in step:
+                    for intermediate_step in step['intermediate_step']:
+                        if isinstance(intermediate_step, tuple) and len(intermediate_step) == 2:
+                            action, result = intermediate_step
+                            for message in action.message_log:
+                                if isinstance(message, AIMessageChunk) and message.content:
+                                    audio_queue.put((message.content, voice_mode))
+                                    print(message.content)
+                elif isinstance(step, dict) and "output" in step:
+                    audio_queue.put((step['output'], voice_mode))
+                    print(step['output'])
+                    result = step['output']
+        else:
+            result = agent_executor.invoke({"input": user_input})
+            if isinstance(result, dict) and "output" in result:
+                result = result["output"]
+            print(result)
+    return result
 
+
+class MultiAgent:
     def __init__(self, agents, prompts, icao_seperation_guidelines):
         self.agents = agents
         self.prompts = prompts
         self.icao_seperation_guidelines = icao_seperation_guidelines
 
-    def invoke(self, initial_input):
+    def invoke(self, input_dict, audio_queue=None, voice_mode=None):
+        initial_input = input_dict.get("input", "")
         planner_prompt = self.prompts["planner"].format(
-            icao_seperation_guidelines=self.icao_seperation_guidelines
+            icao_seperation_guidelines=self.icao_seperation_guidelines,
+            initial_input=initial_input
         )
         print("Planner Agent Running")
-        plan = self.agents["planner"].invoke({"input": planner_prompt})["output"]
+        plan = process_agent_output(self.agents["planner"], planner_prompt, voice_mode, audio_queue)
 
         plan_exists = extraction_plan_runnable.invoke({"text": plan}).plan_exists
 
@@ -196,17 +228,13 @@ class MultiAgent:
         while True:
             controller_prompt = self.prompts["executor"].format(plan=plan)
             print("Controller Agent Running")
-            controller_output = self.agents["controller"].invoke(
-                {"input": controller_prompt}
-            )["output"]
+            controller_output = process_agent_output(self.agents["controller"], controller_prompt, voice_mode, audio_queue)
 
             verifier_prompt = self.prompts["verifier"].format(
                 icao_seperation_guidelines=self.icao_seperation_guidelines, plan=plan
             )
             print("Verifier Agent Running")
-            verifier_output = self.agents["verifier"].invoke(
-                {"input": verifier_prompt}
-            )["output"]
+            verifier_output = process_agent_output(self.agents["verifier"], verifier_prompt, voice_mode, audio_queue)
 
             plan_exists = extraction_plan_runnable.invoke(
                 {"text": verifier_output}

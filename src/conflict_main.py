@@ -6,8 +6,10 @@ import logging
 import threading
 import time
 import click
-
-sys.path.append("src")
+from langchain.schema import AgentAction, AgentFinish
+from langchain_core.messages import AIMessageChunk
+import re
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Get the absolute path of the current script
 current_dir = os.path.dirname(os.path.abspath(__file__))
 # Construct the path to the bluesky directory
@@ -23,7 +25,7 @@ from utils.load_apis_and_configs import (
     load_groq_api_keys,
     cyclic_key_generator,
 )
-from agents import setup_agent
+from agents import setup_agent, process_agent_output
 from utils.output_capturing import CaptureAndPrintConsoleOutput, ScreenRecorder
 from utils.data_processing import (
     get_num_ac_from_scenario,
@@ -43,6 +45,20 @@ from voice_assistant.utils import delete_file
 from voice_assistant.text_to_speech import text_to_speech
 from voice_assistant.transcription import transcribe_audio
 from voice_assistant.audio import record_audio, play_audio
+from queue import Queue
+
+audio_queue = Queue()
+
+def audio_player_thread():
+    while True:
+        text, voice_mode = audio_queue.get()
+        if text is None:
+            break
+        try:
+            speak_text(text, voice_mode)
+        except Exception as e:
+            logging.error(f"Error playing audio: {e}")
+
 
 @click.command()
 @click.option("--model_name", default="gpt-4o-2024-08-06", help="single model or comma-separated list")
@@ -178,42 +194,33 @@ def run_simulation(
                     agent_executor = setup_agent(
                         agent_config, groq_api_keys, client, collection
                     )
+                    user_input = "You are an air traffic controller with tools. Solve aircraft conflict. Solve until there are no more conflicts. You must explain to the operator your every step. Keep it short, 1-2 sentences."
+
+                    if voice_mode == '2-way':
+                        record_audio("user_input.wav")
+                        transcription_api_key = get_transcription_api_key()
+                        user_input = transcribe_audio(
+                            Config.TRANSCRIPTION_MODEL, transcription_api_key, 'user_input.wav', Config.LOCAL_MODEL_PATH)
+                        logging.info("User said: " + user_input)
+
+                    start_time = time.perf_counter()
+
+                    # Start the audio player thread if voice mode is enabled
                     if voice_mode in ['1-way', '2-way']:
-                        user_input = "You are an air traffic controller with tools. Solve aircraft conflict. Solve until there are no more conflicts. You must explain to the operator your steps. Keep it short, 1-2 sentences."
-                        if voice_mode == '2-way':
-                            record_audio("user_input.wav")
-                            transcription_api_key = get_transcription_api_key()
-                            user_input = transcribe_audio(
-                                Config.TRANSCRIPTION_MODEL, transcription_api_key, 'user_input.wav', Config.LOCAL_MODEL_PATH)
-                            logging.info("User said: " + user_input)
-
-                        start_time = time.perf_counter()
-                        result = agent_executor.invoke({"input": user_input})
-                        elapsed_time = time.perf_counter() - start_time
-
-                        if voice_mode in ['1-way', '2-way']:
-                            response_text = result['output']
-                            if Config.TTS_MODEL == 'openai':
-                                output_file = 'output.mp3'
-                            else:
-                                output_file = 'output.wav'
-                            
-                            tts_api_key = get_tts_api_key()
-                            text_to_speech(Config.TTS_MODEL, tts_api_key,
-                                           response_text, output_file, Config.LOCAL_MODEL_PATH)
-                            play_audio(output_file)
-
-                            # Clean up audio files
-                            delete_file('user_input.wav')
-                            delete_file(output_file)
+                        audio_thread = threading.Thread(target=audio_player_thread, daemon=True)
+                        audio_thread.start()
                     else:
-                        start_time = time.perf_counter()
-                        result = agent_executor.invoke(
-                            {
-                                "input": "You are an air traffic controller with tools. Solve aircraft conflict. Solve until there are no more conflicts. You must explain to the operator your steps. Keep it short, 1-2 sentences."
-                            }
-                        )
-                        elapsed_time = time.perf_counter() - start_time
+                        audio_thread = None
+
+                    result = process_agent_output(
+                        agent_executor, user_input, voice_mode, audio_queue
+                    )
+
+                    elapsed_time = time.perf_counter() - start_time
+
+                    if audio_thread:
+                        audio_queue.put((None, None))
+                        audio_thread.join()
                 success = True
                 break  # Exit the retry loop if successful
             except Exception as e:
@@ -259,6 +266,35 @@ def run_simulation(
         "json_results": result,
         "experience_library": agent_config.get("use_skill_lib", False),
     }
+
+
+
+
+def speak_text(text, voice_mode):
+    if voice_mode in ['1-way', '2-way']:
+        try:
+            output_file = 'output.wav'
+            text = re.sub(r"FLIGHT(\d+)", r"FLIGHT \1", text)
+            text = text.replace("FLIGHT", "flight")
+            text = re.sub(r'\bft\b', 'feet', text, flags=re.IGNORECASE)
+            text = re.sub(r'\bnm\b', 'nautical miles', text, flags=re.IGNORECASE)
+            text = re.sub(r'\bdeg\b', 'degrees', text, flags=re.IGNORECASE)
+            text = re.sub(r'\bfpm\b', 'feet per minute', text, flags=re.IGNORECASE)
+            text = re.sub(r'\bkts\b', 'knots', text, flags=re.IGNORECASE)
+            text = re.sub(r'\bFL\b', 'flight level', text, flags=re.IGNORECASE)
+            text = " . . " + text
+            tts_api_key = get_tts_api_key()
+            text_to_speech(Config.TTS_MODEL, tts_api_key,
+                        text, output_file, Config.LOCAL_MODEL_PATH)
+            # need to sleep for 1 sec, else there is audio clipping at the beginning
+            logging.info(f"Audio file generated: {output_file}")
+            #time.sleep(1)
+            play_audio(output_file)
+            logging.info("Audio playback completed")
+            delete_file(output_file)
+            logging.info(f"Audio file deleted: {output_file}")
+        except Exception as e:
+            logging.error(f"Error in speak_text: {e}")
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 from tools.agent_tools import GetConflictInfo
+import os
 
 class CrashFileHandler(PatternMatchingEventHandler):
     def __init__(self, callback):
@@ -28,7 +29,10 @@ class CrashFileHandler(PatternMatchingEventHandler):
 
 
 def monitor_crashes(callback):
-    path_to_watch = "../bluesky/output"  # Updated path to watch for crash logs
+    # Get the directory of the current script
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # Construct the path to the bluesky/output directory
+    path_to_watch = os.path.abspath(os.path.join(current_dir, '..', '..', 'bluesky', 'output'))
     event_handler = CrashFileHandler(callback=callback)
     observer = Observer()
     observer.schedule(event_handler, path=path_to_watch, recursive=False)
@@ -54,7 +58,7 @@ class ListHandler(logging.Handler):
         self.log_messages.append(self.format(record))
 
 
-def monitor_too_many_requests():
+def monitor_too_many_requests(client):
     # Configure a logger for capturing specific log messages
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
@@ -93,7 +97,10 @@ def try_get_conflict_info(max_attempts=3):
     return None  # Or any other error handling mechanism
 
 
-def final_check(crash_log_path="../bluesky/output/crash_log.txt"):
+def final_check(crash_log_path=None):
+    if crash_log_path is None:
+        crash_log_path = os.path.join(os.path.dirname(__file__), "..", "..", "bluesky", "output", "crash_log.txt")
+    crash_log_path = os.path.abspath(crash_log_path)
     """
     Performs the final checks after the agent has completed its task.
 
