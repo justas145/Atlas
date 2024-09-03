@@ -135,6 +135,31 @@ def GetConflictInfo(command: str = "SHOWTCPA"):
 #     return final_output
 
 
+def process_alt_command(command):
+    MAX_ALTITUDE = 37000  # Maximum altitude in feet
+    MAX_FLIGHT_LEVEL = 370  # Maximum flight level
+
+    # Split the command string into components
+    parts = command.split()
+    if len(parts) != 4 or parts[0] != "ALT":
+        return (
+            "Invalid command format. Expected format: ALT ACID ALTITUDE VERTICAL_SPEED"
+        )
+
+    _, acid, altitude, vertical_speed = parts
+
+    # Check if altitude is given in feet or flight level
+    if altitude.startswith("FL"):
+        altitude_value = int(altitude[2:]) * 100  # Convert flight level to feet
+    else:
+        altitude_value = int(altitude)
+
+    # Check if altitude exceeds the maximum limit
+    if altitude_value > MAX_ALTITUDE:
+        return f"Altitude {altitude_value} ft or FL{altitude_value // 100} exceeds the maximum limit of 37,000 ft or FL370."
+
+    return None
+
 @langchain_tool("SENDCOMMAND")
 def SendCommand(command: str):
     """
@@ -153,13 +178,25 @@ def SendCommand(command: str):
     if "ALT" in command:
         # add a vertical speed of 3000 at the end of a command to speed up the process
         command = command + " 3000"
+            
+        
     
     client.send_event(b"STACK", "OP")
     client.send_event(b"STACK", command)
     time.sleep(0.8)
+    
+    # alt command: ALT ACID ALTITUDE VERTICAL_SPEED
+    # check if alt is above 37000 or if it above FL370 return message that this 37000 or FL370 is the maximum altitude
+
+    
     sim_output = receive_bluesky_output()
     if sim_output == "":
+        if "ALT" in command:
+            exceeding_altitude_check = process_alt_command(command)
+            if exceeding_altitude_check:
+                return exceeding_altitude_check
         return "Command executed successfully."
+    
     if "Unknown command" in sim_output:
         return (
             sim_output
