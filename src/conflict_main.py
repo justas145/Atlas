@@ -194,7 +194,7 @@ def run_simulation(
                     agent_executor = setup_agent(
                         agent_config, groq_api_keys, client, collection
                     )
-                    user_input = "You are an air traffic controller with tools. Solve aircraft conflict. Solve until there are no more conflicts. You must explain to the operator your every step. Keep it short, 1-2 sentences."
+                    user_input = "You are an air traffic controller with tools. Solve aircraft conflict. Solve until there are no more conflicts. Provide the command in ICAO radiotelephony style and also explain to human operator the reasoning in short. Your text must be plain text without headings (e.g **Heading**)"
 
                     if voice_mode == '2-way':
                         record_audio("user_input.wav")
@@ -266,8 +266,6 @@ def run_simulation(
         "json_results": result,
         "experience_library": agent_config.get("use_skill_lib", False),
     }
-
-
 
 
 def speak_text(text, voice_mode):
