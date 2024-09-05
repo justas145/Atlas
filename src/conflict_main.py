@@ -202,7 +202,7 @@ def run_simulation(
                     agent_executor = setup_agent(
                         agent_config, groq_api_keys, client, collection
                     )
-                    user_input = "You are an air traffic controller with tools. Solve aircraft conflict. Solve until there are no more conflicts. Provide the command in ICAO radiotelephony style and also explain to human operator your reasoning in short. Your text must be plain text without headings (e.g **Heading**)"
+                    user_input = "You are an air traffic controller with tools. You must monitor the airspace.Monitor for long range conflicts: those that can appear later on like after 10 min. I would like that you execute the necessary commands to prevent conflits at TCPA of 8 min."
 
                     if voice_mode == '2-way':
                         record_audio("user_input.wav")

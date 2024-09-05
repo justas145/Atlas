@@ -216,22 +216,31 @@ def GetBlueskyCommands(ids: str) -> str:
 
 @langchain_tool("CONTINUEMONITORING")
 def ContinueMonitoring(duration: int = 10):
-    """Monitor for conflicts between aircraft pairs for a specified time.
+    #     minimum is 10 seconds (good if you haven't sent any commands yet), maximum duration is 20 seconds (good if you have sent commands already).
+    """Monitor for conflicts between aircraft pairs for a specified time. Conflicts can only be detected when TLOS <= 300 sec.
 
     Parameters:
-    - duration (int): The time in seconds to monitor for conflicts. minimum is 10 seconds (good if you haven't sent any commands yet), maximum duration is 20 seconds (good if you have sent commands already).
+    - duration (int): The time in seconds to monitor for conflicts.
+    
 
     Returns:
     - str: A compact representation of conflict information initially and changes after the specified duration.
     """
     # Ensure duration is within the allowed range
-    duration = max(10, min(duration, 20))
+    # duration = max(10, min(duration, 20))
     client.send_event(b"STACK", "OP")
     client.send_event(b"STACK", "SHOWTCPA")
     time.sleep(1)
     initial_conflicts = receive_bluesky_output()
 
-    time.sleep(duration)
+    client.send_event(b"STACK", f"FF {duration}")
+    ff_completed = False
+    while not ff_completed:
+        output = receive_bluesky_output()
+        if "FF Completed" in output:
+            ff_completed = True
+    # time.sleep(duration)
+    print("FF completed")
     client.send_event(b"STACK", "OP")
     client.send_event(b"STACK", "SHOWTCPA")
     time.sleep(1)
