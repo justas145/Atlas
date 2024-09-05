@@ -47,17 +47,17 @@ from voice_assistant.transcription import transcribe_audio
 from voice_assistant.audio import record_audio, play_audio
 from queue import Queue
 
-audio_queue = Queue()
+# audio_queue = Queue()
 
-def audio_player_thread():
-    while True:
-        text, voice_mode = audio_queue.get()
-        if text is None:
-            break
-        try:
-            speak_text(text, voice_mode)
-        except Exception as e:
-            logging.error(f"Error playing audio: {e}")
+# def audio_player_thread():
+#     while True:
+#         text, voice_mode = audio_queue.get()
+#         if text is None:
+#             break
+#         try:
+#             speak_text(text, voice_mode)
+#         except Exception as e:
+#             logging.error(f"Error playing audio: {e}")
 
 
 @click.command()
@@ -207,20 +207,17 @@ def run_simulation(
 
                     # Start the audio player thread if voice mode is enabled
                     if voice_mode in ['1-way', '2-way']:
-                        audio_thread = threading.Thread(target=audio_player_thread, daemon=True)
-                        audio_thread.start()
+                        audio_thread = None
                     else:
                         audio_thread = None
 
                     result = process_agent_output(
-                        agent_executor, user_input, voice_mode, audio_queue
+                        agent_executor, user_input, voice_mode
                     )
 
                     elapsed_time = time.perf_counter() - start_time
 
-                    if audio_thread:
-                        audio_queue.put((None, None))
-                        audio_thread.join()
+
                 success = True
                 break  # Exit the retry loop if successful
             except Exception as e:
@@ -266,34 +263,6 @@ def run_simulation(
         "json_results": result,
         "experience_library": agent_config.get("use_skill_lib", False),
     }
-
-
-def speak_text(text, voice_mode):
-    if voice_mode in ['1-way', '2-way']:
-        try:
-            output_file = 'output.wav'
-            text = re.sub(r"FLIGHT(\d+)", r"FLIGHT \1", text)
-            text = text.replace("FLIGHT", "flight")
-            text = re.sub(r'\bft\b', 'feet', text, flags=re.IGNORECASE)
-            text = re.sub(r'\bnm\b', 'nautical miles', text, flags=re.IGNORECASE)
-            text = re.sub(r'\bdeg\b', 'degrees', text, flags=re.IGNORECASE)
-            text = re.sub(r'\bfpm\b', 'feet per minute', text, flags=re.IGNORECASE)
-            text = re.sub(r'\bkts\b', 'knots', text, flags=re.IGNORECASE)
-            text = re.sub(r'\bFL\b', 'flight level', text, flags=re.IGNORECASE)
-            text = " . . " + text
-            tts_api_key = get_tts_api_key()
-            text_to_speech(Config.TTS_MODEL, tts_api_key,
-                        text, output_file, Config.LOCAL_MODEL_PATH)
-            # need to sleep for 1 sec, else there is audio clipping at the beginning
-            logging.info(f"Audio file generated: {output_file}")
-            #time.sleep(1)
-            play_audio(output_file)
-            logging.info("Audio playback completed")
-            delete_file(output_file)
-            logging.info(f"Audio file deleted: {output_file}")
-        except Exception as e:
-            logging.error(f"Error in speak_text: {e}")
-
 
 if __name__ == "__main__":
     main()
