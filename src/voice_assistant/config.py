@@ -30,6 +30,12 @@ class Config:
     DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
     LOCAL_MODEL_PATH = os.getenv("LOCAL_MODEL_PATH")
 
+    MULTI_AGENT_VOICES = {
+        "planner": "nova",
+        "executor": "alloy",
+        "verifier": "shimmer"
+    }
+
     @staticmethod
     def validate_config():
         """
@@ -61,3 +67,16 @@ class Config:
             raise ValueError("OPENAI_API_KEY is required for OpenAI models")
         if Config.TTS_MODEL == 'deepgram' and not Config.DEEPGRAM_API_KEY:
             raise ValueError("DEEPGRAM_API_KEY is required for Deepgram models")
+
+    @staticmethod
+    def get_agent_voice(agent_name):
+        """
+        Get the voice for a specific agent.
+
+        Args:
+        agent_name (str): The name of the agent.
+
+        Returns:
+        str: The voice assigned to the agent, or None if not specified.
+        """
+        return Config.AGENT_VOICES.get(agent_name)

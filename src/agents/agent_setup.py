@@ -17,6 +17,8 @@ from prompts.agent_prompts import (
 )
 from typing import Optional
 from langchain_core.messages import AIMessageChunk
+from utils.speak_text import speak_text
+from voice_assistant.config import Config
 
 
 def setup_chat_model(config, groq_api_key):
@@ -175,11 +177,11 @@ extraction_plan_runnable = (
 )
 
 
-def process_agent_output(agent_executor, user_input, voice_mode, audio_queue=None):
+def process_agent_output(agent_executor, user_input, voice_mode, voice=None):
     result = None
     if isinstance(agent_executor, MultiAgent):
         # Handle MultiAgent case
-        result = agent_executor.invoke({"input": user_input}, audio_queue, voice_mode)
+        result = agent_executor.invoke({"input": user_input}, voice_mode)
         return result["output"] if isinstance(result, dict) and "output" in result else result
     else:
         # Handle single agent case
@@ -191,10 +193,10 @@ def process_agent_output(agent_executor, user_input, voice_mode, audio_queue=Non
                             action, result = intermediate_step
                             for message in action.message_log:
                                 if isinstance(message, AIMessageChunk) and message.content:
-                                    audio_queue.put((message.content, voice_mode))
+                                    speak_text(message.content, voice_mode, voice)
                                     print(message.content)
                 elif isinstance(step, dict) and "output" in step:
-                    audio_queue.put((step['output'], voice_mode))
+                    speak_text(step['output'], voice_mode, voice)
                     print(step['output'])
                     result = step['output']
         else:
@@ -211,14 +213,17 @@ class MultiAgent:
         self.prompts = prompts
         self.icao_seperation_guidelines = icao_seperation_guidelines
 
-    def invoke(self, input_dict, audio_queue=None, voice_mode=None):
+    def invoke(self, input_dict, voice_mode=None):
         initial_input = input_dict.get("input", "")
         planner_prompt = self.prompts["planner"].format(
             icao_seperation_guidelines=self.icao_seperation_guidelines,
             initial_input=initial_input
         )
         print("Planner Agent Running")
-        plan = process_agent_output(self.agents["planner"], planner_prompt, voice_mode, audio_queue)
+        planner_voice = Config.MULTI_AGENT_VOICES.get("planner", None)
+        plan = process_agent_output(
+            self.agents["planner"], planner_prompt, voice_mode, voice=planner_voice
+        )
 
         plan_exists = extraction_plan_runnable.invoke({"text": plan}).plan_exists
 
@@ -228,13 +233,15 @@ class MultiAgent:
         while True:
             controller_prompt = self.prompts["executor"].format(plan=plan)
             print("Controller Agent Running")
-            controller_output = process_agent_output(self.agents["controller"], controller_prompt, voice_mode, audio_queue)
+            controller_voice = Config.MULTI_AGENT_VOICES.get("executor", None)
+            controller_output = process_agent_output(self.agents["controller"], controller_prompt, voice_mode, voice=controller_voice)
 
             verifier_prompt = self.prompts["verifier"].format(
                 icao_seperation_guidelines=self.icao_seperation_guidelines, plan=plan
             )
             print("Verifier Agent Running")
-            verifier_output = process_agent_output(self.agents["verifier"], verifier_prompt, voice_mode, audio_queue)
+            verifier_voice = Config.MULTI_AGENT_VOICES.get("verifier", None)
+            verifier_output = process_agent_output(self.agents["verifier"], verifier_prompt, voice_mode, voice=verifier_voice)
 
             plan_exists = extraction_plan_runnable.invoke(
                 {"text": verifier_output}

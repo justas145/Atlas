@@ -408,8 +408,8 @@ record_screen = False
 # gpt-4o-2024-08-06
 agent_configs = [
     {
-        "type": "single_agent",
-        "model_name": "llama3-70b-8192",
+        "type": "multi_agent",
+        "model_name": "gpt-4o-2024-08-06",
         "temperature": 0.3,
         "use_skill_lib": True,
     },
@@ -434,8 +434,9 @@ if __name__ == "__main__":
     # ac_4_no_dH_parallel_5
     # ac_2_dH_converging_10
     # ac_2_dH_t-formation_10
+    # ac_4_no_dH_head-on_2
 
-    scn_files = ["TEST/Big/ac_2/dH/t-formation_10.scn"]
+    scn_files = ["TEST/Big/ac_4/no_dH/head-on_2.scn"]
     for scn in scn_files:
         for agent_config in agent_configs:
 

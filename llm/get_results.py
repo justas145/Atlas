@@ -673,7 +673,7 @@ client = initialize_simulator()
 scn_files = list_scn_files(base_path, target_path)
 
 print(scn_files)
-config = load_config("config/config1.yml")
+# config = load_config("config/config1.yml")
 central_csv_path = "results/csv/all_results.csv"  # Central file for all results
 
 # retrieve groq api keys
@@ -684,11 +684,17 @@ user_input = "You are an air traffic controller with tools. Solve aircraft confl
 # load agent
 # agent = initialize_agent(config_path)
 
-agent_configs = load_agent_configs(config)
+# agent_configs = load_agent_configs(config)
 
 record_screen = False
 
 agent_configs = [
+    {
+        "type": "multi_agent",
+        "model_name": "gpt-4o-2024-08-06",
+        "temperature": 0.3,
+        "use_skill_lib": True,
+    },
     {
         "type": "single_agent",
         "model_name": "gpt-4o-2024-08-06",
@@ -697,13 +703,14 @@ agent_configs = [
     },
 ]
 
+
 if __name__ == "__main__":
     # Run the crash monitoring in a background thread
     threading.Thread(target=monitor_crashes, args=(print_output,), daemon=True).start()
     # monitor too many request -> pause simulator in the background
     threading.Thread(target=monitor_too_many_requests, daemon=True).start()
     ##############################
-
+    # scn_files = ["TEST/Big/ac_4/no_dH/head-on_2.scn"]
     for scn in scn_files:
         for agent_config in agent_configs:
 
@@ -807,4 +814,4 @@ if __name__ == "__main__":
 
             # Save results to both the central and agent-specific CSV files
             save_results_to_csv([result_data], central_csv_path)
-            save_results_to_csv([result_data], agent_csv_path)
+            #save_results_to_csv([result_data], agent_csv_path)

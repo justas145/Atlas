@@ -42,7 +42,7 @@ from utils.monitoring import (
 from voice_assistant.api_key_manager import get_transcription_api_key, get_tts_api_key
 from voice_assistant.config import Config
 from voice_assistant.utils import delete_file
-from voice_assistant.text_to_speech import text_to_speech
+from voice_assistant.text_to_speech import text_to_speech, reset_last_spoken_text
 from voice_assistant.transcription import transcribe_audio
 from voice_assistant.audio import record_audio, play_audio
 from queue import Queue
@@ -172,12 +172,18 @@ def run_simulation(
     groq_api_keys: List[str],
     voice_mode: str,
 ) -> Dict:
+    # Reset the last spoken text at the start of each simulation run
+    reset_last_spoken_text()
+    
     # Initialize variables for rerun logic
     rerun_scenario = True
     attempts_count = 0
     max_attempts = 5
     while rerun_scenario and attempts_count < max_attempts:
         attempts_count += 1
+        
+        # Reset the last spoken text for each attempt
+        reset_last_spoken_text()
 
         num_ac = get_num_ac_from_scenario(os.path.join(base_path, scenario))
         conflict_type = extract_conflict_type(scenario)
@@ -194,7 +200,7 @@ def run_simulation(
                     agent_executor = setup_agent(
                         agent_config, groq_api_keys, client, collection
                     )
-                    user_input = "You are an air traffic controller with tools. Solve aircraft conflict. Solve until there are no more conflicts. Provide the command in ICAO radiotelephony style and also explain to human operator the reasoning in short. Your text must be plain text without headings (e.g **Heading**)"
+                    user_input = "You are an air traffic controller with tools. Solve aircraft conflict. Solve until there are no more conflicts. Provide the command in ICAO radiotelephony style and also explain to human operator your reasoning in short. Your text must be plain text without headings (e.g **Heading**)"
 
                     if voice_mode == '2-way':
                         record_audio("user_input.wav")

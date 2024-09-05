@@ -880,7 +880,7 @@ def plot_success_rate_by_dH(df):
 
 if __name__ == "__main__":
     setup_matplotlib()
-    csv_path = "../results/main/final_combined_V3.csv"
+    csv_path = "../results/main/FINAL_V5-2.csv"
     figures_directory = "../results/figures"
     df = load_and_prepare_data(csv_path)
     total_scores, average_scores, success_rate, success_rate_group_ac, success_rate_group_ct, success_rate_group_dh, average_num_tools_used, average_num_commands_sent = (

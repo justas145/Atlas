@@ -12,3 +12,7 @@ llm/notebooks/random1.ipynb
 results/**/*.avi
 llm/results/figures
 venv_req_test/
+# Ignore all .pyc files
+**/*.pyc
+src/results
+llm/results
