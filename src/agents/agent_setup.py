@@ -194,16 +194,13 @@ def process_agent_output(agent_executor, user_input, voice_mode, voice=None):
                             for message in action.message_log:
                                 if isinstance(message, AIMessageChunk) and message.content:
                                     speak_text(message.content, voice_mode, voice)
-                                    print(message.content)
                 elif isinstance(step, dict) and "output" in step:
                     speak_text(step['output'], voice_mode, voice)
-                    print(step['output'])
                     result = step['output']
         else:
             result = agent_executor.invoke({"input": user_input})
             if isinstance(result, dict) and "output" in result:
                 result = result["output"]
-            print(result)
     return result
 
 

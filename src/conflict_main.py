@@ -182,8 +182,10 @@ def run_simulation(
     while rerun_scenario and attempts_count < max_attempts:
         attempts_count += 1
         
-        # Reset the last spoken text for each attempt
+        # Reset the last spoken text for each attempt, it is for voice agent
         reset_last_spoken_text()
+        scenario = os.path.normpath(scenario)
+
 
         num_ac = get_num_ac_from_scenario(os.path.join(base_path, scenario))
         conflict_type = extract_conflict_type(scenario)
@@ -239,10 +241,12 @@ def run_simulation(
         else:
             console_output = output.getvalue()
             console_output = remove_ansi_escape_sequences(console_output)
-        rerun_scenario = (
-            "tool-use>" in console_output
-            or console_output.count("Invoking: `SENDCOMMAND`") == 0
-        )
+        # rerun_scenario = (
+        #     "tool-use>" in console_output
+        #     or console_output.count("Invoking: `SENDCOMMAND`") == 0
+        # )
+        rerun_scenario = "tool-use>" in console_output
+        
         if rerun_scenario:
             print("reruning the scenario, because of TOOL ERROR")
 
