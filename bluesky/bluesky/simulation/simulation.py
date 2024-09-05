@@ -52,6 +52,9 @@ class Simulation:
         # Keep track of known clients
         self.clients = set()
 
+        # Add this line
+        self.ff_start_time = None  # Add this line
+
     def step(self, dt_increment=0):
         ''' Perform one simulation timestep.
         
@@ -72,7 +75,7 @@ class Simulation:
             datalog.update()
             simtime.preupdate()
 
-            # Determine interval towards next timestep                
+            # Determine interval towards next timestep
             self.simt, self.simdt = simtime.step(dt_increment)
 
             # Update UTC time
@@ -122,7 +125,12 @@ class Simulation:
                 self.hold()
             else:
                 self.op()
-
+            
+            # Add this block
+            if self.ff_start_time is not None:
+                ff_duration = self.simt - self.ff_start_time
+                bs.scr.echo(f"FF Completed. Simulated {ff_duration:.1f} seconds.")
+                self.ff_start_time = None
 
         # Inform main of our state change
         if self.state != self.prevstate:
@@ -159,7 +167,6 @@ class Simulation:
         self.ffmode = False
         self.ffstop = None
 
-
     def reset(self):
         ''' Reset all simulation objects. '''
         self.state = bs.INIT
@@ -195,6 +202,7 @@ class Simulation:
         self.state = bs.OP
         self.ffmode = True
         self.ffstop = (self.simt + nsec) if nsec else None
+        self.ff_start_time = self.simt  # Add this line
 
     def benchmark(self, fname='IC', dt=300.0):
         ''' Run a simulation benchmark.
