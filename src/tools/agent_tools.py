@@ -236,6 +236,7 @@ def ContinueMonitoring(duration: int = 10):
     client.send_event(b"STACK", f"FF {duration}")
     ff_completed = False
     while not ff_completed:
+        print("Waiting for FF to complete")
         output = receive_bluesky_output()
         if "FF Completed" in output:
             ff_completed = True

@@ -202,7 +202,7 @@ def run_simulation(
                     agent_executor = setup_agent(
                         agent_config, groq_api_keys, client, collection
                     )
-                    user_input = "You are an air traffic controller with tools. You must monitor the airspace.Monitor for long range conflicts: those that can appear later on like after 10 min. I would like that you execute the necessary commands to prevent conflits at TCPA of 8 min."
+                    user_input = "You are an air traffic controller with tools. You must monitor the airspace.You must solve any conflicts that appear in the airspace until there are no conflicts left. I have a certain preference for the resolution of conflicts: you must solve the conflicts only at the certain time. The time when you can solve the conflics is when the conflicts are at the TCPA of 600 seconds. If the current TCPA is more than that then you must wait until the TCPA is 600 seconds (by monitoring the airspace for as long as you like) and then you must solve the conflicts. Also i want that you would only solve the conflicts by just heading changes."
 
                     if voice_mode == '2-way':
                         record_audio("user_input.wav")
