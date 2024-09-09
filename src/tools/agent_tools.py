@@ -4,6 +4,8 @@ from contextlib import contextmanager
 from io import StringIO
 from langchain_core.tools import tool as langchain_tool
 import re
+import logging
+from typing import Dict, List, Union
 client = None  # Module-level variable for the client
 collection = None  # Module-level variable for the collection
 
@@ -16,6 +18,60 @@ def initialize_client_for_tools(new_client):
 def initialize_collection_for_tools(new_collection):
     global collection
     collection = new_collection
+
+
+# ... (rest of the code remains the same)
+
+# Global variable to store tLOS logs
+tlos_logs: List[Dict[str, Union[str, float]]] = []
+
+from typing import Dict, List, Union, Optional
+
+# Global variable to store tLOS logs
+tlos_logs: List[Dict[str, Union[str, float, None]]] = []
+
+def log_tlos(command: str):
+    """
+    Log the tLOS for a given command.
+    
+    Parameters:
+    - command: str (executed command)
+    """
+    global tlos_logs
+
+    # Get current conflict information
+    client.send_event(b"STACK", "OP")
+    client.send_event(b"STACK", "SHOWTCPA")
+    time.sleep(0.8)
+    conflict_info = receive_bluesky_output()
+
+    # Parse conflict information
+    conflict_data, _, _ = parse_conflict_data(conflict_info)
+
+    # Extract flight number from the command
+    flight_number = command.split()[1] if len(command.split()) > 1 else "Unknown"
+
+    # Find the smallest tLOS for the flight
+    min_tlos = float('inf')
+    for pair, data in conflict_data.items():
+        if flight_number in pair:
+            min_tlos = min(min_tlos, data["tLOS"])
+    
+    # Only log if there's a conflict (tLOS is not inf)
+    if min_tlos != float('inf'):
+        tlos_logs.append({
+            "command": command,
+            "flight": flight_number,
+            "tLOS": min_tlos
+        })
+
+
+def get_tlos_logs() -> List[Dict[str, Union[str, float]]]:
+    """Return the current tLOS logs and clear the global variable."""
+    global tlos_logs
+    logs = tlos_logs.copy()
+    tlos_logs.clear()
+    return logs
 
 
 @contextmanager
@@ -132,7 +188,6 @@ def SendCommand(command: str):
     Returns:
     str: The output from the simulator.
     """
-
     command = command.replace('"', "").replace("'", "")
     command = command.split("\n")[0]
 
@@ -140,11 +195,15 @@ def SendCommand(command: str):
     if "ALT" in command:
         # add a vertical speed of 3000 at the end of a command to speed up the process
         command = command + " 3000"
-
+        
+    # Log tLOS for the command
+    log_tlos(command)
+    
     client.send_event(b"STACK", "OP")
     client.send_event(b"STACK", command)
     time.sleep(0.8)
     sim_output = receive_bluesky_output()
+
     if sim_output == "":
         return "Command executed successfully."
     if "Unknown command" in sim_output:
@@ -233,14 +292,13 @@ def GetBlueskyCommands(ids: str) -> str:
 
 
 @langchain_tool("CONTINUEMONITORING")
-def ContinueMonitoring(duration: int = 10):
+def ContinueMonitoring(duration: int) -> str:
     #     minimum is 10 seconds (good if you haven't sent any commands yet), maximum duration is 20 seconds (good if you have sent commands already).
-    """Monitor for conflicts between aircraft pairs for a specified time. Conflicts can only be detected when TLOS <= 300 sec.
+    """Monitor for conflicts between aircraft pairs for a selected duration of time.
 
     Parameters:
     - duration (int): The time in seconds to monitor for conflicts.
     
-
     Returns:
     - str: A compact representation of conflict information initially and changes after the specified duration.
     """

@@ -47,6 +47,9 @@ from voice_assistant.transcription import transcribe_audio
 from voice_assistant.audio import record_audio, play_audio
 from queue import Queue
 
+from tools.agent_tools import get_tlos_logs
+import json
+
 # audio_queue = Queue()
 
 # def audio_player_thread():
@@ -174,18 +177,17 @@ def run_simulation(
 ) -> Dict:
     # Reset the last spoken text at the start of each simulation run
     reset_last_spoken_text()
-    
+
     # Initialize variables for rerun logic
     rerun_scenario = True
     attempts_count = 0
     max_attempts = 5
     while rerun_scenario and attempts_count < max_attempts:
         attempts_count += 1
-        
+
         # Reset the last spoken text for each attempt, it is for voice agent
         reset_last_spoken_text()
         scenario = os.path.normpath(scenario)
-
 
         num_ac = get_num_ac_from_scenario(os.path.join(base_path, scenario))
         conflict_type = extract_conflict_type(scenario)
@@ -202,7 +204,7 @@ def run_simulation(
                     agent_executor = setup_agent(
                         agent_config, groq_api_keys, client, collection
                     )
-                    user_input = "You are an air traffic controller with tools. You must monitor the airspace.You must solve any conflicts that appear in the airspace until there are no conflicts left. I have a certain preference for the resolution of conflicts: you must solve the conflicts only at the certain time. The time when you can solve the conflics is when the conflicts are at the TCPA of 600 seconds. If the current TCPA is more than that then you must wait until the TCPA is 600 seconds (by monitoring the airspace for as long as you like) and then you must solve the conflicts. Also i want that you would only solve the conflicts by just heading changes."
+                    user_input = "You are an air traffic controller with tools. You must monitor the airspace. Only start solving the conflicts when the aircraft pair in conflict has TLOS of 400 seconds (TLOS is time loss of seperation - time time from now until the aircraft pair loses required seperation) . You must solve any conflicts that appear in the airspace until there are no conflicts left. You can monitor the airspace for any specific duration of time so for example if current TLOS is 550 seconds you can monitor for 150 seconds to arrive at 400 seconds and then start solving the conflicts. Also if one aircraft pair has TLOS of 400 sec and other pair has 500 sec then you can only solve the first pair and the second pair only when it has TLOS of 400 seconds. "
 
                     if voice_mode == '2-way':
                         record_audio("user_input.wav")
@@ -225,7 +227,6 @@ def run_simulation(
 
                     elapsed_time = time.perf_counter() - start_time
 
-
                 success = True
                 break  # Exit the retry loop if successful
             except Exception as e:
@@ -241,12 +242,16 @@ def run_simulation(
         else:
             console_output = output.getvalue()
             console_output = remove_ansi_escape_sequences(console_output)
+            
+            tlos_logs = get_tlos_logs()
+            print(tlos_logs)
+            print(json.dumps(tlos_logs, indent=2))
         # rerun_scenario = (
         #     "tool-use>" in console_output
         #     or console_output.count("Invoking: `SENDCOMMAND`") == 0
         # )
         rerun_scenario = "tool-use>" in console_output
-        
+
         if rerun_scenario:
             print("reruning the scenario, because of TOOL ERROR")
 
