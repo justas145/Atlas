@@ -29,6 +29,19 @@ from typing import Dict, List, Union, Optional
 
 # Global variable to store tLOS logs
 tlos_logs: List[Dict[str, Union[str, float, None]]] = []
+command_logs: List[str] = []
+
+
+def log_command(command: str):
+    """
+    Log the command.
+
+    Parameters:
+    - command: str (executed command)
+    """
+    global command_logs
+    command_logs.append(command)
+
 
 def log_tlos(command: str):
     """
@@ -71,6 +84,14 @@ def get_tlos_logs() -> List[Dict[str, Union[str, float]]]:
     global tlos_logs
     logs = tlos_logs.copy()
     tlos_logs.clear()
+    return logs
+
+
+def get_command_logs() -> List[str]:
+    """Return the current command logs and clear the global variable."""
+    global command_logs
+    logs = command_logs.copy()
+    command_logs.clear()
     return logs
 
 
@@ -195,6 +216,9 @@ def SendCommand(command: str):
     if "ALT" in command:
         # add a vertical speed of 3000 at the end of a command to speed up the process
         command = command + " 3000"
+        
+    # Log the command
+    log_command(command)
         
     # Log tLOS for the command
     log_tlos(command)
