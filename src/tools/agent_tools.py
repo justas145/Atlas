@@ -49,10 +49,28 @@ def receive_bluesky_output():
         if empty_output_count >= 5:
             break
 
-    # It's assumed you want to keep the last update outside the loop
+    # keep the last update outside the loop
     client.update()
 
     return complete_output
+
+
+def wait_for_ff_completion():
+    """
+    Wait for the FF (Fast Forward) command to complete.
+
+    :return: True when "FF Completed" is received
+    """
+    print("Waiting for FF to complete...")
+    while True:
+        with capture_stdout() as captured:
+            client.update()
+        output = captured.getvalue()
+
+
+        if "FF Completed" in output:
+            print("FF Completed received")
+            return True
 
 
 @langchain_tool("GETALLAIRCRAFTINFO")
@@ -233,15 +251,11 @@ def ContinueMonitoring(duration: int = 10):
     time.sleep(1)
     initial_conflicts = receive_bluesky_output()
 
+    print(f"Sending FF command for {duration} seconds")
     client.send_event(b"STACK", f"FF {duration}")
-    ff_completed = False
-    while not ff_completed:
-        print("Waiting for FF to complete")
-        output = receive_bluesky_output()
-        if "FF Completed" in output:
-            ff_completed = True
-    # time.sleep(duration)
-    print("FF completed")
+    wait_for_ff_completion()
+    print("FF completed, getting updated conflict information")
+
     client.send_event(b"STACK", "OP")
     client.send_event(b"STACK", "SHOWTCPA")
     time.sleep(1)
