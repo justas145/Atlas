@@ -151,3 +151,20 @@ def final_check(crash_log_path=None):
             1,
             "No crashes or conflicts detected.",
         )  # No crashes or conflicts, score 1
+
+
+def check_preference_execution(preference, tlos_threshold, command_logs, tlos_logs):
+    if preference is None:
+        return None
+    elif preference == "HDG":
+        return 1 if all("HDG" in command for command in command_logs) else 0
+    elif preference == "ALT":
+        return 1 if all("ALT" in command for command in command_logs) else 0
+    elif preference == "tLOS":
+        if tlos_threshold is None:
+            raise ValueError(
+                "tLOS threshold must be specified when preference is 'tLOS'"
+            )
+        return 1 if all(log["tLOS"] <= tlos_threshold for log in tlos_logs) else 0
+    else:
+        raise ValueError(f"Invalid preference: {preference}")

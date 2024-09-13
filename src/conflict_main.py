@@ -38,6 +38,7 @@ from utils.monitoring import (
     monitor_too_many_requests,
     print_output,
     final_check,
+    check_preference_execution,
 )
 from voice_assistant.api_key_manager import get_transcription_api_key, get_tts_api_key
 from voice_assistant.config import Config
@@ -47,28 +48,16 @@ from voice_assistant.transcription import transcribe_audio
 from voice_assistant.audio import record_audio, play_audio
 from queue import Queue
 
-from tools.agent_tools import get_tlos_logs
+from tools.agent_tools import get_tlos_logs, get_command_logs
 import json
-
-# audio_queue = Queue()
-
-# def audio_player_thread():
-#     while True:
-#         text, voice_mode = audio_queue.get()
-#         if text is None:
-#             break
-#         try:
-#             speak_text(text, voice_mode)
-#         except Exception as e:
-#             logging.error(f"Error playing audio: {e}")
-
+from pathlib import Path
 
 @click.command()
 @click.option("--model_name", default="gpt-4o-2024-08-06", help="single model or comma-separated list")
 @click.option("--agent_type", default="single_agent", help="single_agent or multi_agent, or comma-separated combination")
 @click.option("--temperature", default=0.3, help="single value or comma-separated list")
 @click.option("--use_skill_lib", default="no", help="yes or no, or Comma-separated combination")
-@click.option("--scenario", help="Specific scenario to run. if empty, all scenarios.")
+@click.option("--scenario", help="Specific scenario or folder to run. If empty, all scenarios.")
 @click.option("--output_csv", help="CSV file name. If none, results won't be saved.")
 @click.option(
     "--exp_lib_collection",
@@ -76,6 +65,8 @@ import json
     help="experience library collection name",
 )
 @click.option("--voice", type=click.Choice(['2-way', '1-way', 'no']), default='no', help="Voice interaction mode")
+@click.option("--preference", type=click.Choice(['HDG', 'ALT', 'tLOS']), default=None, help="Preference for conflict resolution")
+@click.option("--tlos_threshold", type=float, default=None, help="tLOS threshold for preference (only applicable when preference is 'tLOS')")
 def main(
     model_name,
     agent_type,
@@ -85,6 +76,8 @@ def main(
     output_csv,
     exp_lib_collection,
     voice,
+    preference,
+    tlos_threshold,
 ):
     collection = initialize_experience_library(exp_lib_collection)
     print("collection initialized")
@@ -99,27 +92,24 @@ def main(
     )
     print('monitoring for crashes and too many requests')
 
-    # Define base paths
     base_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "bluesky", "scenario")
     )
-    target_path = os.path.join(base_path, "TEST", "Big")
-
-    # Ensure the paths exist
-    if not os.path.exists(base_path):
-        raise FileNotFoundError(f"Base scenario path not found: {base_path}")
-    if not os.path.exists(target_path):
-        raise FileNotFoundError(f"Target scenario path not found: {target_path}")
-
-    # Log the paths for debugging
-    logging.info(f"Base scenario path: {base_path}")
-    logging.info(f"Target scenario path: {target_path}")
-
+    
     if scenario:
-        scenarios = [scenario]
+        scenario_path = Path(os.path.join(base_path, scenario))
+        if scenario_path.is_dir():
+            target_path = scenario_path
+            scenarios = list_scn_files(base_path, str(target_path))
+        elif scenario.endswith('.scn'):
+            scenarios = [scenario]
+        else:
+            raise ValueError(f"Invalid scenario input: {scenario}")
     else:
+        target_path = os.path.join(base_path, "TEST", "Big")
         scenarios = list_scn_files(base_path, target_path)
-        print('using all scenarios')
+
+    print(f"Running scenarios: {scenarios}")
 
     groq_api_keys = load_groq_api_keys()
     groq_key_generator = cyclic_key_generator(groq_api_keys)
@@ -128,7 +118,7 @@ def main(
     for scenario in scenarios:
         for agent_config in agent_configs:
             result = run_simulation(
-                agent_config, scenario, base_path, client, collection, groq_api_keys, voice
+                agent_config, scenario, base_path, client, collection, groq_api_keys, voice, preference, tlos_threshold
             )
             results.append(result)
 
@@ -174,6 +164,8 @@ def run_simulation(
     collection,
     groq_api_keys: List[str],
     voice_mode: str,
+    preference: str,
+    tlos_threshold: float,
 ) -> Dict:
     # Reset the last spoken text at the start of each simulation run
     reset_last_spoken_text()
@@ -204,27 +196,10 @@ def run_simulation(
                     agent_executor = setup_agent(
                         agent_config, groq_api_keys, client, collection
                     )
-                    user_input = """**Role**: Air Traffic Controller
-
-**Objective**: Monitor the airspace and resolve conflicts between aircraft pairs.
-
+                    user_input = """
+**Objective**: Monitor the airspace and resolve conflicts between aircraft pairs until there are no more conflicts.
 **Guidelines**:
-
-1. **Conflict Resolution Threshold**:
-   - Begin resolving a conflict **only when** the Time to Loss of Separation (TLOS) for an aircraft pair is **400 seconds or less**.
-   - **TLOS Definition**: The time remaining until the aircraft pair breaches the required separation distance.
-
-2. **Airspace Monitoring**:
-   - You can choose to monitor the airspace for any specific duration to reach the TLOS threshold. The first time you can check for a short time (1-10 seconds) just to see what is the situation.
-     - *Example*: If an aircraft pair has a TLOS of 550 seconds, you may wait for 150 seconds until the TLOS reaches 400 seconds before taking action.
-
-3. **Multiple Conflicts**:
-   - Prioritize conflicts based on their TLOS:
-     - Address only the conflicts with a TLOS of **400 seconds or less**.
-     - *Example*: If one aircraft pair has a TLOS of 400 seconds and another has 500 seconds, focus on the first pair. Begin resolving the second pair's conflict when its TLOS reaches 400 seconds.
-
-4. **Continuous Monitoring**:
-   - Continue monitoring and resolving conflicts until there are **no conflicts left** in the airspace.
+Only allowed to change heading of aircrafts.
  """
 
                     if voice_mode == '2-way':
@@ -265,19 +240,25 @@ def run_simulation(
             console_output = remove_ansi_escape_sequences(console_output)
 
             tlos_logs = get_tlos_logs()
+            command_logs = get_command_logs()
             print(tlos_logs)
             print(json.dumps(tlos_logs, indent=2))
-        # rerun_scenario = (
-        #     "tool-use>" in console_output
-        #     or console_output.count("Invoking: `SENDCOMMAND`") == 0
-        # )
+
+        rerun_scenario = (
+            "tool-use>" in console_output
+            or console_output.count("Invoking: `SENDCOMMAND`") == 0
+        )
         rerun_scenario = "tool-use>" in console_output
 
         if rerun_scenario:
             print("reruning the scenario, because of TOOL ERROR")
 
     final_score, final_details = final_check()
+    preference_executed = check_preference_execution(
+        preference, tlos_threshold, command_logs, tlos_logs
+    )
     print("FINAL SCORE:", final_score)
+    print("PREFERENCE EXECUTED:", preference_executed)
 
     num_send_commands = console_output.count("Invoking: `SENDCOMMAND`")
     num_total_commands = console_output.count("Invoking:")
@@ -298,6 +279,8 @@ def run_simulation(
         "final_details": final_details,
         "json_results": result,
         "experience_library": agent_config.get("use_skill_lib", False),
+        "preference": preference,
+        "preference_executed": preference_executed,
     }
 
 if __name__ == "__main__":

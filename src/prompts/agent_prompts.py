@@ -1,32 +1,14 @@
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 
-# For example:
-#     1. <Aircraft ID> <Action> <NEW ABSOLUTE VALUE> <reason according to ICAO>.
-#     2. <Aircraft ID> <Action> <NEW ABSOLUTE VALUE> <reason according to ICAO>.
-#     3. <Aircraft ID> <Action> <NEW ABSOLUTE VALUE> <reason according to ICAO>.
-#     4. ...
-#     ...
-
-# If you will give action as for example 'turn  x degrees left/right' or 'climb/descent by x feet' I will kill you, because that is not ABSOLUTE VALUE, that is RELATIVE VALUE and we don't like RELATIVE VALUES.Correct way would be 'turn to y (0<y<360)' climb to ABSOLUTE VALUE.
-# planner_prompt = PromptTemplate.from_template(
-#     """You are an air traffic controller who must solve aircraft conflicts according to ICAO standards. Check if there are conflicts and if so then provide an actionable plan to resolve the conflicts.
-#     INSTRUCTIONS:
-#     If there are no conflicts, respond with final answer as: NO CONFLICTS
-
-#     Use specific, global values for instruction.
-
-#     Do not introduce new conflicts in your plan, people lives depend on this plan
-
-#     """
-# )
-
-# Here are the ICAO seperation guidelines:
-# {icao_seperation_guidelines}
-
 
 planner_prompt = PromptTemplate.from_template(
     """
     Check the airspace and if there are conflicts provide the actionable plan.
+    
+    <OPERATORS PREFERENCE>
+    {user_input}
+    <OPERATORS PREFERENCE>
+
     
     Remeber: either vertical seperation of 2000 ft between all aircraft in conflict or horizontal seperation of 5 nautical miles between all aircraft in conflict.
     """
@@ -48,31 +30,11 @@ executor_prompt = PromptTemplate.from_template(
 )
 
 
-# verifier_prompt = PromptTemplate.from_template(
-#     """
-#     You must verify if the conflict has been resolved or not. This was the initial plan that was executed: {plan}. If the conflict has not been resolved you need to provide a new plan. If the conflict has been resolved, then you finish the task by responding NO CONFLICTS .
-
-#     example:
-#     1. <Aircraft ID> <Action> <NEW ABSOLUTE VALUE>.
-#     2. <Aircraft ID> <Action> <NEW ABSOLUTE VALUE>.
-#     3. <Aircraft ID> <Action> <NEW ABSOLUTE VALUE>.
-#     4. ...
-#     ...
-#     INSTRUCTIONS:
-#     If there are no conflicts, respond with final answer as: NO CONFLICTS
-
-#     If you will give action as for example 'turn  x degrees left/right' or 'climb/descent by x feet' I will kill you, because that is not ABSOLUTE VALUE, that is RELATIVE VALUE and we don't like RELATIVE VALUES.Correct way would be 'turn to y (0<y<360)' climb to ABSOLUTE VALUE.
-
-#     Do not introduce new conflicts in your plan, people lives depend on this plan
-
-#     ICAO seperation guidelines:
-#     {icao_seperation_guidelines}
-#     """
-# )
-
 verifier_prompt = PromptTemplate.from_template(
     """
     Here is the resolution plan that has been executed executed: \n {plan}
+    
+    Here is the operators preference: {user_input}
     """
 )
 
@@ -218,36 +180,6 @@ relative_values_dos_donts_list_prompt = PromptTemplate.from_template(
     
     """
 )
-
-# anonymous_values_dos_donts_list_prompt = PromptTemplate.from_template(
-#     """
-#     here is a list of do's and don'ts commands for air traffic control:
-
-#     <do's dont's list>
-#     {dos_donts_list}
-#     <do's dont's list>
-
-#     Task: Transform a list of air traffic control commands into general descriptions using the following guidelines:
-
-
-#     Use "a small heading amount" for changes of up to 10 degrees.
-#     Use "a moderate heading shift" for changes between 11 to 30 degrees.
-#     Use "a significant heading turn" for changes greater than 30 degrees.
-
-#     Use "a slight adjustment" for changes of up to 1000 feet.
-#     Use "a moderate altitude change" for changes between 1000 and 3000 feet.
-#     Use "a significant altitude change" for changes greater than 3000 feet.
-
-#     For example if the command would be to increase/decrease heading by 5 degrees for aircraft AC1, the transformed command would be increase/decrease heading by a small heading amount for aircraft AC1.
-
-
-#     Output format:
-
-#     keep the list format the same:
-#     1  | transformed description | do's or don'ts
-#     ...
-# """
-# )
 
 
 final_dos_donts_prompt = PromptTemplate.from_template(

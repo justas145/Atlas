@@ -211,11 +211,8 @@ class MultiAgent:
         self.icao_seperation_guidelines = icao_seperation_guidelines
 
     def invoke(self, input_dict, voice_mode=None):
-        initial_input = input_dict.get("input", "")
-        planner_prompt = self.prompts["planner"].format(
-            icao_seperation_guidelines=self.icao_seperation_guidelines,
-            initial_input=initial_input
-        )
+        user_input = input_dict.get("input", "")
+        planner_prompt = self.prompts["planner"].format(user_input=user_input)
         print("Planner Agent Running")
         planner_voice = Config.MULTI_AGENT_VOICES.get("planner", None)
         plan = process_agent_output(
@@ -234,7 +231,7 @@ class MultiAgent:
             controller_output = process_agent_output(self.agents["controller"], controller_prompt, voice_mode, voice=controller_voice)
 
             verifier_prompt = self.prompts["verifier"].format(
-                icao_seperation_guidelines=self.icao_seperation_guidelines, plan=plan
+                user_input=user_input, plan=plan
             )
             print("Verifier Agent Running")
             verifier_voice = Config.MULTI_AGENT_VOICES.get("verifier", None)

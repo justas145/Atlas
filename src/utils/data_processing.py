@@ -131,6 +131,8 @@ def save_results_to_csv(results, output_file):
                 "final_details",
                 "json_results",
                 "experience_library",
+                "preference",
+                "preference_executed",
             ]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
@@ -140,7 +142,9 @@ def save_results_to_csv(results, output_file):
 
             # Write results
             for result in results:
-                writer.writerow(result)
+                # Create a new dictionary, replacing None with empty string
+                filtered_result = {k: ('' if v is None else v) for k, v in result.items() if k in fieldnames}
+                writer.writerow(filtered_result)
 
 
 def get_num_ac_from_scenario(scenario_path):

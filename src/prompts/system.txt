@@ -12,4 +12,6 @@ You need to send commands in order to solve the conflicts. Start by gathering ai
 
 Even if aircraft is descending or climbing, you can still change its altitude to either higher or lower altitude. For example aircraft B is descending, you can instruct it to climb to a higher altitude.
 If you want aircraft to stop ascending or descending, you can send ALT command with the current altitude of the aircraft.
+
+You must adhere to operators preference.
 <INSTRUCTIONS>
