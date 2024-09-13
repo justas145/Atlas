@@ -204,7 +204,28 @@ def run_simulation(
                     agent_executor = setup_agent(
                         agent_config, groq_api_keys, client, collection
                     )
-                    user_input = "You are an air traffic controller with tools. You must monitor the airspace. Only start solving the conflicts when the aircraft pair in conflict has TLOS of 400 seconds (TLOS is time loss of seperation - time time from now until the aircraft pair loses required seperation) . You must solve any conflicts that appear in the airspace until there are no conflicts left. You can monitor the airspace for any specific duration of time so for example if current TLOS is 550 seconds you can monitor for 150 seconds to arrive at 400 seconds and then start solving the conflicts. Also if one aircraft pair has TLOS of 400 sec and other pair has 500 sec then you can only solve the first pair and the second pair only when it has TLOS of 400 seconds. "
+                    user_input = """**Role**: Air Traffic Controller
+
+**Objective**: Monitor the airspace and resolve conflicts between aircraft pairs.
+
+**Guidelines**:
+
+1. **Conflict Resolution Threshold**:
+   - Begin resolving a conflict **only when** the Time to Loss of Separation (TLOS) for an aircraft pair is **400 seconds or less**.
+   - **TLOS Definition**: The time remaining until the aircraft pair breaches the required separation distance.
+
+2. **Airspace Monitoring**:
+   - You can choose to monitor the airspace for any specific duration to reach the TLOS threshold. The first time you can check for a short time (1-10 seconds) just to see what is the situation.
+     - *Example*: If an aircraft pair has a TLOS of 550 seconds, you may wait for 150 seconds until the TLOS reaches 400 seconds before taking action.
+
+3. **Multiple Conflicts**:
+   - Prioritize conflicts based on their TLOS:
+     - Address only the conflicts with a TLOS of **400 seconds or less**.
+     - *Example*: If one aircraft pair has a TLOS of 400 seconds and another has 500 seconds, focus on the first pair. Begin resolving the second pair's conflict when its TLOS reaches 400 seconds.
+
+4. **Continuous Monitoring**:
+   - Continue monitoring and resolving conflicts until there are **no conflicts left** in the airspace.
+ """
 
                     if voice_mode == '2-way':
                         record_audio("user_input.wav")
@@ -242,7 +263,7 @@ def run_simulation(
         else:
             console_output = output.getvalue()
             console_output = remove_ansi_escape_sequences(console_output)
-            
+
             tlos_logs = get_tlos_logs()
             print(tlos_logs)
             print(json.dumps(tlos_logs, indent=2))

@@ -1,0 +1,54 @@
+AT: At waypoint add a alt/speed VNAV constraint or add a command to the stack to be issued when passing
+Edit, delete or show speed or altitude constraints at a waypoint in the route. It can also be used to make a list of command lines to be issued when the waypoint in the flight plan is passed by the aircraft before the AT.
+Usage:
+acid AT wpname [DEL] SPD/ALT/DO/STACK [spd/alt/command]
+
+Arguments 1: Show spd/alt constraints at a waypoint
+
+Name   | Type | Required | Description  
+-------+------+----------+--------------
+acid   | txt  | Yes      | Aircraft id  
+wpname | txt  | Yes      | Waypoint name
+
+
+Arguments 2: Edit spd/alt constraints at a waypoint
+
+Name           | Type    | Required | Description                             
+---------------+---------+----------+-----------------------------------------
+acid           | txt     | Yes      | Aircraft id                             
+wpname         | txt     | Yes      | Waypoint name                           
+contraint type | SPD/ALT | Yes      | Edit speed, altitude or both contraints 
+spd/alt        | float   | Yes      | Aircraft Speed, altitude or both of them
+
+
+Arguments 3: Delete spd/alt constraints & Stack commands at a waypoint
+
+Name           | Type          | Required | Description                              
+---------------+---------------+----------+------------------------------------------
+acid           | txt           | Yes      | Aircraft id                              
+wpname         | txt           | Yes      | Waypoint name                            
+DEL            | DEL           | Yes      | Delete constraint                        
+contraint type | SPD/ALT/STACK | Yes      | Delete speed, altitude or both contraints
+
+
+Arguments 4: Add command lines to the stack at this waypoint, these will be executed when passing this waypoint
+
+Name     | Type     | Required | Description                                                                                                              
+---------+----------+----------+--------------------------------------------------------------------------------------------------------------------------
+acid     | txt      | Yes      | Aircraft id                                                                                                              
+wpname   | txt      | Yes      | Waypoint name                                                                                                            
+DO/STACK | DO/STACK | Yes      | Indicate a command will be stacked                                                                                       
+cmdline  | txt      | Yes      | The command line, if the first argument type is an a/c id and this is not given, then the ownship (acid) will be inserted
+
+
+Examples:
+KL204 AT LOPIK ALT FL100  => at this waypoint the altitude will be FL100 (depending on other constraints, it will descend as late as possible and climb as soon as possible along the route)
+KL204 AT LOPIK SPD 250  =>at this waypoint will set the speed to 250 kts
+KL204 AT LOPIK FL100/250 => does both the above in one go
+KL204 AT LOPIK DO ECHO HELLO WORLD => "ECHO HELLO WORLD" will be issued when this waypoint is passed by KL204
+KL204 AT LOPIK DO HDG 270 => will issue "KL204 HDG 270:" when KL204 passes this waypoint 
+KL204 AT LOPIK DO KLM1705 DIRECT SPY => will issue "KLM1705 DIRECT SPY" when KL204 passes this waypoint (offers lots of interactions!) 
+KL204 AT LOPIK STACK ECHO HELLO WORLD => "ECHO HELLO WORLD" will be issued when this waypoint is passed by KL204 (so same as first)
+KL204 AT LOPIK  => shows everything entered at this waypoint\
+See also: ADDWPT, ORIG, DEST, LNAV, VNAV for route editing features
+\See also: ATALT, ATSPD, ATDIST and DELAY for other conditional commands to be issued than AT ... DO/STACK

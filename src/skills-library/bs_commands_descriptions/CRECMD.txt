@@ -1,0 +1,18 @@
+CRECMD cmdline: Add a command to the Create Command list
+Ad a command to the cre-command list. For example:
+CRECMD COLOUR 255,0,0
+CRECMD VNAV OFF
+Then when an aircraft is creted which is named "KL204", BlueSky will automatically issue the following commands:
+KL204 COLOUR 255,0,0
+KL204 VNAV OFF
+And this will happen for each aircraft when it's created.
+CRECMD ?     - will show the current list of cre-commands.
+CLRCRECMD    - will clear the list.
+Usage:
+CRECMD cmdtxt
+
+Arguments:
+
+Name   | Type   | Required | Description                                                                                                             
+-------+--------+----------+-------------------------------------------------------------------------------------------------------------------------
+cmdtxt | string | Yes      | Full command line with traffic command to be issued upon creation, a/c id of new aircraft will be added before this line

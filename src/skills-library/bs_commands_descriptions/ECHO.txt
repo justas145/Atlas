@@ -1,0 +1,11 @@
+ECHO: Echo
+Show a text in the command window for user to read.
+This function can be used in the command window to chat with yourself, or in a scenario file to display messages at specific times. Useful examples are:
+Usage:
+ECHO txt
+
+Arguments:
+
+Name | Type | Required | Description         
+-----+------+----------+---------------------
+txt  | txt  | yes      | any text for display

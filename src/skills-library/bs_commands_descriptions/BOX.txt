@@ -1,0 +1,16 @@
+BOX: Box
+Draw a box shaped area on the radar display with a user defined name. This box can be made into an area of interest using the AREA command.
+Usage:
+BOX name,lat1,lon1,lat2,lon2,[top,bottom]
+
+Arguments:
+
+Name   | Type  | Required | Description                  
+-------+-------+----------+------------------------------
+name   | txt   | yes      | Name of the box              
+lat1   | float | yes      | [[latitude                   
+lon1   | float | yes      | [[longitude                  
+lat2   | float | yes      | [[latitude                   
+lon2   | float | yes      | [[longitude                  
+top    | float | no       | altitude of the top of box   
+bottom | float | no       | altitude of the bottom of box

@@ -1,0 +1,14 @@
+NOISE: Noise
+Turbulence & noise switch. This function is used to turn on aerodynamic turbulence and ADSB noise. If no argument is given, the current noise status is displayed.
+Turbulence
+All aircraft movements are distorted slightly in perpendicular-to-flight direction, horizontally and vertically.
+ADSB noise
+Reception of ADSB communication between aircraft is distorted. Therefore, aircraft have reduced situational awareness accuracy.
+Usage:
+NOISE [setting]
+
+Arguments:
+
+Name    | Type | Required | Description 
+--------+------+----------+-------------
+Setting | txt  | no       | [[Indication

@@ -1,0 +1,7 @@
+SYMBOL: Symbol
+Toggle aircraft symbol
+Usage:
+SYMBOL
+
+Arguments:
+This command has no arguments.

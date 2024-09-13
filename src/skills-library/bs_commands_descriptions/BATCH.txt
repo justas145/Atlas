@@ -1,0 +1,10 @@
+BATCH: Batch operation
+Start a batch simulation from a batch file. For an example of a batch scenario file look at this tutorial.
+Usage:
+BATCH filename
+
+Arguments:
+
+Name     | Type   | Required | Description            
+---------+--------+----------+------------------------
+filename | string | yes      | Name of the batch file.
