@@ -4,61 +4,59 @@ import speech_recognition as sr
 import pygame
 import time
 import logging
+import sys
+import threading
 from pydub import AudioSegment
 import simpleaudio as sa
 
+def animate_recording():
+    animation = "|/-\\"
+    idx = 0
+    while recording:
+        print(f"\rRecording {animation[idx % len(animation)]}", end="", flush=True)
+        idx += 1
+        time.sleep(0.1)
+
 def record_audio(file_path, timeout=10, phrase_time_limit=5, retries=3):
-    """
-    Record audio from the microphone and save it as a WAV file.
-    
-    Args:
-    file_path (str): The path to save the recorded audio file.
-    timeout (int): Maximum time to wait for a phrase to start (in seconds).
-    phrase_time_limit (int): Maximum time for the phrase to be recorded (in seconds).
-    retries (int): Number of retries if recording fails.
-    """
+    global recording
     recognizer = sr.Recognizer()
     for attempt in range(retries):
         try:
             with sr.Microphone() as source:
+                print("Recording started")
                 logging.info("Recording started")
+                
+                recording = True
+                animation_thread = threading.Thread(target=animate_recording)
+                animation_thread.start()
+                
                 # Listen for the first phrase and extract it into audio data
                 audio_data = recognizer.listen(source, timeout=timeout, phrase_time_limit=phrase_time_limit)
+                
+                recording = False
+                animation_thread.join()
+                
+                print("\nRecording complete")
                 logging.info("Recording complete")
+                
                 # Save the recorded audio data to a WAV file
                 with open(file_path, "wb") as audio_file:
                     audio_file.write(audio_data.get_wav_data())
-                return
+                print(f"Recording saved to {file_path}")
+                logging.info(f"Recording saved to {file_path}")
+                return True
         except sr.WaitTimeoutError:
+            print(f"\nListening timed out, retrying... ({attempt + 1}/{retries})")
             logging.warning(f"Listening timed out, retrying... ({attempt + 1}/{retries})")
         except Exception as e:
+            print(f"\nFailed to record audio: {e}")
             logging.error(f"Failed to record audio: {e}")
+            if "PyAudio" in str(e):
+                print("PyAudio is not installed. Please install it using: pip install pyaudio")
             break
-    else:
-        logging.error("Recording failed after all retries")
-# def play_audio(file_path):
-#     """
-#     Play an audio file using pygame with minimal delay.
-
-#     Args:
-#     file_path (str): The path to the audio file to play.
-#     """
-#     try:
-#         pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=2048)
-#         pygame.mixer.music.load(file_path)
-#         pygame.mixer.music.set_volume(1.0)
-#         pygame.mixer.music.play(start=0.0)
-
-#         # Wait for the audio to finish playing
-#         while pygame.mixer.music.get_busy():
-#             pygame.time.Clock().tick(10)
-
-#         pygame.mixer.quit()
-#     except pygame.error as e:
-#         logging.error(f"Failed to play audio: {e}")
-#     except Exception as e:
-#         logging.error(f"An unexpected error occurred while playing audio: {e}")
-
+    print("Recording failed after all retries")
+    logging.error("Recording failed after all retries")
+    return False
 
 def play_audio(file_path):
     """
