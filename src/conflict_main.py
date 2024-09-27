@@ -208,6 +208,7 @@ Only allowed to change heading of aircrafts.
                         user_input = transcribe_audio(
                             Config.TRANSCRIPTION_MODEL, transcription_api_key, 'user_input.wav', Config.LOCAL_MODEL_PATH)
                         logging.info("User said: " + user_input)
+                        print("User said: " + user_input)
 
                     start_time = time.perf_counter()
 
@@ -235,6 +236,8 @@ Only allowed to change heading of aircrafts.
             print(f"Skipping scenario {scenario_name} after 5 failed attempts.")
             console_output = "skipped"  # Skip to the next scenario
             elapsed_time = -1  # Mark the scenario as skipped
+            # result is exception
+            result = str(e)
         else:
             console_output = output.getvalue()
             console_output = remove_ansi_escape_sequences(console_output)
@@ -285,3 +288,7 @@ Only allowed to change heading of aircrafts.
 
 if __name__ == "__main__":
     main()
+
+
+
+
