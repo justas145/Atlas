@@ -103,7 +103,10 @@ def generate_compact_conflict_report(
 
 
 def save_results_to_csv(results, output_file):
-    # Ensure the directory exists
+    print(f"Attempting to save results to: {output_file}")
+    print(f"Directory name: {os.path.dirname(output_file)}")
+    
+    
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
     # Create a lock file path

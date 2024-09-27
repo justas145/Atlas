@@ -228,6 +228,7 @@ Only allowed to change heading of aircrafts.
                 break  # Exit the retry loop if successful
             except Exception as e:
                 print(f"Attempt {attempt + 1} failed, error: {e}")
+                result = str(e)
                 if attempt < 4:  # Only sleep and swap keys if it's not the last attempt
                     time.sleep(5)
                     # Swap to the next API key
@@ -236,22 +237,21 @@ Only allowed to change heading of aircrafts.
             print(f"Skipping scenario {scenario_name} after 5 failed attempts.")
             console_output = "skipped"  # Skip to the next scenario
             elapsed_time = -1  # Mark the scenario as skipped
-            # result is exception
-            result = str(e)
+
         else:
             console_output = output.getvalue()
             console_output = remove_ansi_escape_sequences(console_output)
-
-            tlos_logs = get_tlos_logs()
-            command_logs = get_command_logs()
-            print(tlos_logs)
-            print(json.dumps(tlos_logs, indent=2))
 
         rerun_scenario = (
             "tool-use>" in console_output
             or console_output.count("Invoking: `SENDCOMMAND`") == 0
         )
         rerun_scenario = "tool-use>" in console_output
+        
+        tlos_logs = get_tlos_logs()
+        command_logs = get_command_logs()
+        print(tlos_logs)
+        print(json.dumps(tlos_logs, indent=2))
 
         if rerun_scenario:
             print("reruning the scenario, because of TOOL ERROR")
@@ -288,7 +288,3 @@ Only allowed to change heading of aircrafts.
 
 if __name__ == "__main__":
     main()
-
-
-
-

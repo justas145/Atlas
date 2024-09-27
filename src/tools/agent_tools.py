@@ -316,7 +316,7 @@ def GetBlueskyCommands(ids: str) -> str:
 
 
 @langchain_tool("CONTINUEMONITORING")
-def ContinueMonitoring(duration: int) -> str:
+def ContinueMonitoring(duration: int = 10) -> str:
     #     minimum is 10 seconds (good if you haven't sent any commands yet), maximum duration is 20 seconds (good if you have sent commands already).
     """Monitor for conflicts between aircraft pairs for a selected duration of time.
 
