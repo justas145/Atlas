@@ -199,7 +199,7 @@ def run_simulation(
                     user_input = """
 **Objective**: Monitor the airspace and resolve conflicts between aircraft pairs until there are no more conflicts.
 **Guidelines**:
-Only allowed to change heading of aircrafts.
+Only change the aircraft altitude.
  """
 
                     if voice_mode == '2-way':
@@ -242,12 +242,13 @@ Only allowed to change heading of aircrafts.
             console_output = output.getvalue()
             console_output = remove_ansi_escape_sequences(console_output)
 
-        rerun_scenario = (
-            "tool-use>" in console_output
-            or console_output.count("Invoking: `SENDCOMMAND`") == 0
-        )
+
+        # rerun_scenario = (
+        #     "tool-use>" in console_output
+        #     or console_output.count("Invoking: `SENDCOMMAND`") == 0
+        # )
         rerun_scenario = "tool-use>" in console_output
-        
+
         tlos_logs = get_tlos_logs()
         command_logs = get_command_logs()
         print(tlos_logs)
