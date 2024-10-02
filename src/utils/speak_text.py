@@ -20,7 +20,7 @@ def speak_text(text, voice_mode, voice=None):
             text = re.sub(r"\bFL\b", "flight level", text, flags=re.IGNORECASE)
             text = " . . " + text
             tts_api_key = get_tts_api_key()
-            print(f"using voice {voice}")
+            # print(f"using voice {voice}")
             text_to_speech(
                 Config.TTS_MODEL,
                 tts_api_key,
