@@ -118,7 +118,7 @@ def main(
     for scenario in scenarios:
         for agent_config in agent_configs:
             result = run_simulation(
-                agent_config, scenario, base_path, client, collection, groq_api_keys, voice, preference, tlos_threshold
+                agent_config, scenario, base_path, client, collection, groq_key_generator, voice, preference, tlos_threshold
             )
             results.append(result)
 
@@ -162,7 +162,7 @@ def run_simulation(
     base_path: str,
     client,
     collection,
-    groq_api_keys: List[str],
+    groq_key_generator,
     voice_mode: str,
     preference: str,
     tlos_threshold: float,
@@ -192,14 +192,16 @@ def run_simulation(
             load_and_run_scenario(client, scenario)
             try:
                 with CaptureAndPrintConsoleOutput() as output:
-                    # Use the current API key to setup the agent
+                    # Use the groq_key_generator to setup the agent
                     agent_executor = setup_agent(
-                        agent_config, groq_api_keys, client, collection
+                        agent_config, groq_key_generator, client, collection
                     )
                     user_input = """
 **Objective**: Monitor the airspace and resolve conflicts between aircraft pairs until there are no more conflicts.
+
 **Guidelines**:
-Only change the aircraft altitude.
+You are allowed to change the aircraft altitude and heading.
+
  """
 
                     if voice_mode == '2-way':
@@ -229,9 +231,8 @@ Only change the aircraft altitude.
             except Exception as e:
                 print(f"Attempt {attempt + 1} failed, error: {e}")
                 result = str(e)
-                if attempt < 4:  # Only sleep and swap keys if it's not the last attempt
+                if attempt < 4:  # Only sleep if it's not the last attempt
                     time.sleep(5)
-                    # Swap to the next API key
 
         if not success:
             print(f"Skipping scenario {scenario_name} after 5 failed attempts.")
@@ -241,7 +242,6 @@ Only change the aircraft altitude.
         else:
             console_output = output.getvalue()
             console_output = remove_ansi_escape_sequences(console_output)
-
 
         # rerun_scenario = (
         #     "tool-use>" in console_output
