@@ -5,9 +5,9 @@
 [![Arxiv](https://img.shields.io/badge/arXiv-2409.09717-b31b1b.svg)](https://arxiv.org/abs/2409.09717)
 [![Python Version](https://img.shields.io/badge/Python-≥3.9-blue.svg)](https://github.com/justas145/LLM-Enhanced-ATM)
 
-[![Alt Text](results/examples/demo_video_thesis_repository_thumbnail.png)](results/examples/demo_video_thesis_repository.mp4)
+______________________________________________________________________
 
-![Image Placeholder](path/to/your/image.png)
+![](results/examples/demo_video_thesis_repository.gif)
 
 </div>
 
