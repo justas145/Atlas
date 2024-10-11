@@ -1,4 +1,5 @@
-# Atlas
+<h1 align="center">Atlas</h1>
+
 ## Automatic Control With Human-Like Reasoning: Exploring Language Model Embodied Air Traffic Agents
 
 <div align="center">
