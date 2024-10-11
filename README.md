@@ -7,7 +7,7 @@
 
 ______________________________________________________________________
 
-![LLM Agent solving 3 aircraft conflict](results/examples/demo_video_thesis_repository.gif)
+![Alt Text](https://github.com/justas145/LLM-Enhanced-ATM/blob/refactor-clean-code/src/results/examples/demo_video_thesis_repository.gif)
 
 </div>
 
