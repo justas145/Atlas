@@ -16,3 +16,8 @@ venv_req_test/
 **/*.pyc
 llm/results
 src/scratchpad.py
+# Ignore all venv environments
+*venv*/
+
+# Ignore any folder with 'venv' in its name
+**/venv**/
