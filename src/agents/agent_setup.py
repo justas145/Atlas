@@ -14,6 +14,16 @@ from prompts.agent_prompts import (
     executor_prompt,
     verifier_prompt,
     extraction_prompt,
+    planner_system_prompt,
+    executor_system_prompt,
+    verifier_system_prompt,
+    single_agent_system_prompt,
+    seperation_guidelines,
+    bluesky_commands,
+    operator_preference,
+    experience_lib_instructions,
+    planner_options,
+    examples,
 )
 from typing import Optional
 from langchain_core.messages import AIMessageChunk
@@ -21,12 +31,16 @@ from utils.speak_text import speak_text
 from voice_assistant.config import Config
 
 
+
 def setup_chat_model(config, groq_api_key):
     if "gpt" in config["model_name"]:
+        print('Using OpenAI model')
         chat = ChatOpenAI(
             temperature=config["temperature"], model_name=config["model_name"]
         )
+
     else:
+        print('Using Groq model')
         chat = ChatGroq(
             temperature=config["temperature"],
             model_name=config["model_name"],
@@ -36,15 +50,20 @@ def setup_chat_model(config, groq_api_key):
 
 
 def setup_single_agent(config, groq_api_key):
-    # Load system prompts
-    prompt = hub.pull("hwchase17/openai-tools-agent")
-    if config.get("use_skill_lib", False):
-        print("loading system prompt with exp lib")
-        with open("prompts/system_with_exp_lib.txt", "r") as f:
-            prompt.messages[0].prompt.template = f.read()
-    else:
-        with open("prompts/system.txt", "r") as f:
-            prompt.messages[0].prompt.template = f.read()
+    # Load base system prompt
+    system_prompt = hub.pull("hwchase17/openai-tools-agent")
+
+    # Update the system prompt using the single_agent_system_prompt
+    system_prompt.messages[0].prompt.template = single_agent_system_prompt.format(
+        seperation_guidelines=seperation_guidelines,
+        experience_lib_instructions=(
+            experience_lib_instructions if config.get("use_skill_lib", False) else ""
+        ),
+        bluesky_commands=bluesky_commands,
+        examples=examples,
+        operator_preference=operator_preference,
+    )
+
     print("setting up agent with config:", config)
     # Initialize LLM model
     chat = setup_chat_model(config, groq_api_key)
@@ -63,27 +82,25 @@ def setup_single_agent(config, groq_api_key):
         ]
         print("not using skill lib")
     # Create and return the agent
-    agent = agents.create_openai_tools_agent(chat, tools_to_use, prompt)
+    agent = agents.create_openai_tools_agent(chat, tools_to_use, system_prompt)
     agent_executor = AgentExecutor(
         agent=agent, tools=tools_to_use, verbose=True, return_intermediate_steps=True
     )
     return agent_executor
 
 
-def setup_agent(config, groq_api_key_lst, client, collection):
+def setup_agent(config, groq_key_generator, client, collection):
     initialize_client_for_tools(client)
     initialize_collection_for_tools(collection)
-    groq_key_generator = cyclic_key_generator(groq_api_key_lst)
     if "multi" in config["type"]:
-        return setup_multi_agent(config, groq_api_key_lst)
+        return setup_multi_agent(config, groq_key_generator)
     elif "single" in config["type"]:
         groq_api_key = next(groq_key_generator)
         return setup_single_agent(config, groq_api_key)
     else:
         raise ValueError(f"Invalid agent type: {config['type']}")
 
-
-def setup_multi_agent(config, groq_api_keys_lst):
+def setup_multi_agent(config, groq_key_generator):
     print("setting up multi agent with config:", config)
     agents_dict = {}
     tool_sets = {
@@ -99,49 +116,49 @@ def setup_multi_agent(config, groq_api_keys_lst):
     }
 
     for role, tool_names in tool_sets.items():
-        prompt_init = hub.pull("hwchase17/openai-tools-agent")
-        ### LOADING PROMPTS ###
+        system_prompt = hub.pull("hwchase17/openai-tools-agent")
+
         if role == "planner":
-            if config.get("use_skill_lib", False):
-                print("loading system prompt with exp lib")
-                with open("prompts/planner_system_with_exp_lib.txt", "r") as f:
-                    planner_system_prompt = prompt_init
-                    planner_system_prompt.messages[0].prompt.template = f.read()
-            else:
-                with open("prompts/planner_system.txt", "r") as f:
-                    planner_system_prompt = prompt_init
-                    planner_system_prompt.messages[0].prompt.template = f.read()
-        if role == "executor":
-            with open("prompts/executor_system.txt", "r") as f:
-                executor_system_prompt = prompt_init
-                executor_system_prompt.messages[0].prompt.template = f.read()
-        if role == "verifier":
-            if config.get("use_skill_lib", False):
-                print("loading system prompt with exp lib")
-                with open("prompts/verifier_system_with_exp_lib.txt", "r") as f:
-                    verifier_system_prompt = prompt_init
-                    verifier_system_prompt.messages[0].prompt.template = f.read()
-            else:
-                with open("prompts/verifier_system.txt", "r") as f:
-                    verifier_system_prompt = prompt_init
-                    verifier_system_prompt.messages[0].prompt.template = f.read()
-        ### LOADING PROMPTS ###
-        groq_key_generator = cyclic_key_generator(groq_api_keys_lst)
+            system_prompt.messages[0].prompt.template = (
+                planner_system_prompt.format(
+                    planner_options=planner_options,
+                    experience_lib_instructions=(
+                        experience_lib_instructions
+                        if config.get("use_skill_lib", False)
+                        else ""
+                    ),
+                    seperation_guidelines=seperation_guidelines,
+                    examples=examples,
+                    operator_preference=operator_preference,
+                )
+            )
+        elif role == "executor":
+            system_prompt.messages[0].prompt.template = executor_system_prompt.format(
+                bluesky_commands=bluesky_commands
+            )
+        elif role == "verifier":
+            system_prompt.messages[0].prompt.template = verifier_system_prompt.format(
+                planner_options=planner_options,
+                experience_lib_instructions=(
+                    experience_lib_instructions
+                    if config.get("use_skill_lib", False)
+                    else ""
+                ),
+                examples=examples,
+                seperation_guidelines=seperation_guidelines,
+                operator_preference=operator_preference,
+            )
+
         groq_api_key = next(groq_key_generator)
         chat = setup_chat_model(config, groq_api_key)
         tools_to_use = [agent_tool_dict[name] for name in tool_names]
         if config.get("use_skill_lib", False) and role in ["planner", "verifier"]:
             print("using skill lib")
             tools_to_use.append(agent_tool_dict["SEARCHEXPERIENCELIBRARY"])
-        print("not using skill lib")
+        else:
+            print("not using skill lib")
 
-        if role == "planner":
-            prompt = planner_system_prompt
-        elif role == "executor":
-            prompt = executor_system_prompt
-        elif role == "verifier":
-            prompt = verifier_system_prompt
-        agent = agents.create_openai_tools_agent(chat, tools_to_use, prompt)
+        agent = agents.create_openai_tools_agent(chat, tools_to_use, system_prompt)
         agents_dict[role] = agents.AgentExecutor(
             agent=agent,
             tools=tools_to_use,
@@ -149,10 +166,7 @@ def setup_multi_agent(config, groq_api_keys_lst):
             return_intermediate_steps=True,
         )
 
-    with open("prompts/ICAO_seperation_guidelines.txt", "r") as f:
-        icao_seperation_guidelines = f.read()
-
-    return MultiAgent(agents_dict, agents_prompts, icao_seperation_guidelines)
+    return MultiAgent(agents_dict, agents_prompts)
 
 
 class PlanExists(BaseModel):
@@ -205,11 +219,9 @@ def process_agent_output(agent_executor, user_input, voice_mode, voice=None):
 
 
 class MultiAgent:
-    def __init__(self, agents, prompts, icao_seperation_guidelines):
+    def __init__(self, agents, prompts):
         self.agents = agents
         self.prompts = prompts
-        self.icao_seperation_guidelines = icao_seperation_guidelines
-
     def invoke(self, input_dict, voice_mode=None):
         user_input = input_dict.get("input", "")
         planner_prompt = self.prompts["planner"].format(user_input=user_input)
