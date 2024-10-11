@@ -1,4 +1,5 @@
-# Automatic Control With Human-Like Reasoning: Exploring Language Model Embodied Air Traffic Agents
+# Atlas
+## Automatic Control With Human-Like Reasoning: Exploring Language Model Embodied Air Traffic Agents
 
 <div align="center">
 
