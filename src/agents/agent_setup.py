@@ -18,7 +18,7 @@ from prompts.agent_prompts import (
     executor_system_prompt,
     verifier_system_prompt,
     single_agent_system_prompt,
-    seperation_guidelines,
+    separation_guidelines,
     bluesky_commands,
     operator_preference,
     experience_lib_instructions,
@@ -55,7 +55,7 @@ def setup_single_agent(config, groq_api_key):
 
     # Update the system prompt using the single_agent_system_prompt
     system_prompt.messages[0].prompt.template = single_agent_system_prompt.format(
-        seperation_guidelines=seperation_guidelines,
+        separation_guidelines=separation_guidelines,
         experience_lib_instructions=(
             experience_lib_instructions if config.get("use_skill_lib", False) else ""
         ),
@@ -127,7 +127,7 @@ def setup_multi_agent(config, groq_key_generator):
                         if config.get("use_skill_lib", False)
                         else ""
                     ),
-                    seperation_guidelines=seperation_guidelines,
+                    separation_guidelines=separation_guidelines,
                     examples=examples,
                     operator_preference=operator_preference,
                 )
@@ -145,7 +145,7 @@ def setup_multi_agent(config, groq_key_generator):
                     else ""
                 ),
                 examples=examples,
-                seperation_guidelines=seperation_guidelines,
+                separation_guidelines=separation_guidelines,
                 operator_preference=operator_preference,
             )
 
@@ -237,7 +237,7 @@ class MultiAgent:
             return {"output": plan, "status": "resolved"}
 
         while True:
-            controller_prompt = self.prompts["executor"].format(plan=plan)
+            controller_prompt = self.prompts["executor"].format(plan=plan, bluesky_commands=bluesky_commands)
             print("Controller Agent Running")
             controller_voice = Config.MULTI_AGENT_VOICES.get("executor", None)
             controller_output = process_agent_output(self.agents["controller"], controller_prompt, voice_mode, voice=controller_voice)

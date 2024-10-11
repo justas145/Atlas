@@ -8,9 +8,6 @@ planner_prompt = PromptTemplate.from_template(
     <OPERATORS PREFERENCE>
     {user_input}
     <OPERATORS PREFERENCE>
-
-    
-    Remeber: {seperation_guidelines}
     """
 )
 
@@ -51,7 +48,7 @@ verifier_prompt = PromptTemplate.from_template(
 # - If there are still conflicts, you should continue to change the heading or altitude of the aircraft until the conflict is resolved.
 
 # ICAO requirements:
-# {icao_seperation_guidelines}
+# {icao_separation_guidelines}
 # """
 # )
 
@@ -241,7 +238,7 @@ extraction_prompt = ChatPromptTemplate.from_messages(
 
 single_agent_system_prompt = PromptTemplate.from_template(
     """
-    You are an air traffic control assistant. Your goal is to solve aircraft conflict according to the following requirements: {seperation_guidelines}.
+    You are an air traffic control assistant. Your goal is to solve aircraft conflict according to the following requirements: {separation_guidelines}.
 
     {experience_lib_instructions}
 
@@ -272,7 +269,7 @@ planner_system_prompt = PromptTemplate.from_template(
     {experience_lib_instructions}
 
     <REQUIREMENTS>
-    {seperation_guidelines}
+    {separation_guidelines}
     <REQUIREMENTS>
 
     <EXAMPLES>
@@ -328,7 +325,7 @@ verifier_system_prompt = PromptTemplate.from_template(
     <EXAMPLES>
 
     <REQUIREMENTS>
-    {seperation_guidelines}
+    {separation_guidelines}
     <REQUIREMENTS>
 
 
@@ -350,7 +347,7 @@ verifier_system_prompt = PromptTemplate.from_template(
 """)
     
 
-seperation_guidelines = """either vertical seperation of 2000 ft or horizontal seperation of 5 nautical miles between all aircraft in conflict."""
+separation_guidelines = """either vertical separation of 2000 ft or horizontal separation of 5 nautical miles between all aircraft in conflict."""
 bluesky_commands = """
     Command to change aircraft altitude is: ALT AIRCRAFT_CALL_SIGN ALTITUDE. 
     
@@ -365,7 +362,7 @@ bluesky_commands = """
 """
 operator_preference ="""
 <OPERATORS PREFERENCE INSTRUCTIONS>
-You must always adhere to operators preference. For example if operator prefers to only use heading changes, you can only use HDG command or if operator prefers to only use altitude changes, you can only use ALT command. If operator prefers to start solving conflict when tLOS (time to lose seperation) is less than specific value, then you can only send commands to the aircraft in conflict when their tLOS is less than that value. If all aircraft pairs in conflict have tLOS greater than the value, you can use tool CONTINUEMONITORING to fast forward the time until tLOS is less than the value and send command to that aircraft pair. Then you can repeat the process for other pairs - fast forward time till tLOS is less than the value and send command to the aircraft pair.
+You must always adhere to operators preference. For example if operator prefers to only use heading changes, you can only use HDG command or if operator prefers to only use altitude changes, you can only use ALT command. If operator prefers to start solving conflict when tLOS (time to lose separation) is less than specific value, then you can only send commands to the aircraft in conflict when their tLOS is less than that value. If all aircraft pairs in conflict have tLOS greater than the value, you use tool CONTINUEMONITORING to fast forward the time until tLOS is less than the value and send command to that aircraft pair. Then you can repeat the process for other pairs - fast forward time till tLOS is less than the value and send command to the aircraft pair.
 <OPERATORS PREFERENCE INSTRUCTIONS>
 
 """
@@ -376,5 +373,5 @@ You must use SearchExperienceLibrary tool if there is conflict to get help from 
 planner_options = """You can either instruct to change aircraft altitude or heading."""
 
 examples = """
-For example if three aircraft are in conflict and in same altitude it would be a good idea to send one aircraft up, other down, other keep same and make sure that their new altitudes have enough vertical seperation. Or change their headings so that one is going one way, other going other way and other going straight. Or if multiple aircraft ascending and in conflict, you can make one aircraft descend and vice versa.
+For example if three aircraft are in conflict and in same altitude it would be a good idea to send one aircraft up, other down, other keep same and make sure that their new altitudes have enough vertical separation. Or change their headings so that one is going one way, other going other way and other going straight. Or if multiple aircraft ascending and in conflict, you can make one aircraft descend and vice versa.
 """

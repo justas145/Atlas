@@ -200,7 +200,7 @@ def run_simulation(
 **Objective**: Monitor the airspace and resolve conflicts between aircraft pairs until there are no more conflicts.
 
 **Guidelines**:
-You are allowed to change the aircraft altitude and heading.
+You are allowed to change the aircraft altitude and heading only when the aircraft tLOS is less than 500 seconds.
 
  """
 
