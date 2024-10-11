@@ -62,13 +62,22 @@ class TheoreticalTimeCalculator(core.Entity):
 
     def calculate(self):
         for i in range(traf.ntraf):
-            acid = traf.id[i]
-
-            if traf.ap.route[i].dest:
+            try:
+                acid = traf.id[i]
+                route = traf.ap.route[i]
+                
+                if not route or not route.dest:
+                    print(f"No destination set for aircraft {acid}")
+                    continue
+                
+                if not route.wplat or not route.wplon:
+                    print(f"No waypoints found for aircraft {acid}")
+                    continue
+                
                 initial_lat = traf.lat[i]
                 initial_lon = traf.lon[i]
-                dest_lat = traf.ap.route[i].wplat[-1]
-                dest_lon = traf.ap.route[i].wplon[-1]
+                dest_lat = route.wplat[-1]
+                dest_lon = route.wplon[-1]
 
                 distance = geo.kwikdist(initial_lat, initial_lon, dest_lat, dest_lon) * 1852  # Convert nm to meters
                 speed = traf.tas[i]  # True airspeed in m/s
@@ -76,6 +85,12 @@ class TheoreticalTimeCalculator(core.Entity):
                 if speed > 0:
                     time_to_destination = distance / speed
                     self.log_theoretical_time(acid, time_to_destination)
+                else:
+                    print(f"Aircraft {acid} has zero speed")
+            except IndexError as e:
+                print(f"IndexError for aircraft {i}: {e}")
+            except Exception as e:
+                print(f"Unexpected error calculating theoretical time for aircraft {i}: {e}")
 
 @stack.command
 def cleartheoreticallog():
