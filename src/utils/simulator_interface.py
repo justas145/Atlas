@@ -52,7 +52,7 @@ def receive_bluesky_output(client):
     return complete_output
 
 
-def load_and_run_scenario(client, scenario_path):
+def load_and_run_scenario(client, scenario_path, add_waypoints=False):
     try:
         clear_crash_log()
         # client.send_event(b"STACK", f"IC {scenario_path}")
