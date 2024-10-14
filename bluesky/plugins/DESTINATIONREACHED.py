@@ -77,7 +77,7 @@ class DestinationLogger(core.Entity):
                 dest_lon = traf.ap.route[i].wplon[-1]
                 dist_to_dest = geo.kwikdist(traf.lat[i], traf.lon[i], dest_lat, dest_lon)
                 print(dist_to_dest)
-                if dist_to_dest < 0.1:  # Within 1 NM of destination
+                if dist_to_dest < 0.3:  # Within 1 NM of destination
                     time_taken = sim.simt - self.start_times[acid]
                     print(time_taken)
                     if time_taken > 0:
