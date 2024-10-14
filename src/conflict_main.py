@@ -67,6 +67,12 @@ from pathlib import Path
 @click.option("--voice", type=click.Choice(['2-way', '1-way', 'no']), default='no', help="Voice interaction mode")
 @click.option("--preference", type=click.Choice(['HDG', 'ALT', 'tLOS']), default=None, help="Preference for conflict resolution")
 @click.option("--tlos_threshold", type=float, default=None, help="tLOS threshold for preference (only applicable when preference is 'tLOS')")
+@click.option("--user_input", default="""
+**Objective**: Monitor the airspace and resolve conflicts between aircraft pairs until there are no more conflicts.
+
+**Guidelines**:
+You are allowed to change the aircraft altitude and heading only when the aircraft tLOS is less than 500 seconds.
+""", help="User input for the agent")
 def main(
     model_name,
     agent_type,
@@ -78,6 +84,7 @@ def main(
     voice,
     preference,
     tlos_threshold,
+    user_input,
 ):
     collection = initialize_experience_library(exp_lib_collection)
     print("collection initialized")
@@ -118,7 +125,7 @@ def main(
     for scenario in scenarios:
         for agent_config in agent_configs:
             result = run_simulation(
-                agent_config, scenario, base_path, client, collection, groq_key_generator, voice, preference, tlos_threshold
+                agent_config, scenario, base_path, client, collection, groq_key_generator, voice, preference, tlos_threshold, user_input
             )
             results.append(result)
 
@@ -166,6 +173,7 @@ def run_simulation(
     voice_mode: str,
     preference: str,
     tlos_threshold: float,
+    user_input: str,
 ) -> Dict:
     # Reset the last spoken text at the start of each simulation run
     reset_last_spoken_text()
@@ -189,20 +197,13 @@ def run_simulation(
         success = False
         for attempt in range(5):
             print(scenario)  # Retry up to 5 times
-            load_and_run_scenario(client, scenario)
+            load_and_run_scenario(client, scenario, add_waypoints=False)
             try:
                 with CaptureAndPrintConsoleOutput() as output:
                     # Use the groq_key_generator to setup the agent
                     agent_executor = setup_agent(
                         agent_config, groq_key_generator, client, collection
                     )
-                    user_input = """
-**Objective**: Monitor the airspace and resolve conflicts between aircraft pairs until there are no more conflicts.
-
-**Guidelines**:
-You are allowed to change the aircraft altitude and heading only when the aircraft tLOS is less than 500 seconds.
-
- """
 
                     if voice_mode == '2-way':
                         record_audio("user_input.wav")
@@ -232,7 +233,8 @@ You are allowed to change the aircraft altitude and heading only when the aircra
                 print(f"Attempt {attempt + 1} failed, error: {e}")
                 result = str(e)
                 if attempt < 4:  # Only sleep if it's not the last attempt
-                    time.sleep(5)
+                    # usually the error is due to rate limit by groq
+                    time.sleep(50)
 
         if not success:
             print(f"Skipping scenario {scenario_name} after 5 failed attempts.")
