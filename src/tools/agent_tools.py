@@ -245,7 +245,7 @@ def SearchExperienceLibrary(
     Search in the experience library for a similar conflict and its resolution. Only use it after you aquired aircraft information and conflict details.
 
     :param conflict_description: Detailed description of the conflict in a couple of sentences, e.g., how each aircraft are positioned, headed relative to one another and most importantly if any aircraft are ascending/descending or all level by only using words. Don't use numbers.
-    :param num_ac: Total number of aircraft in airspace
+    :param num_ac: Total number of aircraft in conflict
     :param conflict_formation: Formation of the conflict, options include "Head-On Formation" (majority heading differences are 180 deg), "T-Formation" (majority heading differences 90, 270 deg), "Parallel Formation" (majority heading differences 0 deg), "Converging Formation" (
         heading differences other than 0, 90, 180, or 270 degrees).
     :return: Document with similar conflict and advices on how to resolve it or no document if nothing similar was found.
@@ -286,7 +286,11 @@ def SearchExperienceLibrary(
                     + "\n\n"
                     + query_results["metadatas"][0][0]["commands"]
                 )
-                return doc  # + "\n\n" + "Remember this is only a similar conflict and not identical. Use the information wisely."
+                return (
+                    doc
+                    + "\n\n"
+                    + "Note: This is a similar conflict but not identical. Please use your judgement and adapt the solution to the current situation."
+                )
         except Exception as e:
             print(f"Error with {label} query:", e)
 
@@ -322,9 +326,10 @@ def ContinueMonitoring(duration: int = 10) -> str:
 
     Parameters:
     - duration (int): The time in seconds to monitor for conflicts.
-    
+
     Returns:
     - str: A compact representation of conflict information initially and changes after the specified duration.
+    The format is: "value before -> value after", where the 'value after' represents the current status.
     """
     # Ensure duration is within the allowed range
     # duration = max(10, min(duration, 20))
