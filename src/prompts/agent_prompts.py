@@ -3,7 +3,7 @@ from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 
 planner_prompt = PromptTemplate.from_template(
     """
-    Check the airspace and if there are conflicts provide the actionable plan.
+    Check the airspace and if there are conflicts provide the actionable plan together with monitoring value.
     
     <OPERATORS PREFERENCE>
     {user_input}
@@ -14,7 +14,7 @@ planner_prompt = PromptTemplate.from_template(
 
 executor_prompt = PromptTemplate.from_template(
     """
-    Execute the plan: {plan}
+    Only Execute the plan (ignore monitoring value): {plan}
     
     Commands syntax:
     {bluesky_commands}
@@ -235,7 +235,6 @@ extraction_prompt = ChatPromptTemplate.from_messages(
 )
 
 
-
 single_agent_system_prompt = PromptTemplate.from_template(
     """
     You are an air traffic control assistant. Your goal is to solve aircraft conflict according to the following requirements: {separation_guidelines}.
@@ -251,7 +250,7 @@ single_agent_system_prompt = PromptTemplate.from_template(
     <EXAMPLES>
 
     <INSTRUCTIONS>
-    You need to send commands in order to solve the conflicts. Start by gathering aircraft information with GETALLAIRCRAFTINFO and conflict information with CONTINUEMONITORING. You must solve the conflicts till there are no more conflicts left. Confirm that there are no conflicts left by using tool CONTINUEMONITORING (Usually it takes about 20 seconds to resolve a conflict pair after command(s) are sent if the commands are correct). It can be that aircraft are still changing their altitude or heading and conflict is not resolved yet. In that case, you need to wait for more time and monitor the airspace again.
+    You need to send commands in order to solve the conflicts. Start by gathering aircraft information with GETALLAIRCRAFTINFO and conflict information with CONTINUEMONITORING. You must solve the conflicts till there are no more conflicts left. Confirm that there are no conflicts left by using tool CONTINUEMONITORING (It takes about 25 sec for aircraft to change altitude by 1000 ft and it takes about 7 sec for aircraft to change heading by 10 degrees). It can be that aircraft are still changing their altitude or heading and conflict is not resolved yet. In that case, you need to wait for more time and monitor the airspace again.
 
 
     Even if aircraft is descending or climbing, you can still change its altitude to either higher or lower altitude. For example aircraft B is descending, you can instruct it to climb to a higher altitude.
@@ -290,6 +289,9 @@ planner_system_prompt = PromptTemplate.from_template(
     1. Aircraft call sign and the command to resolve the conflict.
     2. ...
     ...
+    monitoring value: x - here give a value in seconds to indicate how long the verifier should monitor the solution before verifying the resolution. It takes about 25 sec for aircraft to change altitude by 1000 ft and it takes about 7 sec for aircraft to change heading by 10 degrees. If there are instructions to multiple aircraft, provide the largest monitoring value. e.g. if one aircraft is increasing altitude by 2000 ft and other increasing heading by 30 degrees, then the first aircraft will reach its new altitude in 25*2000/1000=50 sec and the second aircraft will reach its new heading in 7*30/10=14 sec, so the monitoring value should be 50 sec.
+    
+    
     If there no aircrafts in conflicts, respond with: NO CONFLICTS
     """
 )
@@ -301,7 +303,9 @@ executor_system_prompt = PromptTemplate.from_template(
     Commands syntax:
     {bluesky_commands}
 
-
+    Note:
+    - if there is a command that mentions to maintain heading or altitude at certain value, you must still send that command. For example: GHT980 maintain current heading/altitude of X degrees/feet. You would then send command: HDG GHT980 X or ALT GHT980 X.
+    
     Once you have executed the commands from the plan, finish the task by responding with: TASK COMPLETE
 
 """
@@ -309,14 +313,14 @@ executor_system_prompt = PromptTemplate.from_template(
 
 verifier_system_prompt = PromptTemplate.from_template(
     """
-    You are an air traffic controller. There has been a conflict in the airspace. Resolution plan has been executed. You must verify if the conflict has been resolved or not yet. Gather aircraft information and conflict information by Monitor the airspace for 30 sec or more before verifying the resolution.
+    You are an air traffic controller. There has been a conflict in the airspace. Resolution plan has been executed. You must verify if the conflict has been resolved or not yet. Gather aircraft information and conflict information by Monitor the airspace for how long it is instructed in the resolution plan before verifying the resolution (if not instructed, then monitor for around 20 seconds).
 
     You must provide a new plan to resolve the conflict if the there are still aircraft in conflict. {planner_options}. You must adhere to operators preference.
 
     {experience_lib_instructions}
 
     <IMPORTANT NOTE>
-    There can be a case where aircraft pair is in conflict but only because not enough time has passed. Based on the previous plan, you must decide if you want to wait for more time or provide a new plan. It can be that aircraft are still changing their altitude or heading after your command and conflict is not resolved yet. In that case, you need to monitor the airspace again for longer time.
+    There can be a case where aircraft pair is in conflict but only because not enough time has passed. Based on the previous plan, you must decide if you want to wait for more time or provide a new plan. It can be that aircraft are still changing their altitude or heading and conflict is not resolved yet. In that case, you need to monitor the airspace again for longer time.
     <IMPORTANT NOTE>
 
 
@@ -342,10 +346,11 @@ verifier_system_prompt = PromptTemplate.from_template(
     If there is a conflict, respond with: 
         1. Aircraft call sign and the command to resolve the conflict.
         2. ...
-        ...
+        ...    
     If there is no conflict, respond with: NO CONFLICTS
-""")
-    
+"""
+)
+
 
 separation_guidelines = """either vertical separation of 2000 ft or horizontal separation of 5 nautical miles between all aircraft in conflict."""
 bluesky_commands = """
