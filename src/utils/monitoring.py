@@ -126,7 +126,7 @@ def final_check(crash_log_path=None):
     conflict_info = try_get_conflict_info()
     if conflict_info is None:
         return 1, "Conflict information could not be retrieved."
-    if conflict_info.strip() != "No conflicts detected.":
+    if "No conflicts detected." not in conflict_info.strip():
         # Parsing the conflict information for DCPA values
         lines = conflict_info.strip().split("\n")[1:]  # Skip the header
         crash_detected = False
