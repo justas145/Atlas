@@ -52,6 +52,8 @@ from tools.agent_tools import get_tlos_logs, get_command_logs
 import json
 from pathlib import Path
 
+import atexit
+
 @click.command()
 @click.option("--model_name", default="gpt-4o-2024-08-06", help="single model or comma-separated list")
 @click.option("--agent_type", default="single_agent", help="single_agent or multi_agent, or comma-separated combination")
@@ -69,9 +71,8 @@ from pathlib import Path
 @click.option("--tlos_threshold", type=float, default=None, help="tLOS threshold for preference (only applicable when preference is 'tLOS')")
 @click.option("--user_input", default="""
 **Objective**: Monitor the airspace and resolve conflicts between aircraft pairs until there are no more conflicts.
-
 **Guidelines**:
-You are allowed to change the aircraft altitude and heading only when the aircraft tLOS is less than 500 seconds.
+You are allowed to change the aircraft altitude and heading. You are encouraged to use both methods (altitude and heading change) to resolve the conflicts.
 """, help="User input for the agent")
 def main(
     model_name,
@@ -90,10 +91,19 @@ def main(
     print("collection initialized")
     client = initialize_simulator()
     print("bluesky client initialized")
+    # Create a list to store background threads
+    background_threads = []
+
     # Run the crash monitoring in a background thread
-    threading.Thread(target=monitor_crashes, args=(print_output,), daemon=True).start()
-    # monitor too many request -> pause simulator in the background
-    threading.Thread(target=monitor_too_many_requests, args=(client,), daemon=True).start()
+    crash_monitor_thread = threading.Thread(target=monitor_crashes, args=(print_output,), daemon=True)
+    crash_monitor_thread.start()
+    background_threads.append(crash_monitor_thread)
+
+    # Monitor too many requests -> pause simulator in the background
+    too_many_requests_thread = threading.Thread(target=monitor_too_many_requests, args=(client,), daemon=True)
+    too_many_requests_thread.start()
+    background_threads.append(too_many_requests_thread)
+
     agent_configs = create_agent_configs(
         model_name, agent_type, temperature, use_skill_lib
     )
@@ -134,6 +144,14 @@ def main(
 
     print(f"Completed {len(results)} simulations.")
 
+   
+    
+    print("Script execution completed.")
+    
+    # Force exit after a short delay
+    print("Forcing exit in 2 seconds...")
+    time.sleep(2)
+    os._exit(0)
 
 def create_agent_configs(model_name, agent_type, temperature, use_skill_lib):
     model_names = model_name.split(",")
